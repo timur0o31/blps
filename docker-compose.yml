@@ -1,0 +1,18 @@
+version: '3.1'
+
+volumes:
+  pg_delivery:
+
+services:
+  delivery_db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=0000
+      - POSTGRES_DB=delivery_db
+    volumes:
+      - pg_delivery:/var/lib/delivery_db
+
+    ports:
+      - "127.0.0.1:5432:5432"
