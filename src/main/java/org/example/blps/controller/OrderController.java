@@ -28,6 +28,16 @@ public class OrderController {
         OrderResponseDto responseDto = orderService.updateOrder(id,orderStatusRequestDto);
         return ResponseEntity.ok(responseDto);
     }
+    @PatchMapping(value ="/{id}/cancel-order")
+    public ResponseEntity<?> cancelOrderByCourier(@PathVariable Long id,@RequestParam Long courierId, @RequestBody OrderRequestDto orderRequestDto) {
+        orderService.cancelOrderByCourierId(id, courierId);
+        return ResponseEntity.ok().build();
+    }
+    @PatchMapping(value = "/{id}/accept-order")
+    public ResponseEntity<?> acceptOrderByCourier(@PathVariable Long id, @RequestParam Long courierId, @RequestBody OrderRequestDto orderRequestDto){
+        orderService.acceptOrderByCourierId(id,courierId);
+        return ResponseEntity.ok().build();
+    }
 //    @GetMapping
 //    public ResponseEntity<?> getOrders() {}
 

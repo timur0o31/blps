@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.blps.status.OrderStatus;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name="orders")
@@ -27,6 +30,13 @@ public class Order {
     @Column(name = "order_status", nullable = false, length = 15)
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.NEW;
+
+    @CreationTimestamp
+    @Column(name="creation_date")
+    private LocalDateTime creationDate;
+
+    @Column(name="assigment_at")
+    private LocalDateTime assigmentAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="courier_id")
