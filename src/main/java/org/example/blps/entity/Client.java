@@ -15,17 +15,9 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @Column(name = "name", nullable = false, length = 50)
-    private String name;
-
-    @NotNull
-    @Column(name = "surname", nullable = false, length = 50)
-    private String surname;
-
-    @NotNull
-    @Column(name = "phone_number", nullable = false, length = 20)
-    private String phoneNumber;
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @OneToMany(mappedBy ="client")
     private List<Order> orders;

@@ -1,6 +1,5 @@
 package org.example.blps.service;
 import org.example.blps.dto.requestDto.OrderRequestDto;
-import org.example.blps.entity.Order;
 import org.example.blps.mapper.OrderMapper;
 import org.example.blps.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;

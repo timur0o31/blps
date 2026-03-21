@@ -16,13 +16,9 @@ public class Courier {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @Column(name = "name", nullable = false, length = 50)
-    private String name;
-
-    @NotNull
-    @Column(name = "surname", nullable = false, length = 50)
-    private String surname;
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @NotNull
     @Column(name="courier_status", nullable = false, length = 15)
