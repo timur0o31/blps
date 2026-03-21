@@ -1,12 +1,11 @@
 package org.example.blps.controller;
 import org.example.blps.dto.requestDto.OrderRequestDto;
+import org.example.blps.dto.requestDto.OrderStatusRequestDto;
+import org.example.blps.dto.responseDto.OrderResponseDto;
 import org.example.blps.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class OrderController {
@@ -20,11 +19,15 @@ public class OrderController {
 
 
     @PostMapping(value = "/order")
-    public ResponseEntity<?> createOrder(@RequestBody OrderRequestDto orderRequestDto) {
-        orderService.addOrder(orderRequestDto);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<OrderResponseDto> createOrder(@RequestBody OrderRequestDto orderRequestDto) {
+        OrderResponseDto responseDto = orderService.addOrder(orderRequestDto);
+        return ResponseEntity.ok(responseDto);
     }
-
+    @PutMapping(value = "/{id}/status")
+    public ResponseEntity<OrderResponseDto> updateOrder(@PathVariable Long id,@RequestBody OrderStatusRequestDto orderStatusRequestDto) {
+        OrderResponseDto responseDto = orderService.updateOrder(id,orderStatusRequestDto);
+        return ResponseEntity.ok(responseDto);
+    }
 //    @GetMapping
 //    public ResponseEntity<?> getOrders() {}
 

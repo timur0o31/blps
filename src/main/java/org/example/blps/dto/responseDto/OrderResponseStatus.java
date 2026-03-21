@@ -2,7 +2,7 @@ package org.example.blps.dto.responseDto;
 
 import org.example.blps.status.OrderStatus;
 
-public class OrderResponceStatus {
+public class OrderResponseStatus {
 
     private OrderStatus orderStatus;
 }

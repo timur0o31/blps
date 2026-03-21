@@ -26,7 +26,7 @@ public class Order {
     @NotNull
     @Column(name = "order_status", nullable = false, length = 15)
     @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+    private OrderStatus status = OrderStatus.NEW;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="courier_id")
