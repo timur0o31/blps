@@ -3,6 +3,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.example.blps.enums.Role;
 
 @Entity
 @Getter
@@ -33,4 +34,8 @@ public class User {
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
 
+    @NotNull
+    @Column(name="user_role", nullable = false, length = 15)
+    @Enumerated(EnumType.STRING)
+    private Role role;
 }

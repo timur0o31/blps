@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import org.example.blps.status.OrderStatus;
+import org.example.blps.enums.OrderStatus;
 
 @Entity
 @Table(name="orders")
