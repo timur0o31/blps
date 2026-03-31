@@ -1,7 +1,6 @@
 package org.example.blps.controller;
-import org.example.blps.dto.requestDto.JwtAuthificationRequestDto;
-import org.example.blps.dto.requestDto.JwtRefreshRequestDto;
-import org.example.blps.dto.requestDto.UserCredetionalDto;
+import org.example.blps.dto.responseDto.JwtAuthificationResponceDto;
+import org.example.blps.dto.requestDto.UserCredentialsRequestDto;
 import org.example.blps.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +21,8 @@ public class AuthController {
     }
 
     @PostMapping("/sing-in")
-    public ResponseEntity<JwtAuthificationRequestDto> singIn(@RequestBody UserCredetionalDto userCredentialsDto) {
-        JwtAuthificationRequestDto jwtAuthenticationDto = userService.signIn(userCredentialsDto);
+    public ResponseEntity<JwtAuthificationResponceDto> singIn(@RequestBody UserCredentialsRequestDto userCredentialsDto) {
+        JwtAuthificationResponceDto jwtAuthenticationDto = userService.signIn(userCredentialsDto);
         return ResponseEntity.ok(jwtAuthenticationDto);
-    }
-
-    @PostMapping("/refresh")
-    public JwtAuthificationRequestDto refresh(@RequestBody JwtRefreshRequestDto refreshTokenDto) throws Exception {
-        return userService.refreshToken(refreshTokenDto);
     }
 }

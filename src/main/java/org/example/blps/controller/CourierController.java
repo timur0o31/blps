@@ -1,9 +1,10 @@
 package org.example.blps.controller;
 import org.example.blps.dto.requestDto.CourierRequstUpdateStatusDto;
 import org.example.blps.entity.Courier;
+import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.CourierService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,8 +19,9 @@ public class CourierController {
     }
 
     @PostMapping("/status")
-    public Courier updateStatus(@RequestBody CourierRequstUpdateStatusDto courierRequstUpdateStatusDto) {
-        return courierService.updateCourierStatus(courierRequstUpdateStatusDto);
+    public Courier updateStatus(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody CourierRequstUpdateStatusDto courierRequstUpdateStatusDto) {
+        String email = userDetails.getUsername();
+        return courierService.updateCourierStatus(email,courierRequstUpdateStatusDto);
     }
 }
 
