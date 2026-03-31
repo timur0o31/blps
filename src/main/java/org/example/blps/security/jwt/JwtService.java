@@ -1,15 +1,13 @@
 package org.example.blps.security.jwt;
-
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.example.blps.dto.requestDto.JwtAuthificationRequestDto;
+import org.example.blps.dto.responseDto.JwtAuthificationResponceDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -23,24 +21,37 @@ public class JwtService {
     @Value("N8BpLCtew37WlY7DgaFpJueGZhv8CfAhy6BEI2PNcT0")
     private String jwtSecret;
 
-    public JwtAuthificationRequestDto generateAuthToken(String email) {
-        JwtAuthificationRequestDto authRequestDto = new JwtAuthificationRequestDto();
-        authRequestDto.setToken(generateJwtToken(email));
-        return authRequestDto;
+    // Генерация токена для пользователя с ответом
+    public JwtAuthificationResponceDto generateAuthToken(String email) {
+        JwtAuthificationResponceDto authResponceDto = new JwtAuthificationResponceDto();
+        authResponceDto.setToken(generateJwtToken(email));
+        return authResponceDto;
     }
 
-    public JwtAuthificationRequestDto refreshBaseToken(String email, String refreshToken) {
-        JwtAuthificationRequestDto authRequestDto = new JwtAuthificationRequestDto();
-        authRequestDto.setToken(generateJwtToken(email));
-        authRequestDto.setRefreshToken(refreshToken);
-        return authRequestDto;
+    // Генерация токена
+    private String generateJwtToken(String email) {
+        Date date = Date.from(LocalDateTime.now().plusMinutes(20).atZone(ZoneId.systemDefault()).toInstant());
+        return Jwts.builder()
+                .subject(email).  // токен для кого
+                expiration(date)  // соклько времени будет жить
+                .signWith(getSignInKey())  // SignWith - это подпись токена.
+                // Подпись (из Google) - это третья часть токена создаваемая криптографическим хешированием
+                .compact();
     }
 
+    // Генерация подписи - необходима для проверки, что токен не был подделан
+    private SecretKey getSignInKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    // Вот тут как раз проверка, что токен валидный и мы достаем email, потому что для него генерировали токен, так же можно достать время истечения токена
     public String getEmailFromToken(String token) {
         Claims claims = Jwts.parser().verifyWith(getSignInKey()).build().parseSignedClaims(token).getPayload();
         return claims.getSubject();
     }
 
+    // наша валидация
     public boolean validateJwtToken(String token) {
         try {
             Jwts.parser().verifyWith(getSignInKey()).build().parseClaimsJws(token).getPayload();
@@ -59,18 +70,4 @@ public class JwtService {
         return false;
     }
 
-    private String generateJwtToken(String email) {
-        Date date = Date.from(LocalDateTime.now().plusMinutes(20).atZone(ZoneId.systemDefault()).toInstant());
-        return Jwts.builder().subject(email).expiration(date).signWith(getSignInKey()).compact();
-    }
-
-    private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    private String generateRefreshJwtToken(String email) {
-        Date date = Date.from(LocalDateTime.now().plusDays(2).atZone(ZoneId.systemDefault()).toInstant());
-        return Jwts.builder().subject(email).expiration(date).signWith(getSignInKey()).compact();
-    }
 }

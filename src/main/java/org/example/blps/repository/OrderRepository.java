@@ -1,7 +1,7 @@
 package org.example.blps.repository;
 
 import org.example.blps.entity.Order;
-import org.example.blps.status.OrderStatus;
+import org.example.blps.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;

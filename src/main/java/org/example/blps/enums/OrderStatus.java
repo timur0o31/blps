@@ -1,4 +1,4 @@
-package org.example.blps.status;
+package org.example.blps.enums;
 
 public enum OrderStatus {
     NEW,

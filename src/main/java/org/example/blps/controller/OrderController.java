@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/order")
 public class OrderController {
 
     private final OrderService orderService;
@@ -16,7 +17,6 @@ public class OrderController {
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
-
 
     @PostMapping(value = "/order")
     public ResponseEntity<OrderResponseDto> createOrder(@RequestBody OrderRequestDto orderRequestDto) {
@@ -38,6 +38,7 @@ public class OrderController {
         orderService.acceptOrderByCourierId(id,courierId);
         return ResponseEntity.ok().build();
     }
+
 //    @GetMapping
 //    public ResponseEntity<?> getOrders() {}
 
