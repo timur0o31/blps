@@ -9,4 +9,5 @@ import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
     public List<Order> findTop10ByStatusAndAssigmentAtBefore(OrderStatus status, LocalDateTime now);
+    public List<Order> findTop10ByStatus(OrderStatus status);
 }

@@ -1,5 +1,6 @@
 package org.example.blps.service;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
@@ -25,7 +26,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final CourierRepository courierRepository;
-
+    private final Integer LIMIT = 3;
     @Autowired
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CourierRepository courierRepository) {
         this.orderRepository = orderRepository;
@@ -37,11 +38,15 @@ public class OrderService {
     public OrderResponseDto addOrder(OrderRequestDto orderRequestDto) {
         Order newOrder = orderMapper.fromDtoToEntity(orderRequestDto);
         Courier courier = courierRepository.findFirstByStatus(CourierStatus.ONLINE)
-                .orElseThrow(() -> new RuntimeException("Все курьеры заняты"));
+                .orElse(null);
+        if  (courier == null) {
+            newOrder.setStatus(OrderStatus.WAITING);
+            return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
+        }
         newOrder.setCourier(courier);
         newOrder.setStatus(OrderStatus.PENDING);
         newOrder.setAssigmentAt(LocalDateTime.now());
-        courier.setStatus(CourierStatus.BUSY);
+        courier.setStatus(CourierStatus.ACCEPTING_ORDER);
         return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
     }
 
@@ -51,70 +56,74 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(orderRequestDto.getOrderStatus());
         return orderMapper.fromEntityToDto(orderRepository.save(order));
-
     }
 
     @Transactional
     public void cancelOrderByCourierId(Long orderId, Long courierId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
-        courierRepository.findById(courierId).orElseThrow(() -> new RuntimeException("Курьер с данным id не найден."));
-        changeCourier(order, courierId);
+        Courier courier =  courierRepository.findById(courierId).orElseThrow(() -> new RuntimeException("Курьер с данным id не найден."));
+        changeCourier(order, courier);
     }
 
-    private void changeCourier(Order order, Long courierid) {
-        Courier newCourier = courierRepository.findFirstByStatusAndIdNot(CourierStatus.ONLINE, courierid)
-                .orElseThrow(() -> new RuntimeException("В данный момент все курьеры заняты"));
+    private void changeCourier(Order order, Courier courier) {
+        order.setAttempts(order.getAttempts() + 1);
+        if (order.getAttempts()>LIMIT){
+            order.setStatus(OrderStatus.FAILED);
+            order.setCourier(null);
+            courier.setStatus(CourierStatus.ONLINE);
+            return;
+        }
+        Courier newCourier = courierRepository.findFirstByStatusAndIdNot(CourierStatus.ONLINE, courier.getId())
+                .orElse(null);
+        if (newCourier == null) {
+            order.setStatus(OrderStatus.WAITING);
+            order.setCourier(null);
+            courier.setStatus(CourierStatus.ONLINE);
+            return;
+        }
+        courier.setStatus(CourierStatus.ONLINE);
         order.setCourier(newCourier);
         order.setAssigmentAt(LocalDateTime.now());
-        orderRepository.save(order);
-        newCourier.setStatus(CourierStatus.BUSY);
+        order.setStatus(OrderStatus.PENDING);
+        newCourier.setStatus(CourierStatus.ACCEPTING_ORDER);
     }
 
     @Transactional
     public void acceptOrderByCourierId(Long orderId, Long courierId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(OrderStatus.ACCEPTED);
+        Courier courier = order.getCourier();
+        courier.setStatus(CourierStatus.BUSY);
         orderRepository.save(order);
     }
 
     @Scheduled(fixedDelay = 30000)
     @Transactional
-    public void reassignStuckOrders() {
-        LocalDateTime deadline = LocalDateTime.now().minusMinutes(2);
-
-        List<Order> orders = orderRepository
-                .findTop10ByStatusAndAssigmentAtBefore(OrderStatus.PENDING, deadline);
-
-        for (Order order : orders) {
-            if (order.getStatus() != OrderStatus.PENDING) {
+    public void processOrders() {
+        List<Order> waitingOrders = orderRepository.findTop10ByStatus(OrderStatus.WAITING);
+        for (Order order : waitingOrders) {
+            if (order.getAttempts() > LIMIT) {
+                order.setStatus(OrderStatus.FAILED);
                 continue;
             }
-
-
-            Courier oldCourier = order.getCourier();
-            if (oldCourier == null) {
-                continue;
-            }
-
-            Optional<Courier> newCourierOpt =
-                    courierRepository.findFirstByStatusAndIdNot(CourierStatus.ONLINE, oldCourier.getId());
-
-            oldCourier.setStatus(CourierStatus.ONLINE);
-            if (newCourierOpt.isEmpty()) {
-                order.setCourier(null);
-                order.setStatus(OrderStatus.NEW);
-                order.setAssigmentAt(null);
-                continue;
-            }
-
-            Courier newCourier = newCourierOpt.get();
-            newCourier.setStatus(CourierStatus.BUSY);
-
-            order.setCourier(newCourier);
+            Courier courier = courierRepository
+                    .findFirstByStatus(CourierStatus.ONLINE)
+                    .orElse(null);
+            if (courier == null) continue;
+            order.setCourier(courier);
             order.setStatus(OrderStatus.PENDING);
             order.setAssigmentAt(LocalDateTime.now());
-
-
+            courier.setStatus(CourierStatus.ACCEPTING_ORDER);
+        }
+        LocalDateTime deadline = LocalDateTime.now().minusMinutes(2);
+        List<Order> queueOrders = orderRepository.findTop10ByStatusAndAssigmentAtBefore(OrderStatus.PENDING, deadline);
+        for (Order order : queueOrders) {
+            if (order.getStatus() != OrderStatus.PENDING){
+                continue;
+            }
+            Courier oldCourier = order.getCourier();
+            if (oldCourier == null) continue;
+            changeCourier(order, oldCourier);
         }
     }
 }

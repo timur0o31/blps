@@ -38,6 +38,9 @@ public class Order {
     @Column(name="assigment_at")
     private LocalDateTime assigmentAt;
 
+    @Column(name="attempts")
+    private Integer attempts=0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="courier_id")
     private Courier courier;
