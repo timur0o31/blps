@@ -1,5 +1,4 @@
 package org.example.blps.security.jwt;
-
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -9,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.example.blps.dto.requestDto.JwtAuthificationRequestDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -23,12 +21,14 @@ public class JwtService {
     @Value("N8BpLCtew37WlY7DgaFpJueGZhv8CfAhy6BEI2PNcT0")
     private String jwtSecret;
 
+    // Генерация токена
     public JwtAuthificationRequestDto generateAuthToken(String email) {
         JwtAuthificationRequestDto authRequestDto = new JwtAuthificationRequestDto();
         authRequestDto.setToken(generateJwtToken(email));
         return authRequestDto;
     }
 
+    // Рефрешь токена
     public JwtAuthificationRequestDto refreshBaseToken(String email, String refreshToken) {
         JwtAuthificationRequestDto authRequestDto = new JwtAuthificationRequestDto();
         authRequestDto.setToken(generateJwtToken(email));

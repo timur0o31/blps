@@ -3,6 +3,7 @@ import org.example.blps.dto.requestDto.CourierRequstUpdateStatusDto;
 import org.example.blps.entity.Courier;
 import org.example.blps.service.CourierService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,9 +17,9 @@ public class CourierController {
         this.courierService = courierService;
     }
 
-    @PostMapping("/{id}/status")
-    public Courier updateStatus(@PathVariable Long id, @RequestBody CourierRequstUpdateStatusDto courierRequstUpdateStatusDto) {
-        return courierService.updateCourierStatus(id, courierRequstUpdateStatusDto);
+    @PostMapping("/status")
+    public Courier updateStatus(@RequestBody CourierRequstUpdateStatusDto courierRequstUpdateStatusDto) {
+        return courierService.updateCourierStatus(courierRequstUpdateStatusDto);
     }
 }
 

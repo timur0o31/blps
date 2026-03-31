@@ -92,7 +92,7 @@ public class UserService {
 //        throw new AuthenticationException("password incorrect!");
     }
 
-    private User findByEmail(String email) {
+    public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
 }
