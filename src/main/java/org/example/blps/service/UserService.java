@@ -3,8 +3,14 @@ import org.example.blps.dto.requestDto.JwtAuthificationRequestDto;
 import org.example.blps.dto.requestDto.JwtRefreshRequestDto;
 import org.example.blps.dto.requestDto.UserCredetionalDto;
 import org.example.blps.dto.requestDto.UserRequestDto;
+import org.example.blps.entity.Client;
+import org.example.blps.entity.Courier;
 import org.example.blps.entity.User;
+import org.example.blps.enums.CourierStatus;
+import org.example.blps.enums.Role;
 import org.example.blps.mapper.UserMapper;
+import org.example.blps.repository.ClientRepository;
+import org.example.blps.repository.CourierRepository;
 import org.example.blps.repository.UserRepository;
 import org.example.blps.security.jwt.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,18 +21,24 @@ import java.util.Optional;
 
 @Service
 public class UserService {
-
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final ClientRepository ClientRepository;
+    private final CourierRepository courierRepository;
+    private final ClientRepository clientRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, UserMapper userMapper, JwtService jwtService, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, JwtService jwtService,
+                       PasswordEncoder passwordEncoder, ClientRepository ClientRepository, CourierRepository courierRepository, ClientRepository clientRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
+        this.courierRepository = courierRepository;
+        this.ClientRepository = ClientRepository;
+        this.clientRepository = clientRepository;
     }
 
     public JwtAuthificationRequestDto signIn(UserCredetionalDto userCredetionalDto) {
@@ -43,11 +55,29 @@ public class UserService {
         return null;
     }
 
-    public void createUser(UserRequestDto userRequestDto) {
+    public User createUser(UserRequestDto userRequestDto) {
         User user = userMapper.fromDtoToEntity(userRequestDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+        return user;
+    }
 
+    private void createClient(UserRequestDto userRequestDto) {
+        User user = createUser(userRequestDto);
+        user.setRole(Role.CLIENT);
+        userRepository.save(user);
+        Client client = new Client();
+        client.setUser(user);
+        clientRepository.save(client);
+    }
+
+    private void createCourier(UserRequestDto userRequestDto) {
+        User user = createUser(userRequestDto);
+        user.setRole(Role.COURIER);
+        userRepository.save(user);
+        Courier courier = new Courier();
+        courier.setUser(user);
+        courier.setStatus(CourierStatus.BUSY);
+        courierRepository.save(courier);
     }
 
     private User findByCredetionals(UserCredetionalDto userCredetionalDto)  {
