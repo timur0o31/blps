@@ -3,12 +3,10 @@ import org.example.blps.dto.requestDto.CourierRequstUpdateStatusDto;
 import org.example.blps.entity.Courier;
 import org.example.blps.service.CourierService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/courier")
 public class CourierController {
 
     private final CourierService courierService;

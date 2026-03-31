@@ -61,7 +61,7 @@ public class UserService {
         return user;
     }
 
-    private void createClient(UserRequestDto userRequestDto) {
+    public void createClient(UserRequestDto userRequestDto) {
         User user = createUser(userRequestDto);
         user.setRole(Role.CLIENT);
         userRepository.save(user);
@@ -70,7 +70,7 @@ public class UserService {
         clientRepository.save(client);
     }
 
-    private void createCourier(UserRequestDto userRequestDto) {
+    public void createCourier(UserRequestDto userRequestDto) {
         User user = createUser(userRequestDto);
         user.setRole(Role.COURIER);
         userRepository.save(user);

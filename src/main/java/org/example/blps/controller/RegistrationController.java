@@ -20,12 +20,12 @@ public class RegistrationController {
 
     @PostMapping("/client")
     public void createClient(@RequestBody UserRequestDto userDto) {
-        userService.createUser(userDto);
+        userService.createClient(userDto);
     }
 
     @PostMapping("/courier")
     public void createCourier(@RequestBody UserRequestDto userDto) {
-        userService.createUser(userDto);
+        userService.createCourier(userDto);
     }
 
 }
