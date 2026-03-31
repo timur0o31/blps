@@ -1,9 +1,6 @@
 package org.example.blps.service;
 import jakarta.transaction.Transactional;
 import org.example.blps.dto.requestDto.OrderRequestDto;
-import org.example.blps.dto.requestDto.OrderStatusRequestDto;
-import org.example.blps.dto.responseDto.OrderResponseDto;
-import org.example.blps.entity.Courier;
 import org.example.blps.entity.Order;
 import org.example.blps.mapper.OrderMapper;
 import org.example.blps.repository.CourierRepository;
