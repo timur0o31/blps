@@ -14,13 +14,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseEntity<String> handleException(AuthenticationException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Authentication Failed" + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Authentication Failed:" + " " + ex.getMessage());
     }
+
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<String> handleGenericException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred" + ex.getMessage());
     }
+
+
 
 }

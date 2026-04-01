@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.naming.AuthenticationException;
+
 
 @RestController
 @RequestMapping("/auth")
@@ -21,7 +23,7 @@ public class AuthController {
     }
 
     @PostMapping("/sing-in")
-    public ResponseEntity<JwtAuthificationResponceDto> singIn(@RequestBody UserCredentialsRequestDto userCredentialsDto) {
+    public ResponseEntity<JwtAuthificationResponceDto> singIn(@RequestBody UserCredentialsRequestDto userCredentialsDto) throws AuthenticationException {
         JwtAuthificationResponceDto jwtAuthenticationDto = userService.signIn(userCredentialsDto);
         return ResponseEntity.ok(jwtAuthenticationDto);
     }

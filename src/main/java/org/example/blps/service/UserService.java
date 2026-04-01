@@ -15,6 +15,8 @@ import org.example.blps.security.jwt.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import javax.naming.AuthenticationException;
 import java.util.Optional;
 
 @Service
@@ -39,7 +41,7 @@ public class UserService {
 
 
     // Аутинфикация
-    public JwtAuthificationResponceDto signIn(UserCredentialsRequestDto userCredetionalDto) {
+    public JwtAuthificationResponceDto signIn(UserCredentialsRequestDto userCredetionalDto) throws AuthenticationException {
         User user = findByCredetionals(userCredetionalDto);
         return jwtService.generateAuthToken(user.getEmail());
     }
@@ -69,7 +71,7 @@ public class UserService {
         courierRepository.save(courier);
     }
 
-    private User findByCredetionals(UserCredentialsRequestDto userCredetionalDto)  {
+    private User findByCredetionals(UserCredentialsRequestDto userCredetionalDto) throws AuthenticationException {
         Optional<User> userOptional = userRepository.findByEmail(userCredetionalDto.getEmail());
         if (userOptional.isPresent()) {
             User user = userOptional.get();
@@ -77,7 +79,7 @@ public class UserService {
                 return user;
             }
         }
-        return null;
+        throw new AuthenticationException("Email or password is not correct");
     }
 
     public User findByEmail(String email) {

@@ -2,7 +2,6 @@ package org.example.blps.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Setter;
-
 import java.util.List;
 
 
