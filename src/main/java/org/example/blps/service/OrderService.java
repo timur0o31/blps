@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
+import org.example.blps.entity.Client;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.Order;
 import org.example.blps.mapper.OrderMapper;
@@ -16,9 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class OrderService {
@@ -26,17 +25,28 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final CourierRepository courierRepository;
+    private final UserService userService;
+    private final ClientService clientService;
     private final Integer LIMIT = 3;
     @Autowired
-    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CourierRepository courierRepository) {
+    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CourierRepository courierRepository,
+                        UserService userService, ClientService clientService) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.courierRepository = courierRepository;
+        this.userService = userService;
+        this.clientService = clientService;
     }
-
+    public OrderResponseDto getOrder(String email){
+        Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
+                .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
+        return orderMapper.fromEntityToDto(orderRepository.findByCourierAndStatus(courier, OrderStatus.PENDING));
+    }
     @Transactional
-    public OrderResponseDto addOrder(OrderRequestDto orderRequestDto) {
+    public OrderResponseDto addOrder(String email, OrderRequestDto orderRequestDto) {
         Order newOrder = orderMapper.fromDtoToEntity(orderRequestDto);
+        Client client = clientService.findByUser(userService.findByEmail(email));
+        newOrder.setClient(client);
         Courier courier = courierRepository.findFirstByStatus(CourierStatus.ONLINE)
                 .orElse(null);
         if  (courier == null) {
@@ -59,9 +69,10 @@ public class OrderService {
     }
 
     @Transactional
-    public void cancelOrderByCourierId(Long orderId, Long courierId) {
+    public void cancelOrderByCourierId(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
-        Courier courier =  courierRepository.findById(courierId).orElseThrow(() -> new RuntimeException("Курьер с данным id не найден."));
+        Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
+                .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
         changeCourier(order, courier);
     }
 
@@ -89,10 +100,11 @@ public class OrderService {
     }
 
     @Transactional
-    public void acceptOrderByCourierId(Long orderId, Long courierId) {
+    public void acceptOrderByCourierId(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(OrderStatus.ACCEPTED);
-        Courier courier = order.getCourier();
+        Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
+                .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
         courier.setStatus(CourierStatus.BUSY);
         orderRepository.save(order);
     }

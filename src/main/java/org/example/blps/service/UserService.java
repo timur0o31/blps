@@ -41,6 +41,9 @@ public class UserService {
     // Аутинфикация
     public JwtAuthificationResponceDto signIn(UserCredentialsRequestDto userCredetionalDto) {
         User user = findByCredetionals(userCredetionalDto);
+        if (user == null) {
+            throw new IllegalArgumentException("Неверный логин или пароль");
+        }
         return jwtService.generateAuthToken(user.getEmail());
     }
 
@@ -51,7 +54,7 @@ public class UserService {
     }
 
     public void createClient(UserRequestDto userRequestDto) {
-        User user = createUser(userRequestDto);
+       User user = createUser(userRequestDto);
         user.setRole(Role.CLIENT);
         userRepository.save(user);
         Client client = new Client();
@@ -65,7 +68,7 @@ public class UserService {
         userRepository.save(user);
         Courier courier = new Courier();
         courier.setUser(user);
-        courier.setStatus(CourierStatus.BUSY);
+        courier.setStatus(CourierStatus.ONLINE);
         courierRepository.save(courier);
     }
 
@@ -81,6 +84,7 @@ public class UserService {
     }
 
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
