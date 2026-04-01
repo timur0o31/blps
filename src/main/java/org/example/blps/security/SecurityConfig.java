@@ -1,5 +1,4 @@
 package org.example.blps.security;
-
 import lombok.RequiredArgsConstructor;
 import org.example.blps.security.jwt.JwtFilter;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +26,8 @@ public class SecurityConfig {
         http
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/registration/**", "/auth/**").permitAll()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/registration/**", "/auth/**").permitAll()
                         .requestMatchers("/**").authenticated())
                 .sessionManagement(session-> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
