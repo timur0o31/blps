@@ -64,9 +64,10 @@ public class OrderService {
         }
         newOrder.setCourier(courier);
         newOrder.setStatus(OrderStatus.PENDING);
+        orderRepository.save(newOrder);
         orderAttemptService.addOrderAttempt(courier,newOrder, OrderAttemptStatus.ASSIGNED);
         courier.setStatus(CourierStatus.ACCEPTING_ORDER);
-        return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
+        return orderMapper.fromEntityToDto(newOrder);
     }
 
 
@@ -101,6 +102,9 @@ public class OrderService {
     public void cancelOrderByCourierId(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);
+        if (!order.getCourier().getId().equals(courier.getId())){
+            throw new RuntimeException("Курьер не может отменять чужие заказы");
+        }
         changeCourier(order, courier, OrderAttemptStatus.REJECTED);
     }
 
@@ -128,11 +132,17 @@ public class OrderService {
 
     @Transactional
     public void acceptOrderByCourierId(Long orderId, String email) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
+        if (order.getStatus()!=OrderStatus.PENDING){
+            throw new RuntimeException("Только из состояния PENDING можно принять заказ!");
+        }
         order.setStatus(OrderStatus.ACCEPTED);
         Courier courier = courierService.findCourierByEmail(email);
+        if (!order.getCourier().getId().equals(courier.getId())){
+            throw new RuntimeException("Курьер не может принимать чужие заказы");
+        }
         courier.setStatus(CourierStatus.BUSY);
-        orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ACCEPTED);
+        orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.ACCEPTED);
         orderRepository.save(order);
     }
 
@@ -155,7 +165,7 @@ public class OrderService {
                 } else {
                     order.setStatus(OrderStatus.WAITING);
                 }
-                return;
+                continue;
             }
             order.setCourier(courier);
             order.setStatus(OrderStatus.PENDING);

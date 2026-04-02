@@ -30,11 +30,12 @@ public class OrderAttemptService {
         return orderAttemptRepository.countOrderAttemptByOrderAndStatusIn(order, List.of(OrderAttemptStatus.REJECTED, OrderAttemptStatus.EXPIRED));
     }
     public void changeAttemptStatus(Courier courier, Order order, OrderAttemptStatus status){
-        OrderAttempt orderAttempt = orderAttemptRepository.findByCourierAndOrder(courier, order);
+        OrderAttempt orderAttempt = orderAttemptRepository.findByCourierAndOrderAndStatus(courier, order,OrderAttemptStatus.ASSIGNED)
+                .orElseThrow(()->new RuntimeException("Не найдено активной попытки"));
         orderAttempt.setStatus(status);
     }
     public List<Long> findCouriersIdByOrder(Order order){
-        return orderAttemptRepository.findCourierIdsByOrOrder(order);
+        return orderAttemptRepository.findCourierIdsByOrder(order);
     }
     public List<OrderAttempt> findAssignedAttempts(LocalDateTime deadline) {
         return orderAttemptRepository.findTop10ByStatusAndAssigmentAtBefore(

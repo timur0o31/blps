@@ -8,11 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderAttemptRepository extends JpaRepository<OrderAttempt, Long> {
     public Integer countOrderAttemptByOrderAndStatusIn(Order order, List<OrderAttemptStatus> orderAttemptStatusList);
-    public OrderAttempt findByCourierAndOrder(Courier courier,Order order);
-    public List<Long> findCourierIdsByOrOrder(Order order);
+    public Optional<OrderAttempt> findByCourierAndOrderAndStatus(Courier courier, Order order, OrderAttemptStatus assigned);
+    public List<Long> findCourierIdsByOrder(Order order);
     public List<OrderAttempt> findTop10ByStatusAndAssigmentAtBefore(
             OrderAttemptStatus status,
             LocalDateTime deadline

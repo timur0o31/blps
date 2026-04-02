@@ -30,6 +30,7 @@ public class CourierService {
     }
 
     public Courier findOnlineCourier(List<Long> declinedCouriers){
+        if (declinedCouriers.isEmpty()) return courierRepository.findFirstByStatus(CourierStatus.ONLINE).orElse(null);
         return courierRepository.findFirstByStatusAndIdNotIn(CourierStatus.ONLINE, declinedCouriers).orElse(null);
     }
 
