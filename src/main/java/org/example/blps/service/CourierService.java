@@ -2,10 +2,13 @@ package org.example.blps.service;
 import org.example.blps.dto.requestDto.CourierRequstUpdateStatusDto;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.User;
+import org.example.blps.enums.CourierStatus;
 import org.example.blps.repository.CourierRepository;
 import org.example.blps.security.CustomUserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class CourierService {
@@ -27,6 +30,9 @@ public class CourierService {
         Courier courier = courierRepository.findByUserId(user.getId()).orElseThrow(() -> new RuntimeException("Courier not found"));
         courier.setStatus(courierRequstUpdateStatusDto.getStatus());
         return courierRepository.save(courier);
+    }
+    public Courier findOnlineCourier(List<Long> declinedCouriers){
+        return courierRepository.findFirstByStatusAndIdNotIn(CourierStatus.ONLINE, declinedCouriers).orElse(null);
     }
 }
 

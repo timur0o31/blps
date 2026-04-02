@@ -1,6 +1,5 @@
 package org.example.blps.service;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
@@ -8,12 +7,13 @@ import org.example.blps.dto.responseDto.OrderResponseStatus;
 import org.example.blps.entity.Client;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.Order;
+import org.example.blps.entity.OrderAttempt;
+import org.example.blps.enums.OrderAttemptStatus;
 import org.example.blps.mapper.OrderMapper;
 import org.example.blps.repository.CourierRepository;
 import org.example.blps.repository.OrderRepository;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.enums.OrderStatus;
-import org.example.blps.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -29,16 +29,20 @@ public class OrderService {
     private final CourierRepository courierRepository;
     private final UserService userService;
     private final ClientService clientService;
+    private final OrderAttemptService orderAttemptService;
+    private final CourierService courierService;
     private final Integer LIMIT = 3;
 
     @Autowired
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CourierRepository courierRepository,
-                        UserService userService, ClientService clientService) {
+                        UserService userService, ClientService clientService, OrderAttemptService orderAttemptService, CourierService courierService) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.courierRepository = courierRepository;
         this.userService = userService;
         this.clientService = clientService;
+        this.orderAttemptService = orderAttemptService;
+        this.courierService = courierService;
     }
     public OrderResponseDto getOrder(String email){
         Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
@@ -58,7 +62,7 @@ public class OrderService {
         }
         newOrder.setCourier(courier);
         newOrder.setStatus(OrderStatus.PENDING);
-        newOrder.setAssigmentAt(LocalDateTime.now());
+        orderAttemptService.addOrderAttempt(courier,newOrder, OrderAttemptStatus.ASSIGNED);
         courier.setStatus(CourierStatus.ACCEPTING_ORDER);
         return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
     }
@@ -93,19 +97,18 @@ public class OrderService {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
         Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
                 .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
-        changeCourier(order, courier);
+        changeCourier(order, courier, OrderAttemptStatus.REJECTED);
     }
 
-    private void changeCourier(Order order, Courier courier) {
-        order.setAttempts(order.getAttempts() + 1);
-        if (order.getAttempts()>LIMIT){
+    private void changeCourier(Order order, Courier courier, OrderAttemptStatus status) {
+        orderAttemptService.changeAttemptStatus(courier, order,status);
+        if (order.getAttempts()+orderAttemptService.countAttemptsForOrder(order)>LIMIT){
             order.setStatus(OrderStatus.FAILED);
             order.setCourier(null);
             courier.setStatus(CourierStatus.ONLINE);
             return;
         }
-        Courier newCourier = courierRepository.findFirstByStatusAndIdNot(CourierStatus.ONLINE, courier.getId())
-                .orElse(null);
+        Courier newCourier = courierService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
         if (newCourier == null) {
             order.setStatus(OrderStatus.WAITING);
             order.setCourier(null);
@@ -113,8 +116,8 @@ public class OrderService {
             return;
         }
         courier.setStatus(CourierStatus.ONLINE);
+        orderAttemptService.addOrderAttempt(newCourier, order, OrderAttemptStatus.ASSIGNED);
         order.setCourier(newCourier);
-        order.setAssigmentAt(LocalDateTime.now());
         order.setStatus(OrderStatus.PENDING);
         newCourier.setStatus(CourierStatus.ACCEPTING_ORDER);
     }
@@ -126,6 +129,7 @@ public class OrderService {
         Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
                 .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
         courier.setStatus(CourierStatus.BUSY);
+        orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ACCEPTED);
         orderRepository.save(order);
     }
 
@@ -134,28 +138,39 @@ public class OrderService {
     public void processOrders() {
         List<Order> waitingOrders = orderRepository.findTop10ByStatus(OrderStatus.WAITING);
         for (Order order : waitingOrders) {
-            if (order.getAttempts() > LIMIT) {
+            if (order.getAttempts() + orderAttemptService.countAttemptsForOrder(order) > LIMIT) {
                 order.setStatus(OrderStatus.FAILED);
                 continue;
             }
-            Courier courier = courierRepository
-                    .findFirstByStatus(CourierStatus.ONLINE)
-                    .orElse(null);
-            if (courier == null) continue;
+            Courier courier = courierService.findOnlineCourier(
+                    orderAttemptService.findCouriersIdByOrder(order)
+            );
+            if (courier == null){
+                order.setAttempts(order.getAttempts()+1);
+                if (order.getAttempts() + orderAttemptService.countAttemptsForOrder(order) > LIMIT) {
+                    order.setStatus(OrderStatus.FAILED);
+                } else {
+                    order.setStatus(OrderStatus.WAITING);
+                }
+                return;
+            }
             order.setCourier(courier);
             order.setStatus(OrderStatus.PENDING);
-            order.setAssigmentAt(LocalDateTime.now());
             courier.setStatus(CourierStatus.ACCEPTING_ORDER);
+            orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ASSIGNED);
         }
         LocalDateTime deadline = LocalDateTime.now().minusMinutes(2);
-        List<Order> queueOrders = orderRepository.findTop10ByStatusAndAssigmentAtBefore(OrderStatus.PENDING, deadline);
-        for (Order order : queueOrders) {
-            if (order.getStatus() != OrderStatus.PENDING){
-                continue;
+        List<OrderAttempt> attempts = orderAttemptService.findAssignedAttempts(deadline);
+
+        for (OrderAttempt attempt: attempts) {
+            Order order = attempt.getOrder();
+            if (order == null) continue;
+            if (order.getStatus() == OrderStatus.PENDING){
+                Courier oldCourier = attempt.getCourier();
+                if (oldCourier != null) {
+                    changeCourier(order, oldCourier, OrderAttemptStatus.EXPIRED);
+                }
             }
-            Courier oldCourier = order.getCourier();
-            if (oldCourier == null) continue;
-            changeCourier(order, oldCourier);
         }
     }
 }
