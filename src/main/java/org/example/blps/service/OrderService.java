@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
+import org.example.blps.dto.responseDto.OrderResponseStatus;
 import org.example.blps.entity.Client;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.Order;
@@ -29,17 +30,15 @@ public class OrderService {
     private final UserService userService;
     private final ClientService clientService;
     private final Integer LIMIT = 3;
-    private final UserRepository userRepository;
 
     @Autowired
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CourierRepository courierRepository,
-                        UserService userService, ClientService clientService, UserRepository userRepository) {
+                        UserService userService, ClientService clientService) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.courierRepository = courierRepository;
         this.userService = userService;
         this.clientService = clientService;
-        this.userRepository = userRepository;
     }
     public OrderResponseDto getOrder(String email){
         Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
@@ -71,7 +70,7 @@ public class OrderService {
         Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
                 .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
         if (!order.getCourier().getId().equals(courier.getId())){
-            throw new RuntimeException("Другой курьер не может отменить заказ");
+            throw new RuntimeException("Другой курьер не может менять статус заказа");
         }
         order.setStatus(orderRequestDto.getOrderStatus());
         if (orderRequestDto.getOrderStatus()==OrderStatus.DELIVERED){
@@ -80,7 +79,15 @@ public class OrderService {
         }
         return orderMapper.fromEntityToDto(orderRepository.save(order));
     }
-
+    public OrderResponseStatus getStatusOrder(Long id, String email){
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Заказа с данным id не существует"));
+        Client client = clientService.findByUser(userService.findByEmail(email));
+        if (!order.getClient().getId().equals(client.getId())){
+            throw new RuntimeException("Клиент не может просматривать стутус чужого заказа");
+        }
+        return new OrderResponseStatus(order.getStatus());
+    }
     @Transactional
     public void cancelOrderByCourierId(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));

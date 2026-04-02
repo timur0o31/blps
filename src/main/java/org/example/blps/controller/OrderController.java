@@ -2,6 +2,7 @@ package org.example.blps.controller;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
+import org.example.blps.dto.responseDto.OrderResponseStatus;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,11 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
-//    @GetMapping
-//    public ResponseEntity<?> getOrders() {}
+    @GetMapping(value = "/{id}/status")
+    public ResponseEntity<?> getStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        OrderResponseStatus status = orderService.getStatusOrder(id, userDetails.getUsername());
+        return ResponseEntity.ok(status);
+    }
+
 
 }
