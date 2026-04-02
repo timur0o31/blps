@@ -12,6 +12,7 @@ import org.example.blps.repository.CourierRepository;
 import org.example.blps.repository.OrderRepository;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.enums.OrderStatus;
+import org.example.blps.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -28,14 +29,17 @@ public class OrderService {
     private final UserService userService;
     private final ClientService clientService;
     private final Integer LIMIT = 3;
+    private final UserRepository userRepository;
+
     @Autowired
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CourierRepository courierRepository,
-                        UserService userService, ClientService clientService) {
+                        UserService userService, ClientService clientService, UserRepository userRepository) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.courierRepository = courierRepository;
         this.userService = userService;
         this.clientService = clientService;
+        this.userRepository = userRepository;
     }
     public OrderResponseDto getOrder(String email){
         Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
@@ -61,10 +65,19 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponseDto updateOrder(Long id, OrderStatusRequestDto orderRequestDto) {
+    public OrderResponseDto updateOrder(Long id, OrderStatusRequestDto orderRequestDto, String email) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new RuntimeException("Заказа с данным id не существует"));
+        Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
+                .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
+        if (!order.getCourier().getId().equals(courier.getId())){
+            throw new RuntimeException("Другой курьер не может отменить заказ");
+        }
         order.setStatus(orderRequestDto.getOrderStatus());
+        if (orderRequestDto.getOrderStatus()==OrderStatus.DELIVERED){
+            courier.setStatus(CourierStatus.ONLINE);
+            courierRepository.save(courier);
+        }
         return orderMapper.fromEntityToDto(orderRepository.save(order));
     }
 

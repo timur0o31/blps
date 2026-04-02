@@ -36,8 +36,9 @@ public class OrderController {
     }
 
     @PutMapping(value = "/{id}/status")
-    public ResponseEntity<OrderResponseDto> updateOrder(@PathVariable Long id,@RequestBody OrderStatusRequestDto orderStatusRequestDto) {
-        OrderResponseDto responseDto = orderService.updateOrder(id,orderStatusRequestDto);
+    public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails,
+                                                              @RequestBody OrderStatusRequestDto orderStatusRequestDto) {
+        OrderResponseDto responseDto = orderService.updateOrder(id,orderStatusRequestDto, userDetails.getUsername());
         return ResponseEntity.ok(responseDto);
     }
     @PatchMapping(value ="/{id}/cancel-order")
