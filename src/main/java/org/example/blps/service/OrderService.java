@@ -26,7 +26,6 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final CourierRepository courierRepository;
     private final UserService userService;
     private final ClientService clientService;
     private final OrderAttemptService orderAttemptService;
@@ -34,28 +33,31 @@ public class OrderService {
     private final Integer LIMIT = 3;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, CourierRepository courierRepository,
-                        UserService userService, ClientService clientService, OrderAttemptService orderAttemptService, CourierService courierService) {
+    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
+                        UserService userService, ClientService clientService,
+                        OrderAttemptService orderAttemptService,
+                        CourierService courierService) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
-        this.courierRepository = courierRepository;
+        this.courierService = courierService;
         this.userService = userService;
         this.clientService = clientService;
         this.orderAttemptService = orderAttemptService;
-        this.courierService = courierService;
     }
+
+    // Получить заказ (для клиента)
     public OrderResponseDto getOrder(String email){
-        Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
-                .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
+        Courier courier = courierService.findCourierByEmail(email);
         return orderMapper.fromEntityToDto(orderRepository.findByCourierAndStatus(courier, OrderStatus.PENDING));
     }
+
+    // Заказать в доставке (для клиента)
     @Transactional
     public OrderResponseDto addOrder(String email, OrderRequestDto orderRequestDto) {
         Order newOrder = orderMapper.fromDtoToEntity(orderRequestDto);
         Client client = clientService.findByUser(userService.findByEmail(email));
         newOrder.setClient(client);
-        Courier courier = courierRepository.findFirstByStatus(CourierStatus.ONLINE)
-                .orElse(null);
+        Courier courier = courierService.findCourierWithOnlineStatus();
         if  (courier == null) {
             newOrder.setStatus(OrderStatus.WAITING);
             return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
@@ -67,22 +69,25 @@ public class OrderService {
         return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
     }
 
+
+    // Обновить заказ (для клиента)
     @Transactional
     public OrderResponseDto updateOrder(Long id, OrderStatusRequestDto orderRequestDto, String email) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Заказа с данным id не существует"));
-        Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
-                .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
+        Courier courier = courierService.findCourierByEmail(email);
         if (!order.getCourier().getId().equals(courier.getId())){
             throw new RuntimeException("Другой курьер не может менять статус заказа");
         }
         order.setStatus(orderRequestDto.getOrderStatus());
         if (orderRequestDto.getOrderStatus()==OrderStatus.DELIVERED){
             courier.setStatus(CourierStatus.ONLINE);
-            courierRepository.save(courier);
+            courierService.saveCourier(courier);
         }
         return orderMapper.fromEntityToDto(orderRepository.save(order));
     }
+
+    // Получить статус заказа для клиента
     public OrderResponseStatus getStatusOrder(Long id, String email){
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Заказа с данным id не существует"));
@@ -95,8 +100,7 @@ public class OrderService {
     @Transactional
     public void cancelOrderByCourierId(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
-        Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
-                .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
+        Courier courier = courierService.findCourierByEmail(email);
         changeCourier(order, courier, OrderAttemptStatus.REJECTED);
     }
 
@@ -126,8 +130,7 @@ public class OrderService {
     public void acceptOrderByCourierId(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(OrderStatus.ACCEPTED);
-        Courier courier = courierRepository.findByUserId(userService.findByEmail(email).getId())
-                .orElseThrow(()->new RuntimeException("Курьера с данным email не существует"));
+        Courier courier = courierService.findCourierByEmail(email);
         courier.setStatus(CourierStatus.BUSY);
         orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ACCEPTED);
         orderRepository.save(order);
