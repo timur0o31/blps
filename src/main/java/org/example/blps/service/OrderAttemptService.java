@@ -35,7 +35,9 @@ public class OrderAttemptService {
         orderAttempt.setStatus(status);
     }
     public List<Long> findCouriersIdByOrder(Order order){
-        return orderAttemptRepository.findCourierIdsByOrder(order);
+        return orderAttemptRepository.findByOrder(order).stream()
+                .map(attempt -> attempt.getCourier().getId())
+                .toList();
     }
     public List<OrderAttempt> findAssignedAttempts(LocalDateTime deadline) {
         return orderAttemptRepository.findTop10ByStatusAndAssigmentAtBefore(
