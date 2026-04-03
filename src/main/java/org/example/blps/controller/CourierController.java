@@ -1,9 +1,8 @@
 package org.example.blps.controller;
-import org.example.blps.dto.requestDto.CourierRequstUpdateStatusDto;
-import org.example.blps.entity.Courier;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.CourierService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,10 +17,18 @@ public class CourierController {
         this.courierService = courierService;
     }
 
-    @PostMapping("/status")
-    public Courier updateStatus(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody CourierRequstUpdateStatusDto courierRequstUpdateStatusDto) {
+    @PreAuthorize("hasRole('COURIER')")
+    @PostMapping("/work-status")
+    public void toggleWorkStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
         String email = userDetails.getUsername();
-        return courierService.updateCourierStatus(email,courierRequstUpdateStatusDto);
+        courierService.toggleCourierWorkStatus(email);
+    }
+
+    @PreAuthorize("hasRole('COURIER')")
+    @PostMapping("/shift-status")
+    public void toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        String email = userDetails.getUsername();
+        courierService.toggleCourierShiftStatus(email);
     }
 }
 

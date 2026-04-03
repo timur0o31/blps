@@ -23,9 +23,9 @@ public class JwtService {
 
     // Генерация токена для пользователя с ответом
     public JwtAuthificationResponceDto generateAuthToken(String email) {
-        JwtAuthificationResponceDto authResponceDto = new JwtAuthificationResponceDto();
-        authResponceDto.setToken(generateJwtToken(email));
-        return authResponceDto;
+        JwtAuthificationResponceDto jwtAuthificationResponceDto = new JwtAuthificationResponceDto();
+        jwtAuthificationResponceDto.setToken(generateJwtToken(email));
+        return jwtAuthificationResponceDto;
     }
 
     // Генерация токена

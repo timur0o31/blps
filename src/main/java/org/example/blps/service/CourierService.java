@@ -17,21 +17,25 @@ public class CourierService {
     private final UserService userService;
 
     @Autowired
-    public CourierService(CourierRepository courierRepository, UserService userService ) {
+    public CourierService(CourierRepository courierRepository, UserService userService) {
         this.courierRepository = courierRepository;
         this.userService = userService;
     }
 
-    public Courier updateCourierStatus(String email, CourierRequstUpdateStatusDto courierRequstUpdateStatusDto) {
+    public void toggleCourierShiftStatus(String email) {
         User user = userService.findByEmail(email);
         Courier courier = courierRepository.findByUserId(user.getId()).orElseThrow(() -> new RuntimeException("Курьер не найден"));
-        courier.setStatus(courierRequstUpdateStatusDto.getStatus());
-        return courierRepository.save(courier);
+        if (courier.getStatus() == CourierStatus.OFF_SHIFT) {
+            courier.setStatus(CourierStatus.ON_SHIFT);
+        } else if (courier.getStatus() == CourierStatus.ON_SHIFT) {
+            courier.setStatus(CourierStatus.OFF_SHIFT);
+        }
+        courierRepository.save(courier);
     }
 
     public Courier findOnlineCourier(List<Long> declinedCouriers){
-        if (declinedCouriers.isEmpty()) return courierRepository.findFirstByStatus(CourierStatus.ONLINE).orElse(null);
-        return courierRepository.findFirstByStatusAndIdNotIn(CourierStatus.ONLINE, declinedCouriers).orElse(null);
+        if (declinedCouriers.isEmpty()) return courierRepository.findFirstByStatus(CourierStatus.ON_SHIFT).orElse(null);
+        return courierRepository.findFirstByStatusAndIdNotIn(CourierStatus.ON_SHIFT, declinedCouriers).orElse(null);
     }
 
     public Courier findCourierByEmail(String email) {
@@ -39,7 +43,7 @@ public class CourierService {
     }
 
     public Courier findCourierWithOnlineStatus() {
-        return courierRepository.findFirstByStatus(CourierStatus.ONLINE).orElse(null);
+        return courierRepository.findFirstByStatus(CourierStatus.ON_SHIFT).orElse(null);
     }
 
     public void saveCourier(Courier courier) {

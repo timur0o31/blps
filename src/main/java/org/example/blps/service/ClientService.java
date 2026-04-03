@@ -1,5 +1,6 @@
 package org.example.blps.service;
 import org.example.blps.entity.Client;
+import org.example.blps.entity.Courier;
 import org.example.blps.entity.User;
 import org.example.blps.repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;

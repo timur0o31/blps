@@ -82,7 +82,7 @@ public class OrderService {
         }
         order.setStatus(orderRequestDto.getOrderStatus());
         if (orderRequestDto.getOrderStatus()==OrderStatus.DELIVERED){
-            courier.setStatus(CourierStatus.ONLINE);
+            courier.setStatus(CourierStatus.ON_SHIFT);
             courierService.saveCourier(courier);
         }
         return orderMapper.fromEntityToDto(orderRepository.save(order));
@@ -113,17 +113,17 @@ public class OrderService {
         if (order.getAttempts()+orderAttemptService.countAttemptsForOrder(order)>LIMIT){
             order.setStatus(OrderStatus.FAILED);
             order.setCourier(null);
-            courier.setStatus(CourierStatus.ONLINE);
+            courier.setStatus(CourierStatus.ON_SHIFT);
             return;
         }
         Courier newCourier = courierService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
         if (newCourier == null) {
             order.setStatus(OrderStatus.WAITING);
             order.setCourier(null);
-            courier.setStatus(CourierStatus.ONLINE);
+            courier.setStatus(CourierStatus.ON_SHIFT);
             return;
         }
-        courier.setStatus(CourierStatus.ONLINE);
+        courier.setStatus(CourierStatus.ON_SHIFT);
         orderAttemptService.addOrderAttempt(newCourier, order, OrderAttemptStatus.ASSIGNED);
         order.setCourier(newCourier);
         order.setStatus(OrderStatus.PENDING);

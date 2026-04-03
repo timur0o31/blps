@@ -23,7 +23,7 @@ public class User {
     private String surname;
 
     @NotNull
-    @Column(name = "email", nullable = false, length = 255)
+    @Column(name = "email", nullable = false, length = 255, unique = true)
     private String email;
 
     @NotNull
@@ -31,7 +31,7 @@ public class User {
     private String password;
 
     @NotNull
-    @Column(name = "phone_number", nullable = false, length = 20)
+    @Column(name = "phone_number", nullable = false, length = 20, unique = true)
     private String phoneNumber;
 
     @NotNull
