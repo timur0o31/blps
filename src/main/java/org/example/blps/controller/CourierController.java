@@ -18,13 +18,6 @@ public class CourierController {
     }
 
     @PreAuthorize("hasRole('COURIER')")
-    @PostMapping("/work-status")
-    public void toggleWorkStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        String email = userDetails.getUsername();
-        courierService.toggleCourierWorkStatus(email);
-    }
-
-    @PreAuthorize("hasRole('COURIER')")
     @PostMapping("/shift-status")
     public void toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
         String email = userDetails.getUsername();
