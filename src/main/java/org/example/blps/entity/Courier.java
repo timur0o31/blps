@@ -1,6 +1,7 @@
 package org.example.blps.entity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.blps.enums.CourierStatus;
@@ -16,11 +17,12 @@ public class Courier {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @NotNull
+    @Pattern(regexp = "ON_SHIFT|OFF_SHIFT")
     @Column(name="courier_status", nullable = false, length = 15)
     @Enumerated(EnumType.STRING)
     private CourierStatus status;

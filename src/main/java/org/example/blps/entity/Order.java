@@ -1,6 +1,7 @@
 package org.example.blps.entity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.blps.enums.OrderStatus;
@@ -17,15 +18,17 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
+    @NotBlank
+    @Size(max = 150)
     @Column(name= "content", nullable = false, length = 150)
     private String content;
 
-    @NotNull
+    @NotBlank
+    @Size(max = 150)
     @Column(name= "address", nullable = false, length = 150)
     private String address;
 
-    @NotNull
+    @NotBlank
     @Column(name = "order_status", nullable = false, length = 15)
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.NEW;

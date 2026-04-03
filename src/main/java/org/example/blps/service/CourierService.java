@@ -1,10 +1,8 @@
 package org.example.blps.service;
-import org.example.blps.dto.requestDto.CourierRequstUpdateStatusDto;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.User;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.repository.CourierRepository;
-import org.example.blps.security.CustomUserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

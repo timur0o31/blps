@@ -1,4 +1,5 @@
 package org.example.blps.controller;
+import jakarta.validation.Valid;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
@@ -24,7 +25,7 @@ public class OrderController {
 
     @PreAuthorize("hasRole('CLIENT')")
     @PostMapping(value = "/order")
-    public ResponseEntity<OrderResponseDto> createOrder(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody OrderRequestDto orderRequestDto) {
+    public ResponseEntity<OrderResponseDto> createOrder(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid OrderRequestDto orderRequestDto) {
         OrderResponseDto responseDto = orderService.addOrder(userDetails.getUsername(), orderRequestDto);
         return ResponseEntity.ok(responseDto);
     }
@@ -40,7 +41,8 @@ public class OrderController {
 
     @PreAuthorize("hasRole('COURIER')")
     @PutMapping(value = "/{id}/status")
-    public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody OrderStatusRequestDto orderStatusRequestDto) {
+    public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails,
+                                                              @RequestBody @Valid OrderStatusRequestDto orderStatusRequestDto) {
         OrderResponseDto responseDto = orderService.updateOrder(id,orderStatusRequestDto, userDetails.getUsername());
         return ResponseEntity.ok(responseDto);
     }

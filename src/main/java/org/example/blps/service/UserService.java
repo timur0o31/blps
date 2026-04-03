@@ -13,8 +13,10 @@ import org.example.blps.repository.CourierRepository;
 import org.example.blps.repository.UserRepository;
 import org.example.blps.security.jwt.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import javax.naming.AuthenticationException;
 import java.util.Optional;
 
 @Service
@@ -39,7 +41,7 @@ public class UserService {
 
 
     // Аутинфикация
-    public JwtAuthificationResponceDto signIn(UserCredentialsRequestDto userCredetionalDto) {
+    public JwtAuthificationResponceDto signIn(UserCredentialsRequestDto userCredetionalDto) throws AuthenticationException {
         User user = findByCredetionals(userCredetionalDto);
         if (user == null) {
             throw new IllegalArgumentException("Неверный логин или пароль");
@@ -53,16 +55,28 @@ public class UserService {
         return user;
     }
 
-    public void createClient(UserRequestDto userRequestDto) {
-       User user = createUser(userRequestDto);
-        user.setRole(Role.CLIENT);
-        userRepository.save(user);
-        Client client = new Client();
-        client.setUser(user);
-        clientRepository.save(client);
+
+    private void checkUserData(UserRequestDto userRequestDto) throws DataIntegrityViolationException {
+        if (userRepository.existsByEmail(userRequestDto.getEmail())) {
+            throw new DataIntegrityViolationException("Пользователь с таким email уже существует");
+        }
+        if (userRepository.existsByPhoneNumber(userRequestDto.getPhoneNumber())) {
+            throw new DataIntegrityViolationException("Пользователь с таким телефоном уже существует");
+        }
+    }
+
+    public void createClient(UserRequestDto userRequestDto) throws DataIntegrityViolationException {
+           checkUserData(userRequestDto);
+           User user = createUser(userRequestDto);
+           user.setRole(Role.CLIENT);
+           userRepository.save(user);
+           Client client = new Client();
+           client.setUser(user);
+           clientRepository.save(client);
     }
 
     public void createCourier(UserRequestDto userRequestDto) {
+        checkUserData(userRequestDto);
         User user = createUser(userRequestDto);
         user.setRole(Role.COURIER);
         userRepository.save(user);
@@ -72,7 +86,7 @@ public class UserService {
         courierRepository.save(courier);
     }
 
-    private User findByCredetionals(UserCredentialsRequestDto userCredetionalDto)  {
+    private User findByCredetionals(UserCredentialsRequestDto userCredetionalDto) throws AuthenticationException {
         Optional<User> userOptional = userRepository.findByEmail(userCredetionalDto.getEmail());
         if (userOptional.isPresent()) {
             User user = userOptional.get();
@@ -80,7 +94,7 @@ public class UserService {
                 return user;
             }
         }
-        return null;
+        throw new AuthenticationException("Неверный логин или пароль!");
     }
 
     public User findByEmail(String email) {
