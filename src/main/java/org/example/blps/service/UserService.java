@@ -68,7 +68,7 @@ public class UserService {
         userRepository.save(user);
         Courier courier = new Courier();
         courier.setUser(user);
-        courier.setStatus(CourierStatus.ONLINE);
+        courier.setStatus(CourierStatus.OFF_SHIFT);
         courierRepository.save(courier);
     }
 
@@ -85,6 +85,6 @@ public class UserService {
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Пользователь с таким email не найден!"));
     }
 }

@@ -1,13 +1,12 @@
 package org.example.blps.entity;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.blps.enums.OrderStatus;
 import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name="orders")
@@ -35,9 +34,6 @@ public class Order {
     @Column(name="creation_date")
     private LocalDateTime creationDate;
 
-    @Column(name="assigment_at")
-    private LocalDateTime assigmentAt;
-
     @Column(name="attempts")
     private Integer attempts=0;
 
@@ -48,4 +44,7 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="client_id")
     private Client client;
+
+    @OneToMany(mappedBy = "order")
+    private List<OrderAttempt> orderAttempts;
 }

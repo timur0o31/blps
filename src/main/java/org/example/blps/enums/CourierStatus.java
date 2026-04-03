@@ -1,8 +1,8 @@
 package org.example.blps.enums;
 
 public enum CourierStatus {
-    ONLINE,
+    ON_SHIFT,
     ACCEPTING_ORDER,
     BUSY,
-    OFFLINE
+    OFF_SHIFT
 }
