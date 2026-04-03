@@ -71,7 +71,7 @@ public class OrderService {
     }
 
 
-    // Обновить заказ (для клиента)
+    // Обновить заказ (для курьера)
     @Transactional
     public OrderResponseDto updateOrder(Long id, OrderStatusRequestDto orderRequestDto, String email) {
         Order order = orderRepository.findById(id)
@@ -80,10 +80,18 @@ public class OrderService {
         if (!order.getCourier().getId().equals(courier.getId())){
             throw new RuntimeException("Другой курьер не может менять статус заказа");
         }
+        OrderStatus prevOrderStatus = order.getStatus();
+        if (!prevOrderStatus.canSwitchTo(orderRequestDto.getOrderStatus())){
+            throw new RuntimeException("Из состояния "+prevOrderStatus +" нельзя перейти в "+ orderRequestDto.getOrderStatus());
+        }
         order.setStatus(orderRequestDto.getOrderStatus());
         if (orderRequestDto.getOrderStatus()==OrderStatus.DELIVERED){
-            courier.setStatus(CourierStatus.ON_SHIFT);
-            courierService.saveCourier(courier);
+            if (courier.getStatus()==CourierStatus.END_SHIFT){
+               courier.setStatus(CourierStatus.OFF_SHIFT);
+            }else {
+                courier.setStatus(CourierStatus.ON_SHIFT);
+                courierService.saveCourier(courier);
+            }
         }
         return orderMapper.fromEntityToDto(orderRepository.save(order));
     }
@@ -109,21 +117,22 @@ public class OrderService {
     }
 
     private void changeCourier(Order order, Courier courier, OrderAttemptStatus status) {
-        orderAttemptService.changeAttemptStatus(courier, order,status);
-        if (order.getAttempts()+orderAttemptService.countAttemptsForOrder(order)>LIMIT){
-            order.setStatus(OrderStatus.FAILED);
-            order.setCourier(null);
+        order.setCourier(null);
+        if (courier.getStatus()!=CourierStatus.END_SHIFT) {
             courier.setStatus(CourierStatus.ON_SHIFT);
+        }else{
+            courier.setStatus(CourierStatus.OFF_SHIFT);
+        }
+        orderAttemptService.changeAttemptStatus(courier, order,status);
+        if (order.getWaitingCycles()+orderAttemptService.countAttemptsForOrder(order)>=LIMIT){
+            order.setStatus(OrderStatus.FAILED);
             return;
         }
         Courier newCourier = courierService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
         if (newCourier == null) {
             order.setStatus(OrderStatus.WAITING);
-            order.setCourier(null);
-            courier.setStatus(CourierStatus.ON_SHIFT);
             return;
         }
-        courier.setStatus(CourierStatus.ON_SHIFT);
         orderAttemptService.addOrderAttempt(newCourier, order, OrderAttemptStatus.ASSIGNED);
         order.setCourier(newCourier);
         order.setStatus(OrderStatus.PENDING);
@@ -141,7 +150,8 @@ public class OrderService {
         if (!order.getCourier().getId().equals(courier.getId())){
             throw new RuntimeException("Курьер не может принимать чужие заказы");
         }
-        courier.setStatus(CourierStatus.BUSY);
+        if (courier.getStatus()!=CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.BUSY);
+        else courier.setStatus(CourierStatus.END_SHIFT);
         orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.ACCEPTED);
         orderRepository.save(order);
     }
@@ -151,7 +161,7 @@ public class OrderService {
     public void processOrders() {
         List<Order> waitingOrders = orderRepository.findTop10ByStatus(OrderStatus.WAITING);
         for (Order order : waitingOrders) {
-            if (order.getAttempts() + orderAttemptService.countAttemptsForOrder(order) > LIMIT) {
+            if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
                 order.setStatus(OrderStatus.FAILED);
                 continue;
             }
@@ -159,8 +169,8 @@ public class OrderService {
                     orderAttemptService.findCouriersIdByOrder(order)
             );
             if (courier == null){
-                order.setAttempts(order.getAttempts()+1);
-                if (order.getAttempts() + orderAttemptService.countAttemptsForOrder(order) > LIMIT) {
+                order.setWaitingCycles(order.getWaitingCycles()+1);
+                if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
                     order.setStatus(OrderStatus.FAILED);
                 } else {
                     order.setStatus(OrderStatus.WAITING);

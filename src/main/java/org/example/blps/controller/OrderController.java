@@ -7,6 +7,7 @@ import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,11 +22,13 @@ public class OrderController {
         this.orderService = orderService;
     }
 
+    @PreAuthorize("hasRole('CLIENT')")
     @PostMapping(value = "/order")
     public ResponseEntity<OrderResponseDto> createOrder(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody OrderRequestDto orderRequestDto) {
         OrderResponseDto responseDto = orderService.addOrder(userDetails.getUsername(), orderRequestDto);
         return ResponseEntity.ok(responseDto);
     }
+    @PreAuthorize("hasRole('COURIER')")
     @GetMapping(value="/active")
     public ResponseEntity<?> getOrder(@AuthenticationPrincipal CustomUserDetails userDetails){
         OrderResponseDto responseDto = orderService.getOrder(userDetails.getUsername());
@@ -35,23 +38,25 @@ public class OrderController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @PreAuthorize("hasRole('COURIER')")
     @PutMapping(value = "/{id}/status")
-    public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails,
-                                                              @RequestBody OrderStatusRequestDto orderStatusRequestDto) {
+    public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody OrderStatusRequestDto orderStatusRequestDto) {
         OrderResponseDto responseDto = orderService.updateOrder(id,orderStatusRequestDto, userDetails.getUsername());
         return ResponseEntity.ok(responseDto);
     }
+    @PreAuthorize("hasRole('COURIER')")
     @PatchMapping(value ="/{id}/cancel-order")
     public ResponseEntity<?> cancelOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
         orderService.cancelOrderByCourierId(id, userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
+    @PreAuthorize("hasRole('COURIER')")
     @PatchMapping(value = "/{id}/accept-order")
     public ResponseEntity<?> acceptOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
         orderService.acceptOrderByCourierId(id,userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
-
+    @PreAuthorize("hasRole('CLIENT')")
     @GetMapping(value = "/{id}/status")
     public ResponseEntity<?> getStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
         OrderResponseStatus status = orderService.getStatusOrder(id, userDetails.getUsername());

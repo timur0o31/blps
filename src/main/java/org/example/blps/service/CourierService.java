@@ -25,10 +25,15 @@ public class CourierService {
     public void toggleCourierShiftStatus(String email) {
         User user = userService.findByEmail(email);
         Courier courier = courierRepository.findByUserId(user.getId()).orElseThrow(() -> new RuntimeException("Курьер не найден"));
+        if (courier.getStatus()==CourierStatus.END_SHIFT){
+            throw new RuntimeException("Разберитесь с назначенным заказом!");
+        }
         if (courier.getStatus() == CourierStatus.OFF_SHIFT) {
             courier.setStatus(CourierStatus.ON_SHIFT);
         } else if (courier.getStatus() == CourierStatus.ON_SHIFT) {
             courier.setStatus(CourierStatus.OFF_SHIFT);
+        } else if (courier.getStatus() == CourierStatus.BUSY || courier.getStatus() == CourierStatus.ACCEPTING_ORDER){
+            courier.setStatus(CourierStatus.END_SHIFT);
         }
         courierRepository.save(courier);
     }

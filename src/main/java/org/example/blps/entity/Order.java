@@ -34,8 +34,8 @@ public class Order {
     @Column(name="creation_date")
     private LocalDateTime creationDate;
 
-    @Column(name="attempts")
-    private Integer attempts=0;
+    @Column(name="waiting_cycles")
+    private Integer waitingCycles=0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="courier_id")
