@@ -1,6 +1,7 @@
 package org.example.blps.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,7 +29,7 @@ public class Order {
     @Column(name= "address", nullable = false, length = 150)
     private String address;
 
-    @NotBlank
+    @NotNull
     @Column(name = "order_status", nullable = false, length = 15)
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.NEW;
