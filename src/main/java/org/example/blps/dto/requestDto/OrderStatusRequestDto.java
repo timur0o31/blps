@@ -16,6 +16,5 @@ import org.example.blps.enums.OrderStatus;
 public class OrderStatusRequestDto {
 
     @NotNull
-    @Pattern(regexp = "NEW|WAITING|PENDING|ACCEPTED|ON_THE_WAY|PICKED_UP|DELIVERED|FAILED")
     private OrderStatus orderStatus;
 }

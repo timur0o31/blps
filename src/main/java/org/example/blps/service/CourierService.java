@@ -4,6 +4,7 @@ import org.example.blps.entity.User;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.repository.CourierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class CourierService {
         this.userService = userService;
     }
 
-    public void toggleCourierShiftStatus(String email) {
+    public CourierStatus toggleCourierShiftStatus(String email) {
         User user = userService.findByEmail(email);
         Courier courier = courierRepository.findByUserId(user.getId()).orElseThrow(() -> new RuntimeException("Курьер не найден"));
         if (courier.getStatus()==CourierStatus.END_SHIFT){
@@ -34,6 +35,7 @@ public class CourierService {
             courier.setStatus(CourierStatus.END_SHIFT);
         }
         courierRepository.save(courier);
+        return courier.getStatus();
     }
 
     public Courier findOnlineCourier(List<Long> declinedCouriers){

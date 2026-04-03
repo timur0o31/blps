@@ -4,10 +4,7 @@ import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
 import org.example.blps.dto.responseDto.OrderResponseStatus;
-import org.example.blps.entity.Client;
-import org.example.blps.entity.Courier;
-import org.example.blps.entity.Order;
-import org.example.blps.entity.OrderAttempt;
+import org.example.blps.entity.*;
 import org.example.blps.enums.OrderAttemptStatus;
 import org.example.blps.mapper.OrderMapper;
 import org.example.blps.repository.CourierRepository;
@@ -19,7 +16,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OrderService {
@@ -96,7 +95,17 @@ public class OrderService {
         return orderMapper.fromEntityToDto(orderRepository.save(order));
     }
 
-    // Получить статус заказа для клиента
+    public Map<Long, OrderStatus> getOrderHistory(String email) {
+        Map orderHistory = new HashMap<Long,OrderStatus>();
+        User user = userService.findByEmail(email);
+        Client client = clientService.findByUser(user);
+        List<Order> orders = orderRepository.findOrderByClientId(client.getId());
+        for (Order order:orders) {
+            orderHistory.put(order.getId(), order.getStatus());
+        }
+        return orderHistory;
+    }
+
     public OrderResponseStatus getStatusOrder(Long id, String email){
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Заказа с данным id не существует"));
@@ -106,10 +115,15 @@ public class OrderService {
         }
         return new OrderResponseStatus(order.getStatus());
     }
+
+
     @Transactional
     public void cancelOrderByCourierId(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);
+        if (order.getCourier() == null){
+            throw new RuntimeException("Такого заказ уже был завершен!");
+        }
         if (!order.getCourier().getId().equals(courier.getId())){
             throw new RuntimeException("Курьер не может отменять чужие заказы");
         }
@@ -142,14 +156,17 @@ public class OrderService {
     @Transactional
     public void acceptOrderByCourierId(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
+        Courier courier = courierService.findCourierByEmail(email);
+        if (order.getCourier() == null){
+            throw new RuntimeException("Такой заказ уже был завершен!");
+        }
+        if (!order.getCourier().getId().equals(courier.getId())){
+            throw new RuntimeException("Курьер не может принимать чужие заказы");
+        }
         if (order.getStatus()!=OrderStatus.PENDING){
             throw new RuntimeException("Только из состояния PENDING можно принять заказ!");
         }
         order.setStatus(OrderStatus.ACCEPTED);
-        Courier courier = courierService.findCourierByEmail(email);
-        if (!order.getCourier().getId().equals(courier.getId())){
-            throw new RuntimeException("Курьер не может принимать чужие заказы");
-        }
         if (courier.getStatus()!=CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.BUSY);
         else courier.setStatus(CourierStatus.END_SHIFT);
         orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.ACCEPTED);

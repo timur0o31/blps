@@ -29,9 +29,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<String> handleGenericException(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Произошла ошибка!" + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Произошла ошибка! " + ex.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

@@ -23,7 +23,7 @@ public class Courier {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Pattern(regexp = "ON_SHIFT|OFF_SHIFT")
+    @NotNull
     @Column(name="courier_status", nullable = false, length = 15)
     @Enumerated(EnumType.STRING)
     private CourierStatus status;

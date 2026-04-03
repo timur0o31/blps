@@ -1,7 +1,9 @@
 package org.example.blps.controller;
+import org.example.blps.enums.CourierStatus;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.CourierService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -19,9 +21,10 @@ public class CourierController {
 
     @PreAuthorize("hasRole('COURIER')")
     @PostMapping("/shift-status")
-    public void toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<String> toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
         String email = userDetails.getUsername();
-        courierService.toggleCourierShiftStatus(email);
+        CourierStatus status = courierService.toggleCourierShiftStatus(email);
+        return ResponseEntity.ok("Вы успешно поменяли свой статус на " + status);
     }
 }
 
