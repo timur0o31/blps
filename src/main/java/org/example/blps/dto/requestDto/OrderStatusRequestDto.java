@@ -1,6 +1,7 @@
 package org.example.blps.dto.requestDto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,7 +15,7 @@ import org.example.blps.enums.OrderStatus;
 @AllArgsConstructor
 public class OrderStatusRequestDto {
 
-    @NotBlank
+    @NotNull
     @Pattern(regexp = "NEW|WAITING|PENDING|ACCEPTED|ON_THE_WAY|PICKED_UP|DELIVERED|FAILED")
     private OrderStatus orderStatus;
 }
