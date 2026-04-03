@@ -9,7 +9,5 @@ public class OrderResponseStatus {
     public OrderResponseStatus(OrderStatus orderStatus){
         this.orderStatus = orderStatus;
     }
-    public OrderStatus getOrderStatus(){
-        return orderStatus;
-    }
+
 }
