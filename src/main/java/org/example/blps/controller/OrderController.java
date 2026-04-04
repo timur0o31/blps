@@ -5,7 +5,6 @@ import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
 import org.example.blps.dto.responseDto.OrderResponseStatus;
-import org.example.blps.entity.User;
 import org.example.blps.enums.OrderStatus;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.OrderService;
@@ -69,7 +68,7 @@ public class OrderController {
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping(value = "/{id}/status")
     public ResponseEntity<?> getStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        OrderResponseStatus status = orderService.getStatusOrder(id, userDetails.getUsername());
+        OrderResponseDto status = orderService.getStatusOrder(id, userDetails.getUsername());
         log.info(status.toString());
         return ResponseEntity.ok(status);
     }

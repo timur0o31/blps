@@ -43,13 +43,12 @@ public class OrderService {
         this.orderAttemptService = orderAttemptService;
     }
 
-    // Получить заказ (для клиента)
+    // Получить активные заказы (для курьера)
     public OrderResponseDto getOrder(String email){
         Courier courier = courierService.findCourierByEmail(email);
         return orderMapper.fromEntityToDto(orderRepository.findByCourierAndStatus(courier, OrderStatus.PENDING));
     }
 
-    // Заказать в доставке (для клиента)
     @Transactional
     public OrderResponseDto addOrder(String email, OrderRequestDto orderRequestDto) {
         Order newOrder = orderMapper.fromDtoToEntity(orderRequestDto);
@@ -75,6 +74,13 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Заказа с данным id не существует"));
         Courier courier = courierService.findCourierByEmail(email);
+        if (order.getCourier() == null){
+            if (order.getStatus()==OrderStatus.FAILED) {
+                throw new RuntimeException("Такой заказ уже был завершен!");
+            }else if (order.getStatus() == OrderStatus.WAITING){
+                throw new RuntimeException("Данный заказ не назначен вам!");
+            }
+        }
         if (!order.getCourier().getId().equals(courier.getId())){
             throw new RuntimeException("Другой курьер не может менять статус заказа");
         }
@@ -105,14 +111,14 @@ public class OrderService {
         return orderHistory;
     }
 
-    public OrderResponseStatus getStatusOrder(Long id, String email){
+    public OrderResponseDto getStatusOrder(Long id, String email){
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Заказа с данным id не существует"));
         Client client = clientService.findByUser(userService.findByEmail(email));
         if (!order.getClient().getId().equals(client.getId())){
             throw new RuntimeException("Клиент не может просматривать стутус чужого заказа");
         }
-        return new OrderResponseStatus(order.getStatus());
+        return orderMapper.fromEntityToDto(order);
     }
 
 
@@ -121,7 +127,11 @@ public class OrderService {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);
         if (order.getCourier() == null){
-            throw new RuntimeException("Такого заказ уже был завершен!");
+            if (order.getStatus()==OrderStatus.FAILED) {
+                throw new RuntimeException("Такой заказ уже был завершен!");
+            }else if (order.getStatus() == OrderStatus.WAITING){
+                throw new RuntimeException("Данный заказ не назначен вам!");
+            }
         }
         if (!order.getCourier().getId().equals(courier.getId())){
             throw new RuntimeException("Курьер не может отменять чужие заказы");
@@ -157,10 +167,14 @@ public class OrderService {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);
         if (order.getCourier() == null){
-            throw new RuntimeException("Такой заказ уже был завершен!");
+            if (order.getStatus()==OrderStatus.FAILED) {
+                throw new RuntimeException("Такой заказ уже был завершен!");
+            }else if (order.getStatus() == OrderStatus.WAITING){
+                throw new RuntimeException("Данный заказ не назначен вам!");
+            }
         }
         if (!order.getCourier().getId().equals(courier.getId())){
-            throw new RuntimeException("Курьер не может принимать чужие заказы");
+            throw new RuntimeException("Курьер не может принимать чужие заказы!");
         }
         if (order.getStatus()!=OrderStatus.PENDING){
             throw new RuntimeException("Только из состояния PENDING можно принять заказ!");
@@ -203,7 +217,6 @@ public class OrderService {
 
         for (OrderAttempt attempt: attempts) {
             Order order = attempt.getOrder();
-            if (order == null) continue;
             if (order.getStatus() == OrderStatus.PENDING){
                 Courier oldCourier = attempt.getCourier();
                 if (oldCourier != null) {
