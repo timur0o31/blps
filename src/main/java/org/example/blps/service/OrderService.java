@@ -1,5 +1,5 @@
 package org.example.blps.service;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
@@ -7,7 +7,6 @@ import org.example.blps.dto.responseDto.OrderResponseStatus;
 import org.example.blps.entity.*;
 import org.example.blps.enums.OrderAttemptStatus;
 import org.example.blps.mapper.OrderMapper;
-import org.example.blps.repository.CourierRepository;
 import org.example.blps.repository.OrderRepository;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.enums.OrderStatus;

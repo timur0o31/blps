@@ -19,7 +19,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/order")
+@RequestMapping("/orders")
 public class OrderController {
 
     private final OrderService orderService;
@@ -30,7 +30,7 @@ public class OrderController {
     }
 
     @PreAuthorize("hasRole('CLIENT')")
-    @PostMapping(value = "/create-order")
+    @PostMapping
     public ResponseEntity<OrderResponseDto> createOrder(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid OrderRequestDto orderRequestDto) {
         OrderResponseDto responseDto = orderService.addOrder(userDetails.getUsername(), orderRequestDto);
         return ResponseEntity.ok(responseDto);
@@ -47,20 +47,20 @@ public class OrderController {
     }
 
     @PreAuthorize("hasRole('COURIER')")
-    @PutMapping(value = "/{id}/status")
+    @PatchMapping(value = "/{id}/status")
     public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails,
                                                               @RequestBody @Valid OrderStatusRequestDto orderStatusRequestDto) {
         OrderResponseDto responseDto = orderService.updateOrder(id,orderStatusRequestDto, userDetails.getUsername());
         return ResponseEntity.ok(responseDto);
     }
     @PreAuthorize("hasRole('COURIER')")
-    @PatchMapping(value ="/{id}/cancel-order")
+    @PatchMapping(value ="/{id}/cancel")
     public ResponseEntity<?> cancelOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
         orderService.cancelOrderByCourierId(id, userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
     @PreAuthorize("hasRole('COURIER')")
-    @PatchMapping(value = "/{id}/accept-order")
+    @PatchMapping(value = "/{id}/accept")
     public ResponseEntity<?> acceptOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
         orderService.acceptOrderByCourierId(id,userDetails.getUsername());
         return ResponseEntity.ok("Вы успешно приняли заказ!");
