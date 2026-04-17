@@ -117,7 +117,7 @@ public class OrderService {
 
 
     @Transactional
-    public void cancelOrderByCourierId(Long orderId, String email) {
+    public void cancelOrderById(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);
         if (order.getCourier() == null){

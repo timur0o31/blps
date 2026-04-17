@@ -56,7 +56,7 @@ public class OrderController {
     @PreAuthorize("hasRole('COURIER')")
     @PatchMapping(value ="/{id}/cancel")
     public ResponseEntity<?> cancelOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
-        orderService.cancelOrderByCourierId(id, userDetails.getUsername());
+        orderService.cancelOrderById(id, userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
     @PreAuthorize("hasRole('COURIER')")

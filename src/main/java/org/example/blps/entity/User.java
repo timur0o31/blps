@@ -27,19 +27,26 @@ public class User {
 
     @NotBlank
     @Email
+    // (?i) - не учитывать регистр
+    // ^ - проверка начинается с первого символа
+    // [A-Za-z0-9._%+-] - разрешенные символы
+    // @ - должен быть символ @
+    // (yandex\\.ru|gmail\\.com|mail\\.ru) - доступные домены
+    // $ - конец строки
+    @Pattern(regexp = "(?i)^[A-Za-z0-9._%+-]+@(yandex\\\\.ru|gmail\\\\.com|mail\\\\.ru)$")
     @Size(max = 255)
-    @Column(name = "email", nullable = false, length = 255, unique = true)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @NotBlank
     @Size(max = 255)
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", nullable = false)
     private String password;
-
 
     @NotBlank
     @Size(max = 20)
-    @Pattern(regexp = "^\\+?[0-9]{10,20}$")
+
+    @Pattern(regexp = "^(\\+7|8)9\\d{9}$")
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
 

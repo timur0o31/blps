@@ -1,12 +1,12 @@
 package org.example.blps.exceptionHandler;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.example.blps.dto.responseDto.ErrorResponceDto;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import javax.naming.AuthenticationException;
 
@@ -14,53 +14,59 @@ import javax.naming.AuthenticationException;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleBadRequestException(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    // Глобальный обработчик ошибки, плохой запрос - ловит все ошибки, что мы не поймали.
+
+    @ExceptionHandler(Throwable.class)
+    public ResponseEntity<ErrorResponceDto> handleGenericException(Exception ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), ex.getMessage());
+        return ResponseEntity.status(status).body(errorResponceDto);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponceDto> handleBadRequestException(IllegalArgumentException ex) {
+    HttpStatus status = HttpStatus.BAD_REQUEST;
+    ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), ex.getMessage());
+    return ResponseEntity.status(status).body(errorResponceDto);
+  }
+
 
     @ExceptionHandler(AuthenticationException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ResponseEntity<String> handleAuntificationException(AuthenticationException ex) {
-        log.warn("handleAuntificationException сработал!");
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Ошибка аунтификации!: " + ex.getMessage());
-
-    }
-
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleGenericException(Exception ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Произошла ошибка! " + ex.getMessage());
+    public ResponseEntity<ErrorResponceDto> handleAuntificationException(AuthenticationException ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), ex.getMessage());
+        return ResponseEntity.status(status).body(errorResponceDto);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseEntity<String> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body("Произошла Ошибка!: " + ex.getMessage());
+    public ResponseEntity<ErrorResponceDto> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), ex.getMessage());
+        return ResponseEntity.status(status).body(errorResponceDto);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleConstraintViolation(ConstraintViolationException ex) {
+    public ResponseEntity<ErrorResponceDto> handleConstraintViolation(ConstraintViolationException ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
         String message = ex.getConstraintViolations().stream()
                 .findFirst()
                 .map(violation -> "Ошибка валидации: " + violation.getMessage())
                 .orElse("Ошибка валидации");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+        ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), message);
+        return ResponseEntity.status(status).body(errorResponceDto);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponceDto> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
         String message = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .findFirst()
                 .map(error -> "Ошибка валидации: " + error.getField() + " - " + error.getDefaultMessage())
                 .orElse("Ошибка валидации");
-        log.warn("handleMethodArgumentNotValidException сработал!");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+        ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), message);
+        return ResponseEntity.status(status).body(errorResponceDto);
     }
 }
+

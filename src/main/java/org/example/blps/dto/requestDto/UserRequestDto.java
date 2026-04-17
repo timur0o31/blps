@@ -18,6 +18,7 @@ public class UserRequestDto {
 
     @NotBlank
     @Email
+    @Pattern(regexp = "(?i)^[A-Za-z0-9._%+-]+@(yandex\\\\.ru|gmail\\\\.com|mail\\\\.ru)$")
     @Size(max = 255)
     private String email;
 
@@ -27,7 +28,8 @@ public class UserRequestDto {
 
     @NotNull
     @Size(max = 20)
-    @Pattern(regexp = "^\\+?[0-9]{10,20}$")
+    @Pattern(regexp = "^(\\+7|8)9\\d{9}$")
+    private String phone;
     private String phoneNumber;
 }
 
