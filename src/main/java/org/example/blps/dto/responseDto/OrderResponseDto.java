@@ -5,5 +5,5 @@ import org.example.blps.enums.OrderStatus;
 import java.time.LocalDateTime;
 
 
-public record OrderResponseDto(OrderStatus status, String address, String content, @JsonFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime creationDate) {
+public record OrderResponseDto(Long id, OrderStatus status, String address, String content, @JsonFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime creationDate) {
 }

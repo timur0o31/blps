@@ -22,14 +22,14 @@ public class RegistrationController {
     }
 
     @PostMapping("/client")
-    public ResponseEntity<String> createClient(@RequestBody UserRequestDto userDto) {
+    public ResponseEntity<?> createClient(@RequestBody UserRequestDto userDto) {
         userService.createClient(userDto);
-        return ResponseEntity.ok("Регистрация клиента произошла успешно!");
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/courier")
-    public ResponseEntity<String> createCourier(@RequestBody @Valid UserRequestDto userDto) throws DataIntegrityViolationException {
+    public ResponseEntity<?> createCourier(@RequestBody @Valid UserRequestDto userDto) throws DataIntegrityViolationException {
         userService.createCourier(userDto);
-        return ResponseEntity.ok("Регистрация курьера произошла успешно!");
+        return ResponseEntity.ok().build();
     }
 }

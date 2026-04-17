@@ -39,9 +39,6 @@ public class OrderController {
     @GetMapping(value="/active")
     public ResponseEntity<?> getOrder(@AuthenticationPrincipal CustomUserDetails userDetails){
         OrderResponseDto responseDto = orderService.getOrder(userDetails.getUsername());
-        if (responseDto == null){
-            return ResponseEntity.ok("В данный момент нет назначенных заказов");
-        }
         return ResponseEntity.ok(responseDto);
     }
 
@@ -62,7 +59,7 @@ public class OrderController {
     @PatchMapping(value = "/{id}/accept")
     public ResponseEntity<?> acceptOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
         orderService.acceptOrderByCourierId(id,userDetails.getUsername());
-        return ResponseEntity.ok("Вы успешно приняли заказ!");
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('CLIENT')")
@@ -75,7 +72,7 @@ public class OrderController {
 
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping(value = "/history")
-    public ResponseEntity<?> getOrderHistory(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(defaultValue = "0") long page, @RequestParam(defaultValue="10") long size) {
+    public ResponseEntity<?> getOrderHistory(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size) {
         List<OrderResponseDto> history = orderService.getOrderHistory(userDetails.getUsername(),page,size);
         return ResponseEntity.ok(history);
     }

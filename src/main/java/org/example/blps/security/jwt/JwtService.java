@@ -57,15 +57,15 @@ public class JwtService {
             Jwts.parser().verifyWith(getSignInKey()).build().parseClaimsJws(token).getPayload();
             return true;
         } catch (ExpiredJwtException e) {
-            LOGGER.error("Expired JWT token");
+            LOGGER.error("Истекший JWT токен");
         } catch (UnsupportedJwtException e) {
-            LOGGER.error("Unsupported JWT token");
+            LOGGER.error("Не поддерживаемый JWT токен");
         } catch (MalformedJwtException e) {
-            LOGGER.error("Malformed JWT token");
+            LOGGER.error("Искаженный JWT токен");
         } catch (SecurityException e) {
-            LOGGER.error("Security exception");
+            LOGGER.error("Ошибка безопасности");
         } catch (Exception e) {
-            LOGGER.error("Exception");
+            LOGGER.error("Ошибка!");
         }
         return false;
     }

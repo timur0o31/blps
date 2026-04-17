@@ -1,4 +1,5 @@
 package org.example.blps.controller;
+import org.example.blps.dto.responseDto.ShiftStatusResponceDto;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.CourierService;
@@ -21,10 +22,10 @@ public class CourierController {
 
     @PreAuthorize("hasRole('COURIER')")
     @PatchMapping("/shift-status")
-    public ResponseEntity<String> toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ShiftStatusResponceDto> toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
         String email = userDetails.getUsername();
         CourierStatus status = courierService.toggleCourierShiftStatus(email);
-        return ResponseEntity.ok("Вы успешно поменяли свой статус на " + status);
+        return ResponseEntity.ok(new ShiftStatusResponceDto(status));
     }
 }
 

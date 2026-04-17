@@ -31,7 +31,7 @@ public class OrderAttemptService {
     }
     public void changeAttemptStatus(Courier courier, Order order, OrderAttemptStatus status){
         OrderAttempt orderAttempt = orderAttemptRepository.findByCourierAndOrderAndStatus(courier, order,OrderAttemptStatus.ASSIGNED)
-                .orElseThrow(()->new RuntimeException("Не найдено активной попытки"));
+                .orElseThrow(()->new IllegalStateException("Не найдено активной попытки"));
         orderAttempt.setStatus(status);
     }
     public List<Long> findCouriersIdByOrder(Order order){

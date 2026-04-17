@@ -43,9 +43,6 @@ public class UserService {
     // Аутинфикация
     public JwtAuthificationResponceDto signIn(UserCredentialsRequestDto userCredetionalDto) throws AuthenticationException {
         User user = findByCredetionals(userCredetionalDto);
-        if (user == null) {
-            throw new IllegalArgumentException("Неверный логин или пароль");
-        }
         return jwtService.generateAuthToken(user.getEmail());
     }
 

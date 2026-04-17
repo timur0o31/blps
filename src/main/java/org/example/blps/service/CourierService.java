@@ -1,4 +1,5 @@
 package org.example.blps.service;
+import jakarta.persistence.EntityNotFoundException;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.User;
 import org.example.blps.enums.CourierStatus;
@@ -23,9 +24,9 @@ public class CourierService {
 
     public CourierStatus toggleCourierShiftStatus(String email) {
         User user = userService.findByEmail(email);
-        Courier courier = courierRepository.findByUserId(user.getId()).orElseThrow(() -> new RuntimeException("Курьер не найден"));
+        Courier courier = courierRepository.findByUserId(user.getId()).orElseThrow(() -> new EntityNotFoundException("Курьер не найден"));
         if (courier.getStatus()==CourierStatus.END_SHIFT){
-            throw new RuntimeException("Разберитесь с назначенным заказом!");
+            throw new IllegalStateException("Разберитесь с назначенным заказом!");
         }
         if (courier.getStatus() == CourierStatus.OFF_SHIFT) {
             courier.setStatus(CourierStatus.ON_SHIFT);

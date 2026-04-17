@@ -1,9 +1,11 @@
 package org.example.blps.service;
+import jakarta.persistence.EntityNotFoundException;
+import org.example.blps.repository.CourierRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
-import org.example.blps.dto.responseDto.OrderResponseStatus;
 import org.example.blps.entity.*;
 import org.example.blps.enums.OrderAttemptStatus;
 import org.example.blps.mapper.OrderMapper;
@@ -13,12 +15,9 @@ import org.example.blps.enums.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class OrderService {
@@ -35,7 +34,7 @@ public class OrderService {
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
                         UserService userService, ClientService clientService,
                         OrderAttemptService orderAttemptService,
-                        CourierService courierService) {
+                        CourierService courierService, CourierRepository courierRepository) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.courierService = courierService;
@@ -73,21 +72,21 @@ public class OrderService {
     @Transactional
     public OrderResponseDto updateOrder(Long id, OrderStatusRequestDto orderRequestDto, String email) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Заказа с данным id не существует"));
+                .orElseThrow(() -> new EntityNotFoundException("Заказа с данным id не существует"));
         Courier courier = courierService.findCourierByEmail(email);
         if (order.getCourier() == null){
             if (order.getStatus()==OrderStatus.FAILED) {
-                throw new RuntimeException("Такой заказ уже был завершен!");
+                throw new IllegalStateException("Такой заказ уже был завершен!");
             }else if (order.getStatus() == OrderStatus.WAITING){
-                throw new RuntimeException("Данный заказ не назначен вам!");
+                throw new AccessDeniedException("Данный заказ не назначен вам!");
             }
         }
         if (!order.getCourier().getId().equals(courier.getId())){
-            throw new RuntimeException("Другой курьер не может менять статус заказа");
+            throw new AccessDeniedException("Другой курьер не может менять статус заказа");
         }
         OrderStatus prevOrderStatus = order.getStatus();
         if (!prevOrderStatus.canSwitchTo(orderRequestDto.getOrderStatus())){
-            throw new RuntimeException("Из состояния "+prevOrderStatus +" нельзя перейти в "+ orderRequestDto.getOrderStatus());
+            throw new IllegalStateException("Из состояния "+prevOrderStatus +" нельзя перейти в "+ orderRequestDto.getOrderStatus());
         }
         order.setStatus(orderRequestDto.getOrderStatus());
         if (orderRequestDto.getOrderStatus()==OrderStatus.DELIVERED){
@@ -101,23 +100,38 @@ public class OrderService {
         return orderMapper.fromEntityToDto(orderRepository.save(order));
     }
 
-    public List<OrderResponseDto> getOrderHistory(String email,long page,long size) {
+    public List<OrderResponseDto> getOrderHistory(String email,String page,String size) {
+        Long pageValue;
+        Long sizeValue;
+        try {
+             pageValue = Long.parseLong(page);
+             sizeValue = Long.parseLong(size);
+             if (pageValue < 0) {
+                 throw new IllegalArgumentException("page должен быть не отрицательным целым числом");
+             }
+             if (sizeValue <= 0) {
+                 throw new IllegalArgumentException("size должен быть положитеным целым числом!");
+             }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Параметры page и size должны быть целыми числами");
+        }
         List<OrderResponseDto> orderHistory = new ArrayList<>();
         User user = userService.findByEmail(email);
         Client client = clientService.findByUser(user);
-        List<Order> orders = orderRepository.findOrdersByClientId(client.getId(), size, page*size);
+        List<Order> orders = orderRepository.findOrdersByClientId(client.getId(), sizeValue, pageValue*sizeValue);
         for (Order order:orders) {
             orderHistory.add(orderMapper.fromEntityToDto(order));
         }
         return orderHistory;
+
     }
 
     public OrderResponseDto getStatusOrder(Long id, String email){
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Заказа с данным id не существует"));
+                .orElseThrow(() -> new EntityNotFoundException("Заказа с данным id не существует"));
         Client client = clientService.findByUser(userService.findByEmail(email));
         if (!order.getClient().getId().equals(client.getId())){
-            throw new RuntimeException("Клиент не может просматривать стутус чужого заказа");
+            throw new AccessDeniedException("Клиент не может просматривать статус чужого заказа");
         }
         return orderMapper.fromEntityToDto(order);
     }
@@ -125,17 +139,17 @@ public class OrderService {
 
     @Transactional
     public void cancelOrderById(Long orderId, String email) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);
         if (order.getCourier() == null){
             if (order.getStatus()==OrderStatus.FAILED) {
-                throw new RuntimeException("Такой заказ уже был завершен!");
+                throw new IllegalStateException("Такой заказ уже был завершен!");
             }else if (order.getStatus() == OrderStatus.WAITING){
-                throw new RuntimeException("Данный заказ не назначен вам!");
+                throw new AccessDeniedException("Данный заказ не назначен вам!");
             }
         }
         if (!order.getCourier().getId().equals(courier.getId())){
-            throw new RuntimeException("Курьер не может отменять чужие заказы");
+            throw new AccessDeniedException("Курьер не может отменять чужие заказы");
         }
         changeCourier(order, courier, OrderAttemptStatus.REJECTED);
     }
@@ -165,20 +179,23 @@ public class OrderService {
 
     @Transactional
     public void acceptOrderByCourierId(Long orderId, String email) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Заказ не найден"));
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);
         if (order.getCourier() == null){
             if (order.getStatus()==OrderStatus.FAILED) {
-                throw new RuntimeException("Такой заказ уже был завершен!");
+                throw new IllegalStateException("Такой заказ уже был завершен!");
             }else if (order.getStatus() == OrderStatus.WAITING){
-                throw new RuntimeException("Данный заказ не назначен вам!");
+                throw new AccessDeniedException("Данный заказ не назначен вам!");
             }
         }
         if (!order.getCourier().getId().equals(courier.getId())){
-            throw new RuntimeException("Курьер не может принимать чужие заказы!");
+            throw new AccessDeniedException("Курьер не может принимать чужие заказы!");
+        }
+        if (order.getStatus() != OrderStatus.PENDING && order.getCourier().getId().equals(courier.getId())){
+            throw new IllegalStateException("Вы уже приняли данный заказ");
         }
         if (order.getStatus()!=OrderStatus.PENDING){
-            throw new RuntimeException("Только из состояния PENDING можно принять заказ!");
+            throw new IllegalStateException("Только из состояния PENDING можно принять заказ!");
         }
         order.setStatus(OrderStatus.ACCEPTED);
         if (courier.getStatus()!=CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.BUSY);
