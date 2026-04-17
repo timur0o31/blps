@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
-import org.example.blps.dto.responseDto.OrderResponseStatus;
 import org.example.blps.enums.OrderStatus;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.OrderService;
@@ -14,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -75,8 +75,8 @@ public class OrderController {
 
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping(value = "/history")
-    public ResponseEntity<?> getOrderHistory(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        Map<Long, OrderStatus> history = orderService.getOrderHistory(userDetails.getUsername());
+    public ResponseEntity<?> getOrderHistory(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(defaultValue = "0") long page, @RequestParam(defaultValue="10") long size) {
+        List<OrderResponseDto> history = orderService.getOrderHistory(userDetails.getUsername(),page,size);
         return ResponseEntity.ok(history);
     }
 }

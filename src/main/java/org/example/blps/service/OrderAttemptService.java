@@ -40,9 +40,6 @@ public class OrderAttemptService {
                 .toList();
     }
     public List<OrderAttempt> findAssignedAttempts(LocalDateTime deadline) {
-        return orderAttemptRepository.findTop10ByStatusAndAssigmentAtBefore(
-                OrderAttemptStatus.ASSIGNED,
-                deadline
-        );
+        return orderAttemptRepository.findTop10ByStatusAndAssigmentAtBefore(OrderAttemptStatus.ASSIGNED, deadline);
     }
 }

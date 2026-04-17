@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,13 +101,13 @@ public class OrderService {
         return orderMapper.fromEntityToDto(orderRepository.save(order));
     }
 
-    public Map<Long, OrderStatus> getOrderHistory(String email) {
-        Map orderHistory = new HashMap<Long,OrderStatus>();
+    public List<OrderResponseDto> getOrderHistory(String email,long page,long size) {
+        List<OrderResponseDto> orderHistory = new ArrayList<>();
         User user = userService.findByEmail(email);
         Client client = clientService.findByUser(user);
-        List<Order> orders = orderRepository.findOrderByClientId(client.getId());
+        List<Order> orders = orderRepository.findOrdersByClientId(client.getId(), size, page*size);
         for (Order order:orders) {
-            orderHistory.put(order.getId(), order.getStatus());
+            orderHistory.add(orderMapper.fromEntityToDto(order));
         }
         return orderHistory;
     }

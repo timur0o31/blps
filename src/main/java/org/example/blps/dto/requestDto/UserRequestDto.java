@@ -27,7 +27,7 @@ public class UserRequestDto {
 
     @NotNull
     @Size(max = 20)
-    @Pattern(regexp = "^\\+?[0-9]{10,20}$")
+    @Pattern(regexp = "^(\\+7|8)\\d{10}$")
     private String phoneNumber;
 }
 
