@@ -67,20 +67,13 @@ public class OrderService {
         return orderMapper.fromEntityToDto(newOrder);
     }
 
-
     // Обновить заказ (для курьера)
     @Transactional
     public OrderResponseDto updateOrder(Long id, OrderStatusRequestDto orderRequestDto, String email) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Заказа с данным id не существует"));
         Courier courier = courierService.findCourierByEmail(email);
-        if (order.getCourier() == null){
-            if (order.getStatus()==OrderStatus.FAILED) {
-                throw new IllegalStateException("Такой заказ уже был завершен!");
-            }else if (order.getStatus() == OrderStatus.WAITING){
-                throw new AccessDeniedException("Данный заказ не назначен вам!");
-            }
-        }
+        validateOrder(order);
         if (!order.getCourier().getId().equals(courier.getId())){
             throw new AccessDeniedException("Другой курьер не может менять статус заказа");
         }
@@ -106,12 +99,8 @@ public class OrderService {
         try {
              pageValue = Long.parseLong(page);
              sizeValue = Long.parseLong(size);
-             if (pageValue < 0) {
-                 throw new IllegalArgumentException("page должен быть не отрицательным целым числом");
-             }
-             if (sizeValue <= 0) {
-                 throw new IllegalArgumentException("size должен быть положитеным целым числом!");
-             }
+             if (pageValue < 0) throw new IllegalArgumentException("page должен быть не отрицательным целым числом");
+             if (sizeValue <= 0) throw new IllegalArgumentException("size должен быть положитеным целым числом!");
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Параметры page и size должны быть целыми числами");
         }
@@ -123,44 +112,38 @@ public class OrderService {
             orderHistory.add(orderMapper.fromEntityToDto(order));
         }
         return orderHistory;
-
     }
 
     public OrderResponseDto getStatusOrder(Long id, String email){
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Заказа с данным id не существует"));
         Client client = clientService.findByUser(userService.findByEmail(email));
-        if (!order.getClient().getId().equals(client.getId())){
+        if (!order.getClient().getId().equals(client.getId()))
             throw new AccessDeniedException("Клиент не может просматривать статус чужого заказа");
-        }
         return orderMapper.fromEntityToDto(order);
     }
 
-
+    private void validateOrder(Order order){
+        if (order.getCourier() == null){
+            if (order.getStatus()==OrderStatus.FAILED)
+                throw new IllegalStateException("Такой заказ уже был завершен!");
+            else if (order.getStatus() == OrderStatus.WAITING)
+                throw new AccessDeniedException("Данный заказ не назначен вам!");
+        }
+    }
     @Transactional
     public void cancelOrderById(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);
-        if (order.getCourier() == null){
-            if (order.getStatus()==OrderStatus.FAILED) {
-                throw new IllegalStateException("Такой заказ уже был завершен!");
-            }else if (order.getStatus() == OrderStatus.WAITING){
-                throw new AccessDeniedException("Данный заказ не назначен вам!");
-            }
-        }
-        if (!order.getCourier().getId().equals(courier.getId())){
-            throw new AccessDeniedException("Курьер не может отменять чужие заказы");
-        }
+        validateOrder(order);
+        if (!order.getCourier().getId().equals(courier.getId())) throw new AccessDeniedException("Курьер не может отменять чужие заказы");
         changeCourier(order, courier, OrderAttemptStatus.REJECTED);
     }
 
     private void changeCourier(Order order, Courier courier, OrderAttemptStatus status) {
         order.setCourier(null);
-        if (courier.getStatus()!=CourierStatus.END_SHIFT) {
-            courier.setStatus(CourierStatus.ON_SHIFT);
-        }else{
-            courier.setStatus(CourierStatus.OFF_SHIFT);
-        }
+        if (courier.getStatus()!=CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.ON_SHIFT);
+        else courier.setStatus(CourierStatus.OFF_SHIFT);
         orderAttemptService.changeAttemptStatus(courier, order,status);
         if (order.getWaitingCycles()+orderAttemptService.countAttemptsForOrder(order)>=LIMIT){
             order.setStatus(OrderStatus.FAILED);
@@ -181,22 +164,12 @@ public class OrderService {
     public void acceptOrderByCourierId(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);
-        if (order.getCourier() == null){
-            if (order.getStatus()==OrderStatus.FAILED) {
-                throw new IllegalStateException("Такой заказ уже был завершен!");
-            }else if (order.getStatus() == OrderStatus.WAITING){
-                throw new AccessDeniedException("Данный заказ не назначен вам!");
-            }
-        }
-        if (!order.getCourier().getId().equals(courier.getId())){
-            throw new AccessDeniedException("Курьер не может принимать чужие заказы!");
-        }
-        if (order.getStatus() != OrderStatus.PENDING && order.getCourier().getId().equals(courier.getId())){
+        validateOrder(order);
+        if (!order.getCourier().getId().equals(courier.getId())) throw new AccessDeniedException("Курьер не может принимать чужие заказы!");
+        if (order.getStatus() != OrderStatus.PENDING && order.getCourier().getId().equals(courier.getId()))
             throw new IllegalStateException("Вы уже приняли данный заказ");
-        }
-        if (order.getStatus()!=OrderStatus.PENDING){
+        if (order.getStatus()!=OrderStatus.PENDING)
             throw new IllegalStateException("Только из состояния PENDING можно принять заказ!");
-        }
         order.setStatus(OrderStatus.ACCEPTED);
         if (courier.getStatus()!=CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.BUSY);
         else courier.setStatus(CourierStatus.END_SHIFT);
@@ -204,7 +177,6 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    @Scheduled(fixedDelay = 30000)
     @Transactional
     public void processOrders() {
         List<Order> waitingOrders = orderRepository.findTop10ByStatus(OrderStatus.WAITING);
@@ -213,16 +185,11 @@ public class OrderService {
                 order.setStatus(OrderStatus.FAILED);
                 continue;
             }
-            Courier courier = courierService.findOnlineCourier(
-                    orderAttemptService.findCouriersIdByOrder(order)
-            );
+            Courier courier = courierService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
             if (courier == null){
                 order.setWaitingCycles(order.getWaitingCycles()+1);
-                if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
-                    order.setStatus(OrderStatus.FAILED);
-                } else {
-                    order.setStatus(OrderStatus.WAITING);
-                }
+                if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) order.setStatus(OrderStatus.FAILED);
+                else order.setStatus(OrderStatus.WAITING);
                 continue;
             }
             order.setCourier(courier);
@@ -232,14 +199,12 @@ public class OrderService {
         }
         LocalDateTime deadline = LocalDateTime.now().minusMinutes(2);
         List<OrderAttempt> attempts = orderAttemptService.findAssignedAttempts(deadline);
-
         for (OrderAttempt attempt: attempts) {
             Order order = attempt.getOrder();
             if (order.getStatus() == OrderStatus.PENDING){
                 Courier oldCourier = attempt.getCourier();
-                if (oldCourier != null) {
+                if (oldCourier != null)
                     changeCourier(order, oldCourier, OrderAttemptStatus.EXPIRED);
-                }
             }
         }
     }
