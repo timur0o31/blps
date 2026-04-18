@@ -3,13 +3,17 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.blps.dto.responseDto.ErrorResponceDto;
+import org.example.blps.enums.OrderStatus;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import tools.jackson.databind.exc.InvalidFormatException;
+
 import javax.naming.AuthenticationException;
 
 @RestControllerAdvice
@@ -88,6 +92,21 @@ public class GlobalExceptionHandler {
         ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), message);
         log.warn("handleMethodArgumentNotValidException сработал!");
         return ResponseEntity.status(status).body(errorResponceDto);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponceDto> handleHttpMessageNotReadable(HttpMessageNotReadableException ex){
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        String message;
+        if (ex.getCause() instanceof InvalidFormatException){
+            InvalidFormatException invalidFormatException = (InvalidFormatException) ex.getCause();
+            if (invalidFormatException.getTargetType()==OrderStatus.class) {
+                message = "Неверный статус заказа. Доступные значения: NEW, PENDING, WAITING, ACCEPTED, PICKED_UP, ON_THE_WAY, DELIVERED, FAILED";
+                return ResponseEntity.status(status).body(new ErrorResponceDto(status.value(), message));
+            }
+        }
+        message = "Неверный формат json";
+        return ResponseEntity.status(status).body(new ErrorResponceDto(status.value(),message));
     }
 }
 
