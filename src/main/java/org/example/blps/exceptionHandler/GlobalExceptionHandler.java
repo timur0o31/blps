@@ -56,7 +56,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(errorResponceDto);
     }
 
-
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponceDto> handleForbiddenExceptions(Exception ex) {
         HttpStatus status = HttpStatus.FORBIDDEN;

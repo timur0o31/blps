@@ -18,11 +18,13 @@ public class User {
     @NotBlank
     @Size(max = 50)
     @Column(name = "name", nullable = false, length = 50)
+    @Pattern(regexp = "^[\\p{L}]+$", message = "Имя должно содержать только буквы без пробелов")
     private String name;
 
     @NotBlank
     @Size(max = 50)
     @Column(name = "surname", nullable = false, length = 50)
+    @Pattern(regexp = "^[\\p{L}]+$", message = "Фамилия должно содержать только буквы без пробелов")
     private String surname;
 
     @NotBlank
@@ -43,13 +45,13 @@ public class User {
     @NotBlank
     @Size(max = 255)
     @Column(name = "password", nullable = false)
+    @Pattern(regexp = "^\\S+$", message = "Пароль не должен содержать пробелы")
     private String password;
 
     @NotBlank
-    @Size(max = 20)
-
+    @Size(max = 12)
     @Pattern(regexp = "^(\\+7|8)9\\d{9}$", message ="Номер телефона должен быть в формате +79991234567 или 89991234567")
-    @Column(name = "phone_number", nullable = false, length = 20)
+    @Column(name = "phone_number", nullable = false, length = 12)
     private String phoneNumber;
 
     @NotNull

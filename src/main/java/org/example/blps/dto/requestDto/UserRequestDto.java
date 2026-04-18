@@ -10,10 +10,12 @@ import lombok.Setter;
 public class UserRequestDto {
     @NotBlank
     @Size(max = 50)
+    @Pattern(regexp = "^[\\p{L}]+$", message = "Имя должно содержать только буквы без пробелов")
     private String name;
 
     @NotBlank
     @Size(max = 50)
+    @Pattern(regexp = "^[\\p{L}]+$", message = "Фамилия должно содержать только буквы без пробелов")
     private String surname;
 
     @NotBlank
@@ -23,8 +25,10 @@ public class UserRequestDto {
             message = "Некорректный email! " +
                     "Примеры валидного email: dans2005@yandex.ru, timur2005@gmail.com, sasha2005@mail.ru")
     private String email;
+
     @NotBlank
     @Size(max = 255)
+    @Pattern(regexp = "^\\S+$", message = "Пароль не должен содержать пробелы")
     private String password;
 
     @NotBlank
