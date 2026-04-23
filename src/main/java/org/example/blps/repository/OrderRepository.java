@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findTop10ByStatus(OrderStatus status);
+    List<Long> findTop10IdsByStatus(OrderStatus status);
     Order findByCourierAndStatus(Courier courier, OrderStatus status);
     List<Order> findOrderByClientId(Long userId);
     @Query(
@@ -19,4 +19,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             LIMIT :size OFFSET :offset
             """, nativeQuery = true)
     List<Order> findOrdersByClientId(@Param("userId") Long userId, @Param("size") Long size, @Param("offset") Long offset);
+    Long countOrderByClientId(Long userId);
 }

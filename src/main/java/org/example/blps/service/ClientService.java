@@ -1,4 +1,5 @@
 package org.example.blps.service;
+import jakarta.persistence.EntityNotFoundException;
 import org.example.blps.entity.Client;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.User;
@@ -17,7 +18,6 @@ public class ClientService {
     }
 
     public Client findByUser(User user) {
-        return clientRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Клиент с таким айди не найден"));
+        return clientRepository.findByUserId(user.getId()).orElseThrow(() -> new EntityNotFoundException("Клиент с таким айди не найден"));
     }
 }

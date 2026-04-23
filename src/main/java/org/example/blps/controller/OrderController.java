@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
-import org.example.blps.enums.OrderStatus;
+import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,17 +14,16 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/orders")
 public class OrderController {
 
-    private final OrderService orderService;
-
     @Autowired
-    public OrderController(OrderService orderService) {
+    private OrderService orderService;
+
+    public OrderController(OrderService orderService){
         this.orderService = orderService;
     }
 
@@ -39,9 +38,6 @@ public class OrderController {
     @GetMapping(value="/active")
     public ResponseEntity<?> getOrder(@AuthenticationPrincipal CustomUserDetails userDetails){
         OrderResponseDto responseDto = orderService.getOrder(userDetails.getUsername());
-        if (responseDto == null){
-            return ResponseEntity.ok("В данный момент нет назначенных заказов");
-        }
         return ResponseEntity.ok(responseDto);
     }
 
@@ -55,14 +51,14 @@ public class OrderController {
     @PreAuthorize("hasRole('COURIER')")
     @PatchMapping(value ="/{id}/cancel")
     public ResponseEntity<?> cancelOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
-        orderService.cancelOrderByCourierId(id, userDetails.getUsername());
+        orderService.cancelOrderById(id, userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
     @PreAuthorize("hasRole('COURIER')")
     @PatchMapping(value = "/{id}/accept")
     public ResponseEntity<?> acceptOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
         orderService.acceptOrderByCourierId(id,userDetails.getUsername());
-        return ResponseEntity.ok("Вы успешно приняли заказ!");
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('CLIENT')")
@@ -75,8 +71,8 @@ public class OrderController {
 
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping(value = "/history")
-    public ResponseEntity<?> getOrderHistory(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(defaultValue = "0") long page, @RequestParam(defaultValue="10") long size) {
-        List<OrderResponseDto> history = orderService.getOrderHistory(userDetails.getUsername(),page,size);
+    public ResponseEntity<?> getOrderHistory(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size) {
+        ResponsePaginationDto history = orderService.getOrderHistory(userDetails.getUsername(),page,size);
         return ResponseEntity.ok(history);
     }
 }
