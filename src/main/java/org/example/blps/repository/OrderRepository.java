@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Long> findTop10IdsByStatus(OrderStatus status);
+    List<Order> findTop10ByStatus(OrderStatus status);
     Order findByCourierAndStatus(Courier courier, OrderStatus status);
     List<Order> findOrderByClientId(Long userId);
     @Query(

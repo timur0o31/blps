@@ -182,7 +182,10 @@ public class OrderService {
     }
 
     public List<Long> getTop10WaitingOrders(){
-        return orderRepository.findTop10IdsByStatus(OrderStatus.WAITING);
+        return orderRepository.findTop10ByStatus(OrderStatus.WAITING)
+                .stream()
+                .map((Order order) -> order.getId())
+                .toList();
     }
     @Transactional
     public void refreshWaitingOrder(Long id){

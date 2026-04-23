@@ -14,7 +14,7 @@ public interface OrderAttemptRepository extends JpaRepository<OrderAttempt, Long
     Integer countOrderAttemptByOrderAndStatusIn(Order order, List<OrderAttemptStatus> orderAttemptStatusList);
     Optional<OrderAttempt> findByCourierAndOrderAndStatus(Courier courier, Order order, OrderAttemptStatus assigned);
     List<OrderAttempt> findByOrder(Order order);
-    List<Long> findTop10IdsByStatusAndAssigmentAtBefore(
+    List<OrderAttempt> findTop10ByStatusAndAssigmentAtBefore(
             OrderAttemptStatus status,
             LocalDateTime deadline
     );

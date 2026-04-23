@@ -40,7 +40,10 @@ public class OrderAttemptService {
                 .toList();
     }
     public List<Long> findAssignedAttempts(LocalDateTime deadline) {
-        return orderAttemptRepository.findTop10IdsByStatusAndAssigmentAtBefore(OrderAttemptStatus.ASSIGNED, deadline);
+        return orderAttemptRepository.findTop10ByStatusAndAssigmentAtBefore(OrderAttemptStatus.ASSIGNED, deadline)
+                .stream()
+                .map((OrderAttempt orderAttempt) -> orderAttempt.getId())
+                .toList();
     }
     public OrderAttempt findById(Long id){
         return orderAttemptRepository.findById(id).orElseThrow(()-> new RuntimeException("не найдено попытки с таким id"));
