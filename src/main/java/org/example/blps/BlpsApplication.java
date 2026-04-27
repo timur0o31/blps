@@ -7,9 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @SpringBootApplication
 public class BlpsApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(BlpsApplication.class, args);
     }
-
 }

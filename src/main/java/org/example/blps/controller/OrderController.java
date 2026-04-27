@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
-import org.example.blps.enums.OrderStatus;
+import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,18 +14,17 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/orders")
 public class OrderController {
 
-    private final OrderService orderService;
-
     @Autowired
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
+    private OrderService orderService;
+    @Autowired
+    public OrderController(OrderService orderService){
+        this.orderService=orderService;
     }
 
     @PreAuthorize("hasRole('CLIENT')")
@@ -73,7 +72,7 @@ public class OrderController {
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping(value = "/history")
     public ResponseEntity<?> getOrderHistory(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size) {
-        List<OrderResponseDto> history = orderService.getOrderHistory(userDetails.getUsername(),page,size);
+        ResponsePaginationDto history = orderService.getOrderHistory(userDetails.getUsername(),page,size);
         return ResponseEntity.ok(history);
     }
 }

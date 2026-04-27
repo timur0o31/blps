@@ -18,7 +18,6 @@ public class ClientService {
     }
 
     public Client findByUser(User user) {
-        return clientRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Клиент с таким айди не найден"));
+        return clientRepository.findByUserId(user.getId()).orElseThrow(() -> new EntityNotFoundException("Клиент с таким айди не найден"));
     }
 }

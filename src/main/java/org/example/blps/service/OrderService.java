@@ -1,5 +1,6 @@
 package org.example.blps.service;
 import jakarta.persistence.EntityNotFoundException;
+import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.repository.CourierRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,9 +14,8 @@ import org.example.blps.repository.OrderRepository;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.enums.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +29,6 @@ public class OrderService {
     private final OrderAttemptService orderAttemptService;
     private final CourierService courierService;
     private final Integer LIMIT = 3;
-
     @Autowired
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
                         UserService userService, ClientService clientService,
@@ -93,7 +92,7 @@ public class OrderService {
         return orderMapper.fromEntityToDto(orderRepository.save(order));
     }
 
-    public List<OrderResponseDto> getOrderHistory(String email,String page,String size) {
+    public ResponsePaginationDto getOrderHistory(String email, String page, String size) {
         Long pageValue;
         Long sizeValue;
         try {
@@ -108,10 +107,15 @@ public class OrderService {
         User user = userService.findByEmail(email);
         Client client = clientService.findByUser(user);
         List<Order> orders = orderRepository.findOrdersByClientId(client.getId(), sizeValue, pageValue*sizeValue);
+        Long totalElements = orderRepository.countOrderByClientId(client.getId());
+        Long totalPages = 0L;
+        if (totalElements/sizeValue!=0) totalPages = totalElements/sizeValue+1;
+        Long lastPage = 0L;
+        if (totalPages!=0) lastPage = totalPages-1;
         for (Order order:orders) {
             orderHistory.add(orderMapper.fromEntityToDto(order));
         }
-        return orderHistory;
+        return new ResponsePaginationDto(orderHistory, page, size, totalElements,lastPage,0L,totalPages);
     }
 
     public OrderResponseDto getStatusOrder(Long id, String email){
@@ -177,35 +181,40 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+    public List<Long> getTop10WaitingOrders(){
+        return orderRepository.findTop10ByStatus(OrderStatus.WAITING)
+                .stream().map((Order order)-> order.getId()).toList();
+    }
     @Transactional
-    public void processOrders() {
-        List<Order> waitingOrders = orderRepository.findTop10ByStatus(OrderStatus.WAITING);
-        for (Order order : waitingOrders) {
-            if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
-                order.setStatus(OrderStatus.FAILED);
-                continue;
-            }
-            Courier courier = courierService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
-            if (courier == null){
-                order.setWaitingCycles(order.getWaitingCycles()+1);
-                if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) order.setStatus(OrderStatus.FAILED);
-                else order.setStatus(OrderStatus.WAITING);
-                continue;
-            }
-            order.setCourier(courier);
-            order.setStatus(OrderStatus.PENDING);
-            courier.setStatus(CourierStatus.ACCEPTING_ORDER);
-            orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ASSIGNED);
+    public void refreshWaitingOrder(Long id){
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Заказа с данным id не существует"));
+        if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
+            order.setStatus(OrderStatus.FAILED);
+            return;
         }
-        LocalDateTime deadline = LocalDateTime.now().minusMinutes(2);
-        List<OrderAttempt> attempts = orderAttemptService.findAssignedAttempts(deadline);
-        for (OrderAttempt attempt: attempts) {
-            Order order = attempt.getOrder();
-            if (order.getStatus() == OrderStatus.PENDING){
-                Courier oldCourier = attempt.getCourier();
-                if (oldCourier != null)
-                    changeCourier(order, oldCourier, OrderAttemptStatus.EXPIRED);
-            }
+        Courier courier = courierService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
+        if (courier == null){
+            order.setWaitingCycles(order.getWaitingCycles()+1);
+            if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) order.setStatus(OrderStatus.FAILED);
+            else order.setStatus(OrderStatus.WAITING);
+            return;
+        }
+        order.setCourier(courier);
+        order.setStatus(OrderStatus.PENDING);
+        courier.setStatus(CourierStatus.ACCEPTING_ORDER);
+        orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ASSIGNED);
+    }
+
+    @Transactional
+    public void refreshAssignedOrder(Long id){
+        OrderAttempt orderAttempt = orderAttemptService.findById(id);
+        Order order = orderAttempt.getOrder();
+        if (order.getStatus() == OrderStatus.PENDING){
+            Courier oldCourier = orderAttempt.getCourier();
+            if (oldCourier != null)
+                changeCourier(order, oldCourier, OrderAttemptStatus.EXPIRED);
         }
     }
+
 }

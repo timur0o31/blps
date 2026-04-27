@@ -19,4 +19,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             LIMIT :size OFFSET :offset
             """, nativeQuery = true)
     List<Order> findOrdersByClientId(@Param("userId") Long userId, @Param("size") Long size, @Param("offset") Long offset);
+    Long countOrderByClientId(Long userId);
 }
