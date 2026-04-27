@@ -96,10 +96,10 @@ public class OrderService {
         Long pageValue;
         Long sizeValue;
         try {
-             pageValue = Long.parseLong(page);
-             sizeValue = Long.parseLong(size);
-             if (pageValue < 0) throw new IllegalArgumentException("page должен быть не отрицательным целым числом");
-             if (sizeValue <= 0) throw new IllegalArgumentException("size должен быть положитеным целым числом!");
+            pageValue = Long.parseLong(page);
+            sizeValue = Long.parseLong(size);
+            if (pageValue < 0) throw new IllegalArgumentException("page должен быть не отрицательным целым числом");
+            if (sizeValue <= 0) throw new IllegalArgumentException("size должен быть положитеным целым числом!");
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Параметры page и size должны быть целыми числами");
         }

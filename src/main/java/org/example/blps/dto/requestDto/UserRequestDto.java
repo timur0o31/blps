@@ -19,9 +19,15 @@ public class UserRequestDto {
     private String surname;
 
     @NotBlank
-    @Email
     @Size(max = 255)
-    @Pattern(regexp = "(?i)^[A-Za-z0-9._%+-]+@(yandex\\.ru|gmail\\.com|mail\\.ru)$",
+//    @Pattern(regexp = "(?i)^[A-Za-z0-9._%+-]+@(yandex\\.ru|gmail\\.com|mail\\.ru)$",
+    // **Критерии валидации email**:
+    //- Начало: любой символ из набора буквы, цифры, . _ % +
+    //- Содержит: символ @
+    //- Домен: буквы, цифры, дефис
+    //- Заканчивается точкой
+    //- Окончание: от 2 до 6 буквенных или цифровых символов
+    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$",
             message = "Некорректный email! " +
                     "Примеры валидного email: dans2005@yandex.ru, timur2005@gmail.com, sasha2005@mail.ru")
     private String email;

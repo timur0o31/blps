@@ -14,14 +14,15 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/orders")
 public class OrderController {
 
-    @Autowired
-    private OrderService orderService;
+    private final OrderService orderService;
+
     @Autowired
     public OrderController(OrderService orderService){
         this.orderService=orderService;
@@ -48,12 +49,14 @@ public class OrderController {
         OrderResponseDto responseDto = orderService.updateOrder(id,orderStatusRequestDto, userDetails.getUsername());
         return ResponseEntity.ok(responseDto);
     }
+
     @PreAuthorize("hasRole('COURIER')")
     @PatchMapping(value ="/{id}/cancel")
     public ResponseEntity<?> cancelOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
         orderService.cancelOrderById(id, userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
+
     @PreAuthorize("hasRole('COURIER')")
     @PatchMapping(value = "/{id}/accept")
     public ResponseEntity<?> acceptOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){

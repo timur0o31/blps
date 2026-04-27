@@ -28,14 +28,13 @@ public class User {
     private String surname;
 
     @NotBlank
-    @Email
     // (?i) - не учитывать регистр
     // ^ - проверка начинается с первого символа
     // [A-Za-z0-9._%+-] - разрешенные символы
     // @ - должен быть символ @
     // (yandex\\.ru|gmail\\.com|mail\\.ru) - доступные домены
     // $ - конец строки
-    @Pattern(regexp = "(?i)^[A-Za-z0-9._%+-]+@(yandex\\.ru|gmail\\.com|mail\\.ru)$",
+    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$",
             message = "Некорректный email! " +
                     "Примеры валидного email: dans2005@yandex.ru, timur2005@gmail.com, sasha2005@mail.ru")
     @Size(max = 255)
