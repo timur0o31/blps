@@ -1,5 +1,6 @@
 package org.example.blps.security;
 import org.example.blps.entity.User;
+import org.example.blps.enums.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,6 +22,10 @@ public record CustomUserDetails(User user) implements UserDetails {
     @Override
     public String getUsername() {
         return user.getEmail();
+    }
+
+    public Role getRole() {
+        return user.getRole();
     }
 
     @Override

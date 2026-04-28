@@ -17,16 +17,17 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import javax.naming.AuthenticationException;
+import java.io.IOException;
 import java.util.Optional;
 
 @Service
 public class UserService {
-    private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final CourierRepository courierRepository;
     private final ClientRepository clientRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     public UserService(UserRepository userRepository, UserMapper userMapper, JwtService jwtService,
@@ -46,6 +47,8 @@ public class UserService {
         return jwtService.generateAuthToken(user.getEmail());
     }
 
+
+
     public User createUser(UserRequestDto userRequestDto) {
         User user = userMapper.fromDtoToEntity(userRequestDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -62,23 +65,23 @@ public class UserService {
         }
     }
 
-    public void createClient(UserRequestDto userRequestDto) throws DataIntegrityViolationException {
+    public void createClient(UserRequestDto userRequestDto) throws DataIntegrityViolationException, IOException {
            checkUserData(userRequestDto);
            User user = createUser(userRequestDto);
            user.setRole(Role.CLIENT);
-           userRepository.save(user);
+           userRepository.saveUser(user);
            Client client = new Client();
-           client.setUser(user);
+           client.setUserId(user.getId());
            clientRepository.save(client);
     }
 
-    public void createCourier(UserRequestDto userRequestDto) {
+    public void createCourier(UserRequestDto userRequestDto) throws DataIntegrityViolationException, IOException{
         checkUserData(userRequestDto);
         User user = createUser(userRequestDto);
         user.setRole(Role.COURIER);
-        userRepository.save(user);
+        userRepository.saveUser(user);
         Courier courier = new Courier();
-        courier.setUser(user);
+        courier.setUserId(user.getId());
         courier.setStatus(CourierStatus.OFF_SHIFT);
         courierRepository.save(courier);
     }

@@ -20,7 +20,7 @@ public class CourierController {
         this.courierService = courierService;
     }
 
-    @PreAuthorize("hasRole('COURIER')")
+    @PreAuthorize("hasRole(@courierSecurity.isApprovedCourier(authentication))")
     @PatchMapping("/shift-status")
     public ResponseEntity<ShiftStatusResponceDto> toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
         String email = userDetails.getUsername();

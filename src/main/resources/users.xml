@@ -1,0 +1,18 @@
+<users>
+  <user id="1">
+    <name>Ivans</name>
+    <surname>Ivanov</surname>
+    <email>dans2005@yandex.ru</email>
+    <password>$2a$04$GsYoh/w1pT3vlRSAJix/auF0c5xzQUv7ENRF8J.tvYp.F16EnaGUW</password>
+    <phone_number>+79931632745</phone_number>
+    <role>COURIER</role>
+  </user>
+  <user id="2">
+    <name>Admin</name>
+    <surname>Admin</surname>
+    <email>admin@gmail.com</email>
+    <password>$2a$04$3LEXYI6BaXlAW9Y9C2XEd.bxKEY3oEUl7mfbrT6.w328dAsFB9tfi</password>
+    <phone_number>+70000000000</phone_number>
+    <role>ADMIN</role>
+  </user>
+</users>

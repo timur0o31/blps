@@ -1,16 +1,15 @@
 package org.example.blps.entity;
+
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import lombok.Setter;
+
 import java.util.List;
 
-
-@Data
+@Getter
 @Setter
-@Table(name="clients")
 @Entity
-public class Client {
-
+public class Admin {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,7 +17,9 @@ public class Client {
     @Column(unique = true, nullable = false, name = "user_id")
     private Long userId;
 
-    @OneToMany(mappedBy ="client")
-    private List<Order> orders;
+    @OneToMany(mappedBy = "approvedBy")
+    private List<Courier> approvedCouriers;
 
+    @OneToMany(mappedBy = "deletedBy")
+    private List<Courier> deletedCouriers;
 }

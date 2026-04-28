@@ -1,6 +1,8 @@
 package org.example.blps.enums;
 
 public enum Role {
+    ADMIN,
     CLIENT,
-    COURIER
+    COURIER,
+    APPROVED_COURIER
 }

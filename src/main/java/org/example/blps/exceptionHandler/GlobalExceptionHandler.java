@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -30,11 +31,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponceDto> handleBadRequestException(IllegalArgumentException ex) {
-    HttpStatus status = HttpStatus.BAD_REQUEST;
-    ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), ex.getMessage());
-    log.warn("handleBadRequestException сработал!");
-    return ResponseEntity.status(status).body(errorResponceDto);
-  }
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), ex.getMessage());
+        log.warn("handleBadRequestException сработал!");
+        return ResponseEntity.status(status).body(errorResponceDto);
+    }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponceDto> handleAuthenticationException(AuthenticationException ex) {
@@ -60,7 +61,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(errorResponceDto);
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
+    @ExceptionHandler({DisabledException.class, AccessDeniedException.class})
     public ResponseEntity<ErrorResponceDto> handleForbiddenExceptions(Exception ex) {
         HttpStatus status = HttpStatus.FORBIDDEN;
         ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), ex.getMessage());
@@ -95,18 +96,19 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponceDto> handleHttpMessageNotReadable(HttpMessageNotReadableException ex){
+    public ResponseEntity<ErrorResponceDto> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         String message;
-        if (ex.getCause() instanceof InvalidFormatException){
+        if (ex.getCause() instanceof InvalidFormatException) {
             InvalidFormatException invalidFormatException = (InvalidFormatException) ex.getCause();
-            if (invalidFormatException.getTargetType()==OrderStatus.class) {
+            if (invalidFormatException.getTargetType() == OrderStatus.class) {
                 message = "Неверный статус заказа. Доступные значения: NEW, PENDING, WAITING, ACCEPTED, PICKED_UP, ON_THE_WAY, DELIVERED, FAILED";
                 return ResponseEntity.status(status).body(new ErrorResponceDto(status.value(), message));
             }
         }
         message = "Неверный формат json";
-        return ResponseEntity.status(status).body(new ErrorResponceDto(status.value(),message));
+        return ResponseEntity.status(status).body(new ErrorResponceDto(status.value(), message));
     }
+
 }
 

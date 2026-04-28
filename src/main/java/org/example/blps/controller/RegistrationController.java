@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/registration")
 public class RegistrationController {
@@ -22,13 +24,13 @@ public class RegistrationController {
     }
 
     @PostMapping("/client")
-    public ResponseEntity<?> createClient(@RequestBody UserRequestDto userDto) {
+    public ResponseEntity<?> createClient(@RequestBody UserRequestDto userDto) throws IOException {
         userService.createClient(userDto);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/courier")
-    public ResponseEntity<?> createCourier(@RequestBody @Valid UserRequestDto userDto) throws DataIntegrityViolationException {
+    public ResponseEntity<?> createCourier(@RequestBody @Valid UserRequestDto userDto) throws DataIntegrityViolationException, IOException {
         userService.createCourier(userDto);
         return ResponseEntity.ok().build();
     }
