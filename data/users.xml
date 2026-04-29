@@ -1,0 +1,42 @@
+<users>
+  <user id="1">
+    <name>Admin</name>
+    <surname>Admin</surname>
+    <email>admin@gmail.com</email>
+    <password>$2a$04$.dqHUe02WmO837FdJyOSA..nJoqaxvcBLUIad7O4LgeZM586V1H1C</password>
+    <phone_number>+70000000000</phone_number>
+    <role>ADMIN</role>
+  </user>
+  <user id="2">
+    <name>Ivans</name>
+    <surname>Ivanov</surname>
+    <email>dans2005@yandex.ru</email>
+    <password>$2a$04$rmJUpcq8vPjiIcbftdqagOLeqInERGtEZae7K7Sv5a4gDt8V4BZ2q</password>
+    <phone_number>+79991234567</phone_number>
+    <role>CLIENT</role>
+  </user>
+  <user id="3">
+    <name>Jimmy</name>
+    <surname>Ivanov</surname>
+    <email>timur2005@yandex.ru</email>
+    <password>$2a$04$4K7m2WSievu/DPirmBEeXOgWp5Rcooew/R9eifL7sWhuqVWSq4qWG</password>
+    <phone_number>+79991324567</phone_number>
+    <role>COURIER</role>
+  </user>
+  <user id="4">
+    <name>Ivans</name>
+    <surname>Ivanov</surname>
+    <email>test2005@yandex.ru</email>
+    <password>$2a$04$oII2XkGynYS1WifrNWcN2u6lUfcvh0a1nhboyfgCbtKFRJ3PTzF6.</password>
+    <phone_number>+79991425637</phone_number>
+    <role>COURIER</role>
+  </user>
+  <user id="5">
+    <name>Pavel</name>
+    <surname>Dmitriev</surname>
+    <email>kptr33332005@yandex.ru</email>
+    <password>$2a$04$OC9mPPapV6MbthiVc0AFNeMtIB.wIcBDym//6EXWAEFGiFiRXtj.W</password>
+    <phone_number>+79994543637</phone_number>
+    <role>COURIER</role>
+  </user>
+</users>

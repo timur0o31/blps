@@ -33,4 +33,7 @@ public class UserRepository {
     public Optional<User> findByEmail(String email) {
         return xmlService.findByEmailInXmlFile(email);
     }
+    public Optional<User> findById(Long id){
+        return xmlService.findByIdInXmlFile(id);
+    }
 }

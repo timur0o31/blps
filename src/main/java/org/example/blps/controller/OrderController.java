@@ -32,14 +32,14 @@ public class OrderController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @PreAuthorize("hasRole('COURIER')")
+    @PreAuthorize("hasRole(@courierSecurity.isApprovedCourier(authentication))")
     @GetMapping(value="/active")
     public ResponseEntity<?> getOrder(@AuthenticationPrincipal CustomUserDetails userDetails){
         OrderResponseDto responseDto = orderService.getOrder(userDetails.getUsername());
         return ResponseEntity.ok(responseDto);
     }
 
-    @PreAuthorize("hasRole('COURIER')")
+    @PreAuthorize("hasRole(@courierSecurity.isApprovedCourier(authentication))")
     @PatchMapping(value = "/{id}/status")
     public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails,
                                                               @RequestBody @Valid OrderStatusRequestDto orderStatusRequestDto) {
@@ -47,14 +47,14 @@ public class OrderController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @PreAuthorize("hasRole('COURIER')")
+    @PreAuthorize("hasRole(@courierSecurity.isApprovedCourier(authentication))")
     @PatchMapping(value ="/{id}/cancel")
     public ResponseEntity<?> cancelOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
         orderService.cancelOrderById(id, userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasRole('COURIER')")
+    @PreAuthorize("hasRole(@courierSecurity.isApprovedCourier(authentication))")
     @PatchMapping(value = "/{id}/accept")
     public ResponseEntity<?> acceptOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
         orderService.acceptOrderByCourierId(id,userDetails.getUsername());
@@ -72,7 +72,7 @@ public class OrderController {
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping(value = "/history")
     public ResponseEntity<?> getOrderHistory(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size) {
-        ResponsePaginationDto history = orderService.getOrderHistory(userDetails.getUsername(),page,size);
+        ResponsePaginationDto<OrderResponseDto> history = orderService.getOrderHistory(userDetails.getUsername(),page,size);
         return ResponseEntity.ok(history);
     }
 }

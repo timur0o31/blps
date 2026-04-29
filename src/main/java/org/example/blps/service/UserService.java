@@ -5,6 +5,7 @@ import org.example.blps.dto.requestDto.UserRequestDto;
 import org.example.blps.entity.Client;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.User;
+import org.example.blps.enums.CourierAccountState;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.enums.Role;
 import org.example.blps.mapper.UserMapper;
@@ -83,6 +84,7 @@ public class UserService {
         Courier courier = new Courier();
         courier.setUserId(user.getId());
         courier.setStatus(CourierStatus.OFF_SHIFT);
+        courier.setAccountState(CourierAccountState.INACTIVE);
         courierRepository.save(courier);
     }
 
@@ -100,5 +102,9 @@ public class UserService {
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Пользователь с таким email не найден!"));
+    }
+    public User findById(Long id){
+        return userRepository.findById(id)
+                .orElseThrow(()-> new RuntimeException("Пользователь с таким id не найден"));
     }
 }

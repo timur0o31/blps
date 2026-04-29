@@ -1,4 +1,5 @@
 package org.example.blps.controller;
+import lombok.extern.slf4j.Slf4j;
 import org.example.blps.dto.responseDto.JwtAuthificationResponceDto;
 import org.example.blps.dto.requestDto.UserCredentialsRequestDto;
 import org.example.blps.service.UserService;
@@ -13,6 +14,7 @@ import javax.naming.AuthenticationException;
 
 @RestController
 @RequestMapping("/auth")
+@Slf4j
 public class AuthController {
     private final UserService userService;
 
@@ -24,6 +26,7 @@ public class AuthController {
     @PostMapping("/sing-in")
     public ResponseEntity<JwtAuthificationResponceDto> singIn(@RequestBody UserCredentialsRequestDto userCredentialsDto) throws AuthenticationException {
         JwtAuthificationResponceDto jwtAuthenticationDto = userService.signIn(userCredentialsDto);
+        log.info("пользователь авторизовался");
         return ResponseEntity.ok(jwtAuthenticationDto);
     }
 }

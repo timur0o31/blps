@@ -1,9 +1,11 @@
 package org.example.blps.service;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.example.blps.entity.User;
 import org.example.blps.entity.UsersWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
@@ -13,17 +15,19 @@ import java.util.Optional;
 
 @Service
 public class XmlService {
-    private static final String USERS_FILE = "src/main/resources/users.xml";
+    @Value("${users.file.path}")
+    private String usersFilePath;
     private final XmlMapper xmlMapper;
 
-    @Autowired
-    public XmlService(XmlMapper xmlMapper) {
-        this.xmlMapper = xmlMapper;
+    public XmlService() {
+        XmlMapper mapper = new XmlMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        this.xmlMapper = mapper;
     }
 
     public List<User> readUsers() {
         try {
-            UsersWrapper usersWrapper = xmlMapper.readValue(new File(USERS_FILE), UsersWrapper.class);
+            UsersWrapper usersWrapper = xmlMapper.readValue(new File(usersFilePath), UsersWrapper.class);
             if (usersWrapper.getUsers() != null) {
                 return usersWrapper.getUsers();
             } else {
@@ -37,11 +41,14 @@ public class XmlService {
     public Optional<User> findByEmailInXmlFile(String email) {
         return readUsers().stream().filter(u ->u.getEmail().equals(email)).findFirst();
     }
+    public Optional<User> findByIdInXmlFile(Long id){
+        return readUsers().stream().filter(u->u.getId()==id).findFirst();
+    }
 
     private void saveUsers(List<User> users) throws IOException {
         UsersWrapper usersWrapper = new UsersWrapper();
         usersWrapper.setUsers(users);
-        File file = new File(USERS_FILE);
+        File file = new File(usersFilePath);
         xmlMapper.writerWithDefaultPrettyPrinter()
                 .writeValue(file, usersWrapper);
     }

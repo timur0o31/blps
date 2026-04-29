@@ -27,5 +27,12 @@ public class CourierController {
         CourierStatus status = courierService.toggleCourierShiftStatus(email);
         return ResponseEntity.ok(new ShiftStatusResponceDto(status));
     }
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}/block")
+    public ResponseEntity<?> blockCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
+        String email = userDetails.getUsername();
+        courierService.blockCourier(email,id);
+        return ResponseEntity.ok("");
+    }
 }
 

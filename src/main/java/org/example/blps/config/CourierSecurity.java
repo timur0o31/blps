@@ -20,9 +20,7 @@ public class CourierSecurity {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
         }
-
         Object principal = authentication.getPrincipal();
-
         if (!(principal instanceof CustomUserDetails userDetails)) {
             return false;
         }

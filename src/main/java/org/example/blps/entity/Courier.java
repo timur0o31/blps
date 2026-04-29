@@ -35,11 +35,9 @@ public class Courier {
     private List<Order> orders;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approved_by_admin_id")
-    private Admin approvedBy;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deleted_by_admin_id")
     private Admin deletedBy;
 
+    @OneToMany(mappedBy="courier")
+    private List<CourierRequest> courierRequests;
 }

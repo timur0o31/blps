@@ -9,6 +9,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@Table(name="admins")
 public class Admin {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,9 +18,10 @@ public class Admin {
     @Column(unique = true, nullable = false, name = "user_id")
     private Long userId;
 
-    @OneToMany(mappedBy = "approvedBy")
-    private List<Courier> approvedCouriers;
-
     @OneToMany(mappedBy = "deletedBy")
     private List<Courier> deletedCouriers;
+
+    @OneToMany(mappedBy="reviewedBy")
+    private List<CourierRequest> courierRequests;
+
 }

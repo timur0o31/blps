@@ -48,23 +48,25 @@ public class OrderService {
         return orderMapper.fromEntityToDto(orderRepository.findByCourierAndStatus(courier, OrderStatus.PENDING));
     }
 
-    @Transactional
-    public OrderResponseDto addOrder(String email, OrderRequestDto orderRequestDto) {
-        Order newOrder = orderMapper.fromDtoToEntity(orderRequestDto);
-        Client client = clientService.findByUser(userService.findByEmail(email));
-        newOrder.setClient(client);
-        Courier courier = courierService.findCourierWithOnlineStatus();
-        if  (courier == null) {
-            newOrder.setStatus(OrderStatus.WAITING);
-            return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
+        @Transactional
+        public OrderResponseDto addOrder(String email, OrderRequestDto orderRequestDto) {
+            Order newOrder = orderMapper.fromDtoToEntity(orderRequestDto);
+            Client client = clientService.findByUser(userService.findByEmail(email));
+            newOrder.setClient(client);
+            Courier courier = courierService.findCourierWithOnlineStatus();
+            if  (courier == null) {
+                newOrder.setStatus(OrderStatus.WAITING);
+               // throw new RuntimeException("тест отката транзакции");
+                return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
+            }
+            newOrder.setCourier(courier);
+            newOrder.setStatus(OrderStatus.PENDING);
+            orderRepository.save(newOrder);
+            orderAttemptService.addOrderAttempt(courier,newOrder, OrderAttemptStatus.ASSIGNED);
+            courier.setStatus(CourierStatus.ACCEPTING_ORDER);
+            //throw new RuntimeException("тест отката транзакции");
+            return orderMapper.fromEntityToDto(newOrder);
         }
-        newOrder.setCourier(courier);
-        newOrder.setStatus(OrderStatus.PENDING);
-        orderRepository.save(newOrder);
-        orderAttemptService.addOrderAttempt(courier,newOrder, OrderAttemptStatus.ASSIGNED);
-        courier.setStatus(CourierStatus.ACCEPTING_ORDER);
-        return orderMapper.fromEntityToDto(newOrder);
-    }
 
     // Обновить заказ (для курьера)
     @Transactional

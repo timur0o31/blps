@@ -37,6 +37,7 @@ public class SuperUserInitializer implements CommandLineRunner {
             userRepository.saveUser(user);
             Admin admin = new Admin();
             admin.setUserId(user.getId());
+            adminRepository.save(admin);
         }
     }
 }
