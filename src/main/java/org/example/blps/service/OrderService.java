@@ -2,6 +2,7 @@ package org.example.blps.service;
 import jakarta.persistence.EntityNotFoundException;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.repository.CourierRepository;
+import org.example.blps.utils.PaginationUtil;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.blps.dto.requestDto.OrderRequestDto;
@@ -95,29 +96,16 @@ public class OrderService {
     }
 
     public ResponsePaginationDto getOrderHistory(String email, String page, String size) {
-        Long pageValue;
-        Long sizeValue;
-        try {
-            pageValue = Long.parseLong(page);
-            sizeValue = Long.parseLong(size);
-            if (pageValue < 0) throw new IllegalArgumentException("page должен быть не отрицательным целым числом");
-            if (sizeValue <= 0) throw new IllegalArgumentException("size должен быть положитеным целым числом!");
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Параметры page и size должны быть целыми числами");
-        }
         List<OrderResponseDto> orderHistory = new ArrayList<>();
         User user = userService.findByEmail(email);
         Client client = clientService.findByUser(user);
-        List<Order> orders = orderRepository.findOrdersByClientId(client.getId(), sizeValue, pageValue*sizeValue);
+        PaginationUtil.Params params = PaginationUtil.parse(page, size);
+        List<Order> orders = orderRepository.findOrdersByClientId(client.getId(), params.size(), params.page()*params.size());
         Long totalElements = orderRepository.countOrderByClientId(client.getId());
-        Long totalPages = 0L;
-        if (totalElements/sizeValue!=0) totalPages = totalElements/sizeValue+1;
-        Long lastPage = 0L;
-        if (totalPages!=0) lastPage = totalPages-1;
         for (Order order:orders) {
             orderHistory.add(orderMapper.fromEntityToDto(order));
         }
-        return new ResponsePaginationDto(orderHistory, page, size, totalElements,lastPage,0L,totalPages);
+        return PaginationUtil.responsePaginationDto(orderHistory, params, totalElements);
     }
 
     public OrderResponseDto getStatusOrder(Long id, String email){
@@ -218,5 +206,4 @@ public class OrderService {
                 changeCourier(order, oldCourier, OrderAttemptStatus.EXPIRED);
         }
     }
-
 }

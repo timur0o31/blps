@@ -38,4 +38,5 @@ public class AdminService {
     public void createAdmin(UserRequestDto userRequestDto) throws IOException {
         userService.createAdmin(userRequestDto);
     }
+
 }

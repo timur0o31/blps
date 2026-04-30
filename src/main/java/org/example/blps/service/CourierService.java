@@ -13,6 +13,7 @@ import org.example.blps.enums.CourierStatus;
 import org.example.blps.mapper.CourierMapper;
 import org.example.blps.mapper.CourierRequestMapper;
 import org.example.blps.repository.CourierRepository;
+import org.example.blps.utils.PaginationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
@@ -87,28 +88,15 @@ public class CourierService {
         courier.setDeletedBy(admin);
         return courierRepository.save(courier);
     }
+    //доделать
     public ResponsePaginationDto<CourierResponseDto> getAll(String page, String size){
-        Long pageValue;
-        Long sizeValue;
-        try {
-            pageValue = Long.parseLong(page);
-            sizeValue = Long.parseLong(size);
-            if (pageValue < 0) throw new IllegalArgumentException("page должен быть не отрицательным целым числом");
-            if (sizeValue <= 0) throw new IllegalArgumentException("size должен быть положитеным целым числом!");
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Параметры page и size должны быть целыми числами");
-        }
+        PaginationUtil.Params params = PaginationUtil.parse(page,size);
         List<CourierResponseDto> result = new ArrayList<>();
         List<Courier> couriers= courierRepository.findAll();
         Long totalElements = courierRepository.count();
-        Long totalPages = 0L;
-        if (totalElements/sizeValue!=0) totalPages = totalElements/sizeValue+1;
-        Long lastPage = 0L;
-        if (totalPages!=0) lastPage = totalPages-1;
-        for (Courier cr: couriers){
+        for (Courier cr: couriers)
             result.add(mapper.fromEntityToDto(cr));
-        }
-        return new ResponsePaginationDto(result, page, size, totalElements,lastPage,0L,totalPages);
+        return PaginationUtil.responsePaginationDto(result, params, totalElements);
     }
 }
 

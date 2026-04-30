@@ -9,6 +9,7 @@ import org.example.blps.enums.CourierAccountState;
 import org.example.blps.enums.CourierRequestStatus;
 import org.example.blps.mapper.CourierRequestMapper;
 import org.example.blps.repository.CourierRequestRepository;
+import org.example.blps.utils.PaginationUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,27 +69,15 @@ public class CourierRequestService {
         courierRequest.setReviewedBy(admin);
         courierRequestRepository.save(courierRequest);
     }
+    //доделать пагинацию
     public ResponsePaginationDto<CourierApplicationsResponseDto> getAll(String page, String size){
-        Long pageValue;
-        Long sizeValue;
-        try {
-            pageValue = Long.parseLong(page);
-            sizeValue = Long.parseLong(size);
-            if (pageValue < 0) throw new IllegalArgumentException("page должен быть не отрицательным целым числом");
-            if (sizeValue <= 0) throw new IllegalArgumentException("size должен быть положитеным целым числом!");
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Параметры page и size должны быть целыми числами");
-        }
+        PaginationUtil.Params params = PaginationUtil.parse(page,size);
         List<CourierApplicationsResponseDto> result = new ArrayList<>();
         List<CourierRequest> courierRequests = courierRequestRepository.findCourierRequestByStatus(CourierRequestStatus.PENDING);
         Long totalElements = courierRequestRepository.countAllByStatus(CourierRequestStatus.PENDING);
-        Long totalPages = 0L;
-        if (totalElements/sizeValue!=0) totalPages = totalElements/sizeValue+1;
-        Long lastPage = 0L;
-        if (totalPages!=0) lastPage = totalPages-1;
         for (CourierRequest cr: courierRequests){
             result.add(mapper.fromEntityToDto(cr,userService.findById(cr.getCourier().getUserId())));
         }
-        return new ResponsePaginationDto(result, page, size, totalElements,lastPage,0L,totalPages);
+        return PaginationUtil.responsePaginationDto(result, params, totalElements);
     }
 }
