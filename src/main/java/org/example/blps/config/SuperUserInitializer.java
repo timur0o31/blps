@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class SuperUserInitializer implements CommandLineRunner {
+// CommandLineRunner это простой Spring Boot интерфейс с методом run.
+// Spring Boot автоматически вызывает метод run для всех бинов, которые имплиментируют этот интерфейс, при инициализации контекста.
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;

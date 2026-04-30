@@ -6,6 +6,7 @@ import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.entity.CourierRequest;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.CourierRequestService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,7 +16,10 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequestMapping("/courier-requests")
 public class CourierRequestController {
+
     private final CourierRequestService courierRequestService;
+
+    @Autowired
     public CourierRequestController(CourierRequestService courierRequestService){
         this.courierRequestService =courierRequestService;
     }

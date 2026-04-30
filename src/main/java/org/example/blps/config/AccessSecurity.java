@@ -59,5 +59,4 @@ public class AccessSecurity {
                 .map(Admin::isAccountState)
                 .orElseThrow(()->new RuntimeException("Ваш аккаунт еще не одобрен"));
     }
-
 }

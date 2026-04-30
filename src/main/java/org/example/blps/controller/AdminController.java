@@ -19,6 +19,7 @@ public class AdminController {
     public AdminController(AdminService adminService){
         this.adminService=adminService;
     }
+
     //подправить
     @PatchMapping("{id}/change-state")
     @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication) or @accessSecurity.isSuperUser(authentication)")
@@ -27,6 +28,7 @@ public class AdminController {
         adminService.changeState(email,id,state);
         return ResponseEntity.ok().build();
     }
+
     @PostMapping
     @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication) or @accessSecurity.isSuperUser(authentication)")
     public ResponseEntity<?> createAdmin(@RequestBody @Valid UserRequestDto userRequestDto) throws IOException {
