@@ -1,15 +1,23 @@
 package org.example.blps.service;
 import jakarta.persistence.EntityNotFoundException;
+import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
+import org.example.blps.dto.responseDto.CourierResponseDto;
+import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.entity.Admin;
 import org.example.blps.entity.Courier;
+import org.example.blps.entity.CourierRequest;
 import org.example.blps.entity.User;
 import org.example.blps.enums.CourierAccountState;
+import org.example.blps.enums.CourierRequestStatus;
 import org.example.blps.enums.CourierStatus;
+import org.example.blps.mapper.CourierMapper;
+import org.example.blps.mapper.CourierRequestMapper;
 import org.example.blps.repository.CourierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,11 +26,14 @@ public class CourierService {
     private final CourierRepository courierRepository;
     private final UserService userService;
     private final AdminService adminService;
+    private final CourierMapper mapper;
     @Autowired
-    public CourierService(CourierRepository courierRepository, UserService userService, AdminService adminService) {
+    public CourierService(CourierRepository courierRepository, UserService userService, AdminService adminService,
+                          CourierMapper mapper) {
         this.courierRepository = courierRepository;
         this.userService = userService;
         this.adminService = adminService;
+        this.mapper = mapper;
     }
 
     public CourierStatus toggleCourierShiftStatus(String email) {
@@ -75,6 +86,29 @@ public class CourierService {
         courier.setStatus(CourierStatus.OFF_SHIFT);
         courier.setDeletedBy(admin);
         return courierRepository.save(courier);
+    }
+    public ResponsePaginationDto<CourierResponseDto> getAll(String page, String size){
+        Long pageValue;
+        Long sizeValue;
+        try {
+            pageValue = Long.parseLong(page);
+            sizeValue = Long.parseLong(size);
+            if (pageValue < 0) throw new IllegalArgumentException("page должен быть не отрицательным целым числом");
+            if (sizeValue <= 0) throw new IllegalArgumentException("size должен быть положитеным целым числом!");
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Параметры page и size должны быть целыми числами");
+        }
+        List<CourierResponseDto> result = new ArrayList<>();
+        List<Courier> couriers= courierRepository.findAll();
+        Long totalElements = courierRepository.count();
+        Long totalPages = 0L;
+        if (totalElements/sizeValue!=0) totalPages = totalElements/sizeValue+1;
+        Long lastPage = 0L;
+        if (totalPages!=0) lastPage = totalPages-1;
+        for (Courier cr: couriers){
+            result.add(mapper.fromEntityToDto(cr));
+        }
+        return new ResponsePaginationDto(result, page, size, totalElements,lastPage,0L,totalPages);
     }
 }
 

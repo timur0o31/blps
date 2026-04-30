@@ -1,4 +1,7 @@
 package org.example.blps.controller;
+import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
+import org.example.blps.dto.responseDto.CourierResponseDto;
+import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.dto.responseDto.ShiftStatusResponceDto;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.security.CustomUserDetails;
@@ -10,7 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/courier")
+@RequestMapping("/couriers")
 public class CourierController {
 
     private final CourierService courierService;
@@ -20,19 +23,25 @@ public class CourierController {
         this.courierService = courierService;
     }
 
-    @PreAuthorize("hasRole(@courierSecurity.isApprovedCourier(authentication))")
+    @PreAuthorize("@accessSecurity.isApprovedCourier(authentication)")
     @PatchMapping("/shift-status")
     public ResponseEntity<ShiftStatusResponceDto> toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
         String email = userDetails.getUsername();
         CourierStatus status = courierService.toggleCourierShiftStatus(email);
         return ResponseEntity.ok(new ShiftStatusResponceDto(status));
     }
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication)")
     @PatchMapping("/{id}/block")
     public ResponseEntity<?> blockCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
         String email = userDetails.getUsername();
         courierService.blockCourier(email,id);
         return ResponseEntity.ok("");
+    }
+    @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication)")
+    @GetMapping
+    public ResponseEntity<?> getAll(@RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size){
+        ResponsePaginationDto<CourierResponseDto> response = courierService.getAll(page,size);
+        return ResponseEntity.ok(response);
     }
 }
 

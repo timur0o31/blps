@@ -33,10 +33,12 @@ public class SuperUserInitializer implements CommandLineRunner {
         user.setPassword(passwordEncoder.encode("Gufi2001"));
         user.setPhoneNumber("+70000000000");
         user.setRole(Role.ADMIN);
+        user.setSuperUser(true);
         if (!userRepository.existsByEmail(user.getEmail())) {
             userRepository.saveUser(user);
             Admin admin = new Admin();
             admin.setUserId(user.getId());
+            admin.setAccountState(true);
             adminRepository.save(admin);
         }
     }

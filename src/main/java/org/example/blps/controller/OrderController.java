@@ -32,14 +32,14 @@ public class OrderController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @PreAuthorize("hasRole(@courierSecurity.isApprovedCourier(authentication))")
+    @PreAuthorize("@accessSecurity.isApprovedCourier(authentication)")
     @GetMapping(value="/active")
     public ResponseEntity<?> getOrder(@AuthenticationPrincipal CustomUserDetails userDetails){
         OrderResponseDto responseDto = orderService.getOrder(userDetails.getUsername());
         return ResponseEntity.ok(responseDto);
     }
 
-    @PreAuthorize("hasRole(@courierSecurity.isApprovedCourier(authentication))")
+    @PreAuthorize("@accessSecurity.isApprovedCourier(authentication)")
     @PatchMapping(value = "/{id}/status")
     public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails,
                                                               @RequestBody @Valid OrderStatusRequestDto orderStatusRequestDto) {
@@ -47,14 +47,14 @@ public class OrderController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @PreAuthorize("hasRole(@courierSecurity.isApprovedCourier(authentication))")
+    @PreAuthorize("@accessSecurity.isApprovedCourier(authentication)")
     @PatchMapping(value ="/{id}/cancel")
     public ResponseEntity<?> cancelOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
         orderService.cancelOrderById(id, userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasRole(@courierSecurity.isApprovedCourier(authentication))")
+    @PreAuthorize("@accessSecurity.isApprovedCourier(authentication)")
     @PatchMapping(value = "/{id}/accept")
     public ResponseEntity<?> acceptOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
         orderService.acceptOrderByCourierId(id,userDetails.getUsername());

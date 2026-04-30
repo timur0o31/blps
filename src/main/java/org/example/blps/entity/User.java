@@ -29,4 +29,6 @@ public class User {
 
     @JacksonXmlProperty(localName = "role")
     private Role role;
+    @JacksonXmlProperty(localName = "superUser")
+    private boolean superUser;
 }

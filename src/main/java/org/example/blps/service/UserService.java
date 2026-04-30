@@ -2,6 +2,7 @@ package org.example.blps.service;
 import org.example.blps.dto.responseDto.JwtAuthificationResponceDto;
 import org.example.blps.dto.requestDto.UserCredentialsRequestDto;
 import org.example.blps.dto.requestDto.UserRequestDto;
+import org.example.blps.entity.Admin;
 import org.example.blps.entity.Client;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.User;
@@ -9,6 +10,7 @@ import org.example.blps.enums.CourierAccountState;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.enums.Role;
 import org.example.blps.mapper.UserMapper;
+import org.example.blps.repository.AdminRepository;
 import org.example.blps.repository.ClientRepository;
 import org.example.blps.repository.CourierRepository;
 import org.example.blps.repository.UserRepository;
@@ -29,16 +31,18 @@ public class UserService {
     private final CourierRepository courierRepository;
     private final ClientRepository clientRepository;
     private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
 
     @Autowired
     public UserService(UserRepository userRepository, UserMapper userMapper, JwtService jwtService,
-                       PasswordEncoder passwordEncoder, ClientRepository clientRepository, CourierRepository courierRepository) {
+                       PasswordEncoder passwordEncoder, ClientRepository clientRepository, CourierRepository courierRepository, AdminRepository adminRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.courierRepository = courierRepository;
         this.clientRepository = clientRepository;
+        this.adminRepository = adminRepository;
     }
 
 
@@ -88,6 +92,15 @@ public class UserService {
         courierRepository.save(courier);
     }
 
+    public void createAdmin(UserRequestDto userRequestDto) throws IOException{
+        checkUserData(userRequestDto);
+        User user = createUser(userRequestDto);
+        user.setRole(Role.ADMIN);
+        userRepository.saveUser(user);
+        Admin admin = new Admin();
+        admin.setUserId(user.getId());
+        adminRepository.save(admin);
+    }
     private User findByCredetionals(UserCredentialsRequestDto userCredetionalDto) throws AuthenticationException {
         Optional<User> userOptional = userRepository.findByEmail(userCredetionalDto.getEmail());
         if (userOptional.isPresent()) {
