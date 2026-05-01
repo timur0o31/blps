@@ -1,9 +1,9 @@
 package org.example.blps.controller;
 
-import org.apache.coyote.Response;
+
+import jakarta.validation.constraints.Positive;
 import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
-import org.example.blps.entity.CourierRequest;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.CourierRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
+@Validated
 @RequestMapping("/courier-requests")
 public class CourierRequestController {
 
@@ -25,8 +27,9 @@ public class CourierRequestController {
     }
     @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication)")
     @GetMapping
-    public ResponseEntity<?> getRequests(@RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size){
-        ResponsePaginationDto<CourierApplicationsResponseDto> response = courierRequestService.getAll(page,size);
+    public ResponseEntity<?> getRequests(@RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size,
+                                         @RequestParam(required = false) @Positive Long courierId, @RequestParam(required = false) String status){
+        ResponsePaginationDto<CourierApplicationsResponseDto> response = courierRequestService.getAll(page,size, courierId, status);
         return ResponseEntity.ok(response);
     }
 
@@ -39,14 +42,14 @@ public class CourierRequestController {
     }
     @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication)")
     @PatchMapping("/{id}/approve")
-    public ResponseEntity<?> approveRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
+    public ResponseEntity<?> approveRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable @Positive Long id){
         String email = userDetails.getUsername();
         courierRequestService.approveRequest(email, id);
         return ResponseEntity.ok().build();
     }
     @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication)")
     @PatchMapping("/{id}/decline")
-    public ResponseEntity<?> declineRequest(@AuthenticationPrincipal CustomUserDetails userDetails,@PathVariable Long id){
+    public ResponseEntity<?> declineRequest(@AuthenticationPrincipal CustomUserDetails userDetails,@PathVariable @Positive Long id){
         String email = userDetails.getUsername();
         courierRequestService.declineRequest(email,id);
         return ResponseEntity.ok().build();

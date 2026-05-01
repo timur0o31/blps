@@ -1,21 +1,21 @@
 package org.example.blps.service;
 import jakarta.persistence.EntityNotFoundException;
-import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
 import org.example.blps.dto.responseDto.CourierResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.entity.Admin;
 import org.example.blps.entity.Courier;
-import org.example.blps.entity.CourierRequest;
 import org.example.blps.entity.User;
 import org.example.blps.enums.CourierAccountState;
-import org.example.blps.enums.CourierRequestStatus;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.mapper.CourierMapper;
-import org.example.blps.mapper.CourierRequestMapper;
 import org.example.blps.repository.CourierRepository;
 import org.example.blps.utils.PaginationUtil;
+import org.example.blps.utils.ParseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -88,13 +88,15 @@ public class CourierService {
         courier.setDeletedBy(admin);
         return courierRepository.save(courier);
     }
-    //доделать
-    public ResponsePaginationDto<CourierResponseDto> getAll(String page, String size){
+    public ResponsePaginationDto<CourierResponseDto> getAll(String page, String size,String courierState, String courierStatus){
         PaginationUtil.Params params = PaginationUtil.parse(page,size);
+        CourierAccountState accountState = ParseUtil.parseEnum(courierState, CourierAccountState.class);
+        CourierStatus status = ParseUtil.parseEnum(courierStatus, CourierStatus.class);
+        Pageable pageable = PageRequest.of((int) params.page(),(int) params.size(), Sort.by("id").ascending());
         List<CourierResponseDto> result = new ArrayList<>();
-        List<Courier> couriers= courierRepository.findAll();
+        Page<Courier> couriers= courierRepository.findWithfilters(pageable,status,accountState);
         Long totalElements = courierRepository.count();
-        for (Courier cr: couriers)
+        for (Courier cr: couriers.getContent())
             result.add(mapper.fromEntityToDto(cr));
         return PaginationUtil.responsePaginationDto(result, params, totalElements);
     }

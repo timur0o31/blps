@@ -1,12 +1,17 @@
 package org.example.blps.service;
 
 import org.example.blps.dto.requestDto.UserRequestDto;
+import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.entity.Admin;
 import org.example.blps.entity.User;
 import org.example.blps.repository.AdminRepository;
+import org.example.blps.utils.PaginationUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import javax.imageio.IIOException;
 import java.io.IOException;
 
 @Service
@@ -37,6 +42,13 @@ public class AdminService {
     }
     public void createAdmin(UserRequestDto userRequestDto) throws IOException {
         userService.createAdmin(userRequestDto);
+    }
+
+    public ResponsePaginationDto<Admin> getAll(String page, String size) {
+        PaginationUtil.Params params = PaginationUtil.parse(page, size);
+        Pageable pageable = PageRequest.of((int) params.page(), (int) params.size(), Sort.by("id").ascending());
+        Page<Admin> admins = adminRepository.findAll(pageable);
+        return PaginationUtil.responsePaginationDto(admins.getContent(), params, admins.getTotalElements());
     }
 
 }

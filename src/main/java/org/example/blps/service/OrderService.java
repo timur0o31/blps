@@ -3,6 +3,10 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.repository.CourierRepository;
 import org.example.blps.utils.PaginationUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.blps.dto.requestDto.OrderRequestDto;
@@ -49,8 +53,8 @@ public class OrderService {
         return orderMapper.fromEntityToDto(orderRepository.findByCourierAndStatus(courier, OrderStatus.PENDING));
     }
 
-        @Transactional
-        public OrderResponseDto addOrder(String email, OrderRequestDto orderRequestDto) {
+    @Transactional
+    public OrderResponseDto addOrder(String email, OrderRequestDto orderRequestDto) {
             Order newOrder = orderMapper.fromDtoToEntity(orderRequestDto);
             Client client = clientService.findByUser(userService.findByEmail(email));
             newOrder.setClient(client);
@@ -67,8 +71,7 @@ public class OrderService {
             courier.setStatus(CourierStatus.ACCEPTING_ORDER);
             //throw new RuntimeException("тест отката транзакции");
             return orderMapper.fromEntityToDto(newOrder);
-        }
-
+    }
     // Обновить заказ (для курьера)
     @Transactional
     public OrderResponseDto updateOrder(Long id, OrderStatusRequestDto orderRequestDto, String email) {
@@ -100,11 +103,11 @@ public class OrderService {
         User user = userService.findByEmail(email);
         Client client = clientService.findByUser(user);
         PaginationUtil.Params params = PaginationUtil.parse(page, size);
-        List<Order> orders = orderRepository.findOrdersByClientId(client.getId(), params.size(), params.page()*params.size());
+        Pageable pageable = PageRequest.of((int) params.page(),(int) params.size(), Sort.by("id").ascending());
+        Page<Order> orders = orderRepository.findOrdersByClientId(client.getId(),pageable);
         Long totalElements = orderRepository.countOrderByClientId(client.getId());
-        for (Order order:orders) {
+        for (Order order:orders.getContent())
             orderHistory.add(orderMapper.fromEntityToDto(order));
-        }
         return PaginationUtil.responsePaginationDto(orderHistory, params, totalElements);
     }
 
