@@ -1,41 +1,34 @@
 package org.example.blps.entity;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.blps.enums.Role;
 
-@Entity
 @Getter
 @Setter
-@Table(name="users")
+@JacksonXmlRootElement(localName = "user")
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JacksonXmlProperty(isAttribute = true, localName = "id")
     private Long id;
 
-    @NotNull
-    @Column(name = "name", nullable = false, length = 50)
+    @JacksonXmlProperty(localName = "name")
     private String name;
 
-    @NotNull
-    @Column(name = "surname", nullable = false, length = 50)
+    @JacksonXmlProperty(localName = "surname")
     private String surname;
 
-    @NotNull
-    @Column(name = "email", nullable = false, length = 255, unique = true)
+    @JacksonXmlProperty(localName = "email")
     private String email;
 
-    @NotNull
-    @Column(name = "password", nullable = false, length = 255)
+    @JacksonXmlProperty(localName = "password")
     private String password;
 
-    @NotNull
-    @Column(name = "phone_number", nullable = false, length = 20, unique = true)
+    @JacksonXmlProperty(localName = "phone_number")
     private String phoneNumber;
 
-    @NotNull
-    @Column(name="user_role", nullable = false, length = 15)
-    @Enumerated(EnumType.STRING)
+    @JacksonXmlProperty(localName = "role")
     private Role role;
+    @JacksonXmlProperty(localName = "superUser")
+    private boolean superUser;
 }

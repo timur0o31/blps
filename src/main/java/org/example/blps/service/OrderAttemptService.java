@@ -31,7 +31,7 @@ public class OrderAttemptService {
     }
     public void changeAttemptStatus(Courier courier, Order order, OrderAttemptStatus status){
         OrderAttempt orderAttempt = orderAttemptRepository.findByCourierAndOrderAndStatus(courier, order,OrderAttemptStatus.ASSIGNED)
-                .orElseThrow(()->new RuntimeException("Не найдено активной попытки"));
+                .orElseThrow(()->new IllegalStateException("Не найдено активной попытки"));
         orderAttempt.setStatus(status);
     }
     public List<Long> findCouriersIdByOrder(Order order){
@@ -39,10 +39,11 @@ public class OrderAttemptService {
                 .map(attempt -> attempt.getCourier().getId())
                 .toList();
     }
-    public List<OrderAttempt> findAssignedAttempts(LocalDateTime deadline) {
-        return orderAttemptRepository.findTop10ByStatusAndAssigmentAtBefore(
-                OrderAttemptStatus.ASSIGNED,
-                deadline
-        );
+    public List<Long> findAssignedAttempts(LocalDateTime deadline) {
+        return orderAttemptRepository.findTop10ByStatusAndAssigmentAtBefore(OrderAttemptStatus.ASSIGNED, deadline)
+                .stream().map((OrderAttempt orderAttempt) -> orderAttempt.getId()).toList();
+    }
+    public OrderAttempt findById(Long id){
+        return orderAttemptRepository.findById(id).orElseThrow(()-> new IllegalStateException("не найдено попытки с таким id"));
     }
 }

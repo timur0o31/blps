@@ -1,6 +1,8 @@
 package org.example.blps.entity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.blps.enums.OrderStatus;
@@ -17,11 +19,13 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
+    @NotBlank
+    @Size(max = 150)
     @Column(name= "content", nullable = false, length = 150)
     private String content;
 
-    @NotNull
+    @NotBlank
+    @Size(max = 150)
     @Column(name= "address", nullable = false, length = 150)
     private String address;
 
@@ -34,8 +38,8 @@ public class Order {
     @Column(name="creation_date")
     private LocalDateTime creationDate;
 
-    @Column(name="attempts")
-    private Integer attempts=0;
+    @Column(name="waiting_cycles")
+    private Integer waitingCycles=0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="courier_id")

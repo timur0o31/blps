@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderAttemptRepository extends JpaRepository<OrderAttempt, Long> {
-    public Integer countOrderAttemptByOrderAndStatusIn(Order order, List<OrderAttemptStatus> orderAttemptStatusList);
-    public Optional<OrderAttempt> findByCourierAndOrderAndStatus(Courier courier, Order order, OrderAttemptStatus assigned);
-    public List<OrderAttempt> findByOrder(Order order);
-    public List<OrderAttempt> findTop10ByStatusAndAssigmentAtBefore(
+    Integer countOrderAttemptByOrderAndStatusIn(Order order, List<OrderAttemptStatus> orderAttemptStatusList);
+    Optional<OrderAttempt> findByCourierAndOrderAndStatus(Courier courier, Order order, OrderAttemptStatus assigned);
+    List<OrderAttempt> findByOrder(Order order);
+    List<OrderAttempt> findTop10ByStatusAndAssigmentAtBefore(
             OrderAttemptStatus status,
             LocalDateTime deadline
     );

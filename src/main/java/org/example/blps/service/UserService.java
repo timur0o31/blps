@@ -2,50 +2,57 @@ package org.example.blps.service;
 import org.example.blps.dto.responseDto.JwtAuthificationResponceDto;
 import org.example.blps.dto.requestDto.UserCredentialsRequestDto;
 import org.example.blps.dto.requestDto.UserRequestDto;
+import org.example.blps.entity.Admin;
 import org.example.blps.entity.Client;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.User;
+import org.example.blps.enums.CourierAccountState;
 import org.example.blps.enums.CourierStatus;
 import org.example.blps.enums.Role;
 import org.example.blps.mapper.UserMapper;
+import org.example.blps.repository.AdminRepository;
 import org.example.blps.repository.ClientRepository;
 import org.example.blps.repository.CourierRepository;
 import org.example.blps.repository.UserRepository;
 import org.example.blps.security.jwt.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import javax.naming.AuthenticationException;
+import java.io.IOException;
 import java.util.Optional;
 
 @Service
 public class UserService {
-    private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final CourierRepository courierRepository;
     private final ClientRepository clientRepository;
+    private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
 
     @Autowired
     public UserService(UserRepository userRepository, UserMapper userMapper, JwtService jwtService,
-                       PasswordEncoder passwordEncoder, ClientRepository clientRepository, CourierRepository courierRepository) {
+                       PasswordEncoder passwordEncoder, ClientRepository clientRepository, CourierRepository courierRepository, AdminRepository adminRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.courierRepository = courierRepository;
         this.clientRepository = clientRepository;
+        this.adminRepository = adminRepository;
     }
 
 
     // Аутинфикация
-    public JwtAuthificationResponceDto signIn(UserCredentialsRequestDto userCredetionalDto) {
+    public JwtAuthificationResponceDto signIn(UserCredentialsRequestDto userCredetionalDto) throws AuthenticationException {
         User user = findByCredetionals(userCredetionalDto);
-        if (user == null) {
-            throw new IllegalArgumentException("Неверный логин или пароль");
-        }
         return jwtService.generateAuthToken(user.getEmail());
     }
+
+
 
     public User createUser(UserRequestDto userRequestDto) {
         User user = userMapper.fromDtoToEntity(userRequestDto);
@@ -53,26 +60,48 @@ public class UserService {
         return user;
     }
 
-    public void createClient(UserRequestDto userRequestDto) {
-       User user = createUser(userRequestDto);
-        user.setRole(Role.CLIENT);
-        userRepository.save(user);
-        Client client = new Client();
-        client.setUser(user);
-        clientRepository.save(client);
+
+    private void checkUserData(UserRequestDto userRequestDto) throws DataIntegrityViolationException {
+        if (userRepository.existsByEmail(userRequestDto.getEmail())) {
+            throw new DataIntegrityViolationException("Пользователь с таким email уже существует");
+        }
+        if (userRepository.existsByPhoneNumber(userRequestDto.getPhoneNumber())) {
+            throw new DataIntegrityViolationException("Пользователь с таким телефоном уже существует");
+        }
     }
 
-    public void createCourier(UserRequestDto userRequestDto) {
+    public void createClient(UserRequestDto userRequestDto) throws DataIntegrityViolationException, IOException {
+           checkUserData(userRequestDto);
+           User user = createUser(userRequestDto);
+           user.setRole(Role.CLIENT);
+           userRepository.saveUser(user);
+           Client client = new Client();
+           client.setUserId(user.getId());
+           clientRepository.save(client);
+    }
+
+    public void createCourier(UserRequestDto userRequestDto) throws DataIntegrityViolationException, IOException{
+        checkUserData(userRequestDto);
         User user = createUser(userRequestDto);
         user.setRole(Role.COURIER);
-        userRepository.save(user);
+        userRepository.saveUser(user);
         Courier courier = new Courier();
-        courier.setUser(user);
+        courier.setUserId(user.getId());
         courier.setStatus(CourierStatus.OFF_SHIFT);
+        courier.setAccountState(CourierAccountState.INACTIVE);
         courierRepository.save(courier);
     }
 
-    private User findByCredetionals(UserCredentialsRequestDto userCredetionalDto)  {
+    public void createAdmin(UserRequestDto userRequestDto) throws IOException{
+        checkUserData(userRequestDto);
+        User user = createUser(userRequestDto);
+        user.setRole(Role.ADMIN);
+        userRepository.saveUser(user);
+        Admin admin = new Admin();
+        admin.setUserId(user.getId());
+        adminRepository.save(admin);
+    }
+    private User findByCredetionals(UserCredentialsRequestDto userCredetionalDto) throws AuthenticationException {
         Optional<User> userOptional = userRepository.findByEmail(userCredetionalDto.getEmail());
         if (userOptional.isPresent()) {
             User user = userOptional.get();
@@ -80,11 +109,15 @@ public class UserService {
                 return user;
             }
         }
-        return null;
+        throw new AuthenticationException("Неверный логин или пароль!");
     }
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Пользователь с таким email не найден!"));
+                .orElseThrow(() -> new IllegalStateException("Пользователь с таким email не найден!"));
+    }
+    public User findById(Long id){
+        return userRepository.findById(id)
+                .orElseThrow(()-> new IllegalStateException("Пользователь с таким id не найден"));
     }
 }

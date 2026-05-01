@@ -3,8 +3,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.example.blps.dto.responseDto.JwtAuthificationResponceDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -14,9 +13,8 @@ import java.time.ZoneId;
 import java.util.Date;
 
 @Component
+@Slf4j
 public class JwtService {
-
-    private static Logger LOGGER = LogManager.getLogger(JwtService.class);
 
     @Value("N8BpLCtew37WlY7DgaFpJueGZhv8CfAhy6BEI2PNcT0")
     private String jwtSecret;
@@ -57,15 +55,15 @@ public class JwtService {
             Jwts.parser().verifyWith(getSignInKey()).build().parseClaimsJws(token).getPayload();
             return true;
         } catch (ExpiredJwtException e) {
-            LOGGER.error("Expired JWT token");
+            log.error("Истекший JWT токен");
         } catch (UnsupportedJwtException e) {
-            LOGGER.error("Unsupported JWT token");
+            log.error("Не поддерживаемый JWT токен");
         } catch (MalformedJwtException e) {
-            LOGGER.error("Malformed JWT token");
+            log.error("Искаженный JWT токен");
         } catch (SecurityException e) {
-            LOGGER.error("Security exception");
+            log.error("Ошибка безопасности");
         } catch (Exception e) {
-            LOGGER.error("Exception");
+            log.error("Ошибка!");
         }
         return false;
     }
