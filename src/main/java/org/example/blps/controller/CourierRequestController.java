@@ -34,7 +34,7 @@ public class CourierRequestController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasAuthority('SUMBMIT_REQUEST')")
+    @PreAuthorize("hasAuthority('SUBMIT_REQUEST')")
     @PostMapping("/submit")
     public ResponseEntity<?> submitRequest(@AuthenticationPrincipal CustomUserDetails userDetails){
         String email = userDetails.getUsername();

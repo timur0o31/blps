@@ -44,6 +44,6 @@ public class OrderAttemptService {
                 .stream().map((OrderAttempt orderAttempt) -> orderAttempt.getId()).toList();
     }
     public OrderAttempt findById(Long id){
-        return orderAttemptRepository.findById(id).orElseThrow(()-> new RuntimeException("не найдено попытки с таким id"));
+        return orderAttemptRepository.findById(id).orElseThrow(()-> new IllegalStateException("не найдено попытки с таким id"));
     }
 }

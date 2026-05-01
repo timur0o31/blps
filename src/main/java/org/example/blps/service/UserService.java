@@ -114,10 +114,10 @@ public class UserService {
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Пользователь с таким email не найден!"));
+                .orElseThrow(() -> new IllegalStateException("Пользователь с таким email не найден!"));
     }
     public User findById(Long id){
         return userRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Пользователь с таким id не найден"));
+                .orElseThrow(()-> new IllegalStateException("Пользователь с таким id не найден"));
     }
 }

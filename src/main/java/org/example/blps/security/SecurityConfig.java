@@ -1,5 +1,6 @@
 package org.example.blps.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.blps.security.jwt.JwtFilter;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,19 @@ public class SecurityConfig {
         http
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("""
+                                {
+                                  "status": 401,
+                                  "error": "Unauthorized",
+                                  "message": "Вы не авторизованы"
+                                }
+                                """);
+                        })
+                )
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/registration/**", "/auth/**").permitAll()
                         .requestMatchers("/**")
                         .authenticated())

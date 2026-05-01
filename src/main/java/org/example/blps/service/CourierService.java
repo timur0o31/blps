@@ -64,7 +64,7 @@ public class CourierService {
     }
 
     public Courier findCourierByEmail(String email) {
-        return courierRepository.findByUserId(userService.findByEmail(email).getId()).orElseThrow(() -> new RuntimeException("Курьера с таким email не существует!"));
+        return courierRepository.findByUserId(userService.findByEmail(email).getId()).orElseThrow(() -> new IllegalStateException("Курьера с таким email не существует!"));
     }
 
     public Courier findCourierWithOnlineStatus() {
@@ -80,9 +80,9 @@ public class CourierService {
     public Courier blockCourier(String email, Long id){
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
         Courier courier = courierRepository.findById(id).orElseThrow(
-                ()->new RuntimeException("Курьера с данным id не существует"));
+                ()->new IllegalStateException("Курьера с данным id не существует"));
         if (courier.getAccountState()==CourierAccountState.BLOCKED){
-            throw new RuntimeException("Курьер уже был заблокирован");
+            throw new IllegalStateException("Курьер уже был заблокирован");
         }
         if (courier.getStatus() == CourierStatus.BUSY
                 || courier.getStatus() == CourierStatus.ACCEPTING_ORDER

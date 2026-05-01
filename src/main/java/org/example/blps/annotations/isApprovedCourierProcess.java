@@ -1,12 +1,10 @@
 package org.example.blps.annotations;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.User;
 import org.example.blps.enums.CourierAccountState;
-import org.example.blps.repository.AdminRepository;
 import org.example.blps.repository.CourierRepository;
 import org.example.blps.repository.UserRepository;
 import org.example.blps.security.CustomUserDetails;

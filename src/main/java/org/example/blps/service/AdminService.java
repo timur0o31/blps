@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -26,21 +27,21 @@ public class AdminService {
         this.userService = userService;
     }
     public Admin findByUserId(Long id){
-        return adminRepository.findByUserId(id).orElseThrow(()-> new RuntimeException("Пользователя с данным id не существует"));
+        return adminRepository.findByUserId(id).orElseThrow(()-> new IllegalStateException("Пользователя с данным id не существует"));
     }
 
     @isApprovedAdmin
     public void changeState(String email,Long id, boolean state){
         User user = userService.findByEmail(email);
         Admin admin = adminRepository.findById(id).orElseThrow(
-                ()->new RuntimeException("Админа с таким id не существует")
+                ()->new IllegalStateException("Админа с таким id не существует")
         );
-        Admin changedBy = adminRepository.findByUserId(user.getId()).orElseThrow(()->new RuntimeException("Данный пользователь не является админом"));
+        Admin changedBy = adminRepository.findByUserId(user.getId()).orElseThrow(()->new IllegalStateException("Данный пользователь не является админом"));
         if (!changedBy.isAccountState()){
-            throw new RuntimeException("Ваш аккаунт не одобрен, у вас нет привилегий администратора");
+            throw new AccessDeniedException("Ваш аккаунт не одобрен, у вас нет привилегий администратора");
         }
         if (changedBy.getUserId()==id){
-            throw new RuntimeException("Вы не можете менять свои привилегии");
+            throw new IllegalStateException("Вы не можете менять свои привилегии");
         }
         admin.setAccountState(true);
         adminRepository.save(admin);

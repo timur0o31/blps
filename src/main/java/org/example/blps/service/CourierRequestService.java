@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,14 +41,15 @@ public class CourierRequestService {
         this.mapper = mapper;
         this.userService = userService;
     }
+
     public void submitRequest(String email) {
         Courier courier = courierService.findCourierByEmail(email);
         if (courier.getAccountState()==CourierAccountState.BLOCKED)
-            throw new RuntimeException("Заблокированным сотрудникам нельзя трудоустроиться");
+            throw new AccessDeniedException("Заблокированным сотрудникам нельзя трудоустроиться");
         if (!courierRequestRepository.findCourierRequestByCourierAndStatus(courier, CourierRequestStatus.APPROVED).isEmpty())
-            throw new RuntimeException("Заявка уже одобрена");
+            throw new IllegalStateException("Заявка уже одобрена");
         if (!courierRequestRepository.findCourierRequestByCourierAndStatus(courier, CourierRequestStatus.PENDING).isEmpty())
-            throw new RuntimeException("Заявка на трудоустройство уже подана");
+            throw new IllegalStateException("Заявка на трудоустройство уже подана");
         CourierRequest courierRequest = new CourierRequest();
         courierRequest.setCourier(courier);
         courierRequest.setStatus(CourierRequestStatus.PENDING);
@@ -59,8 +61,8 @@ public class CourierRequestService {
     public void approveRequest(String email, Long id){
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
         CourierRequest courierRequest = courierRequestRepository.findCourierRequestById(id)
-                .orElseThrow(()->new RuntimeException("заявки с данным id не существует"));
-        if (courierRequest.getStatus()!=CourierRequestStatus.PENDING) throw new RuntimeException("Заявку можно одобрить только из состояния ожидания!");
+                .orElseThrow(()->new IllegalStateException("заявки с данным id не существует"));
+        if (courierRequest.getStatus()!=CourierRequestStatus.PENDING) throw new IllegalStateException("Заявку можно одобрить только из состояния ожидания!");
         courierRequest.setStatus(CourierRequestStatus.APPROVED);
         courierRequest.setReviewedBy(admin);
         Courier courier = courierRequest.getCourier();
@@ -72,8 +74,8 @@ public class CourierRequestService {
     public void declineRequest(String email, Long id){
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
         CourierRequest courierRequest = courierRequestRepository.findCourierRequestById(id)
-                .orElseThrow(()->new RuntimeException("заявки с данным id не существует"));
-        if (courierRequest.getStatus()!=CourierRequestStatus.PENDING) throw new RuntimeException("Заявку можно отклонить только из состояния ожидания!");
+                .orElseThrow(()->new IllegalStateException("заявки с данным id не существует"));
+        if (courierRequest.getStatus()!=CourierRequestStatus.PENDING) throw new IllegalStateException("Заявку можно отклонить только из состояния ожидания!");
         courierRequest.setStatus(CourierRequestStatus.DECLINED);
         courierRequest.setReviewedBy(admin);
         courierRequestRepository.save(courierRequest);

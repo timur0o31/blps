@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -60,7 +61,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(errorResponceDto);
     }
 
-    @ExceptionHandler({DisabledException.class, AccessDeniedException.class})
+    @ExceptionHandler({DisabledException.class, AccessDeniedException.class, UsernameNotFoundException.class})
     public ResponseEntity<ErrorResponceDto> handleForbiddenExceptions(Exception ex) {
         HttpStatus status = HttpStatus.FORBIDDEN;
         ErrorResponceDto errorResponceDto = new ErrorResponceDto(status.value(), ex.getMessage());
