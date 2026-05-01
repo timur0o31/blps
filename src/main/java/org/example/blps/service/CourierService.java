@@ -1,5 +1,8 @@
 package org.example.blps.service;
 import jakarta.persistence.EntityNotFoundException;
+import org.example.blps.annotations.isApprovedAdmin;
+import org.example.blps.annotations.isApprovedCourier;
+import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
 import org.example.blps.dto.responseDto.CourierResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.entity.Admin;
@@ -37,6 +40,7 @@ public class CourierService {
         this.mapper = mapper;
     }
 
+    @isApprovedCourier
     public CourierStatus toggleCourierShiftStatus(String email) {
         User user = userService.findByEmail(email);
         Courier courier = courierRepository.findByUserId(user.getId()).orElseThrow(() -> new EntityNotFoundException("Курьер не найден"));
@@ -71,6 +75,8 @@ public class CourierService {
         courierRepository.save(courier);
     }
 
+
+    @isApprovedAdmin
     public Courier blockCourier(String email, Long id){
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
         Courier courier = courierRepository.findById(id).orElseThrow(
@@ -88,6 +94,7 @@ public class CourierService {
         courier.setDeletedBy(admin);
         return courierRepository.save(courier);
     }
+    @isApprovedAdmin
     public ResponsePaginationDto<CourierResponseDto> getAll(String page, String size,String courierState, String courierStatus){
         PaginationUtil.Params params = PaginationUtil.parse(page,size);
         CourierAccountState accountState = ParseUtil.parseEnum(courierState, CourierAccountState.class);

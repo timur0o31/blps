@@ -1,5 +1,4 @@
 package org.example.blps.controller;
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.example.blps.dto.requestDto.UserRequestDto;
@@ -27,7 +26,7 @@ public class AdminController {
     }
 
     @PatchMapping("{id}/change-state")
-    @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication) or @accessSecurity.isSuperUser(authentication)")
+    @PreAuthorize("hasAuthority('CHANGE_STATE')")
     public ResponseEntity<?> changeState(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable @Positive Long id, @RequestParam boolean state) {
         String email = userDetails.getUsername();
         adminService.changeState(email, id, state);
@@ -35,13 +34,14 @@ public class AdminController {
     }
 
     @PostMapping
-    @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication) or @accessSecurity.isSuperUser(authentication)")
+    @PreAuthorize("hasAuthority('CREATE_ADMIN')")
     public ResponseEntity<?> createAdmin(@RequestBody @Valid UserRequestDto userRequestDto) throws IOException {
         adminService.createAdmin(userRequestDto);
         return ResponseEntity.ok().build();
     }
+
     @GetMapping
-    @PreAuthorize("@accessSecurity.isSuperUser(authentication)")
+    @PreAuthorize("hasAuthority('VIEW_ADMINS')")
     public ResponseEntity<?> getAll(@RequestParam(defaultValue = "0") String page,
                                     @RequestParam(defaultValue = "10") String size) {
         ResponsePaginationDto<Admin> response = adminService.getAll(page, size);

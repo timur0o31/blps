@@ -1,5 +1,4 @@
 package org.example.blps.utils;
-
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 
 import java.util.List;

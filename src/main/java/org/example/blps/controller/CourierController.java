@@ -25,21 +25,22 @@ public class CourierController {
         this.courierService = courierService;
     }
 
-    @PreAuthorize("@accessSecurity.isApprovedCourier(authentication)")
+    @PreAuthorize("hasAuthority('TOGGLE_SHIFT_STATUS')")
     @PatchMapping("/shift-status")
     public ResponseEntity<ShiftStatusResponceDto> toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
         String email = userDetails.getUsername();
         CourierStatus status = courierService.toggleCourierShiftStatus(email);
         return ResponseEntity.ok(new ShiftStatusResponceDto(status));
     }
-    @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication)")
+    @PreAuthorize("hasAuthority('BLOCK_COURIER')")
     @PatchMapping("/{id}/block")
     public ResponseEntity<?> blockCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable @Positive Long id){
         String email = userDetails.getUsername();
         courierService.blockCourier(email,id);
         return ResponseEntity.ok("");
     }
-    @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication)")
+
+    @PreAuthorize("hasAuthority('VIEW_COURIERS')")
     @GetMapping
     public ResponseEntity<?> getAll(@RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size,
                                     @RequestParam(required = false) String courierState, @RequestParam(required = false) String courierStatus) {

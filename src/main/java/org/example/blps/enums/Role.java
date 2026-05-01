@@ -7,10 +7,13 @@ import static org.example.blps.enums.Privilege.*;
 @Getter
 public enum Role {
 
-    ADMIN(Set.of(APPROVE_COURIER,
-            VIEW_COURIER_APLICATIONS,
+    ADMIN(Set.of(VIEW_COURIER_APPLICATIONS,
             VIEW_COURIERS,
-            DELETE_COURIER)),
+            BLOCK_COURIER,
+            CREATE_ADMIN,
+            CHANGE_STATE,
+            APPROVE_REQUEST,
+            DECLINE_REQUEST)),
 
     CLIENT(Set.of(CREATE_ORDER,
             VIEW_STATUS_ORDER,
@@ -19,9 +22,10 @@ public enum Role {
 
     COURIER(Set.of(TOGGLE_SHIFT_STATUS,
             UPDATE_STATUS_ORDER,
-            DECLINE_ORDER,
+            CANCEL_ORDER,
             ACCEPT_ORDER,
-            VIEW_ORDER));
+            VIEW_ORDER,
+            SUBMIT_REQUEST));
 
     private final Set<Privilege> privileges;
 

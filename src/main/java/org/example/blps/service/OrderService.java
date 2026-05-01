@@ -1,5 +1,7 @@
 package org.example.blps.service;
 import jakarta.persistence.EntityNotFoundException;
+import org.example.blps.annotations.isApprovedCourier;
+import org.example.blps.annotations.isApprovedCourierProcess;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.repository.CourierRepository;
 import org.example.blps.utils.PaginationUtil;
@@ -34,20 +36,24 @@ public class OrderService {
     private final OrderAttemptService orderAttemptService;
     private final CourierService courierService;
     private final Integer LIMIT = 3;
+    private final org.example.blps.annotations.isApprovedCourierProcess isApprovedCourierProcess;
+
     @Autowired
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
                         UserService userService, ClientService clientService,
                         OrderAttemptService orderAttemptService,
-                        CourierService courierService, CourierRepository courierRepository) {
+                        CourierService courierService, CourierRepository courierRepository, isApprovedCourierProcess isApprovedCourierProcess) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.courierService = courierService;
         this.userService = userService;
         this.clientService = clientService;
         this.orderAttemptService = orderAttemptService;
+        this.isApprovedCourierProcess = isApprovedCourierProcess;
     }
 
     // Получить активные заказы (для курьера)
+    @isApprovedCourier
     public OrderResponseDto getOrder(String email){
         Courier courier = courierService.findCourierByEmail(email);
         return orderMapper.fromEntityToDto(orderRepository.findByCourierAndStatus(courier, OrderStatus.PENDING));
@@ -73,7 +79,9 @@ public class OrderService {
             return orderMapper.fromEntityToDto(newOrder);
     }
     // Обновить заказ (для курьера)
+
     @Transactional
+    @isApprovedCourier
     public OrderResponseDto updateOrder(Long id, OrderStatusRequestDto orderRequestDto, String email) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Заказа с данным id не существует"));
@@ -129,6 +137,7 @@ public class OrderService {
         }
     }
     @Transactional
+    @isApprovedCourier
     public void cancelOrderById(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);
@@ -158,6 +167,7 @@ public class OrderService {
     }
 
     @Transactional
+    @isApprovedCourier
     public void acceptOrderByCourierId(Long orderId, String email) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Заказ не найден"));
         Courier courier = courierService.findCourierByEmail(email);

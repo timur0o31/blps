@@ -11,8 +11,9 @@ import org.example.blps.repository.UserRepository;
 import org.example.blps.security.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component("accessSecurity")
+@Service("accessSecurity")
 @RequiredArgsConstructor
 public class AccessSecurity {
 

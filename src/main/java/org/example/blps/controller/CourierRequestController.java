@@ -25,7 +25,8 @@ public class CourierRequestController {
     public CourierRequestController(CourierRequestService courierRequestService){
         this.courierRequestService =courierRequestService;
     }
-    @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication)")
+
+    @PreAuthorize("hasAuthority('VIEW_COURIER_APPLICATIONS')")
     @GetMapping
     public ResponseEntity<?> getRequests(@RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size,
                                          @RequestParam(required = false) @Positive Long courierId, @RequestParam(required = false) String status){
@@ -33,21 +34,22 @@ public class CourierRequestController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasRole('COURIER')")
+    @PreAuthorize("hasAuthority('SUMBMIT_REQUEST')")
     @PostMapping("/submit")
     public ResponseEntity<?> submitRequest(@AuthenticationPrincipal CustomUserDetails userDetails){
         String email = userDetails.getUsername();
         courierRequestService.submitRequest(email);
         return ResponseEntity.ok().build();
     }
-    @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication)")
+
+    @PreAuthorize("hasAuthority('APPROVE_REQUEST')")
     @PatchMapping("/{id}/approve")
     public ResponseEntity<?> approveRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable @Positive Long id){
         String email = userDetails.getUsername();
         courierRequestService.approveRequest(email, id);
         return ResponseEntity.ok().build();
     }
-    @PreAuthorize("@accessSecurity.isApprovedAdmin(authentication)")
+    @PreAuthorize("hasAuthority('DECLINE_REQUEST')")
     @PatchMapping("/{id}/decline")
     public ResponseEntity<?> declineRequest(@AuthenticationPrincipal CustomUserDetails userDetails,@PathVariable @Positive Long id){
         String email = userDetails.getUsername();

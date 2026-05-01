@@ -1,29 +1,11 @@
 <users>
   <user id="1">
-    <name>Admin</name>
-    <surname>Admin</surname>
-    <email>admin@gmail.com</email>
-    <password>$2a$04$VMt2svROpIo9di6nzBLjBOslOZjN7OwevEyfJwUUq2hu6Bvn5/ClC</password>
-    <phone_number>+70000000000</phone_number>
-    <role>ADMIN</role>
-    <superUser>true</superUser>
-  </user>
-  <user id="2">
     <name>Ivans</name>
     <surname>Ivanov</surname>
     <email>dans2005@yandex.ru</email>
-    <password>$2a$04$g2jGt5vLlPYoiDM51z.Ja.LSDpZH37zrh4HyXjkNAaww1QOPdWApO</password>
+    <password>$2a$04$RcmRDRCiS2ikXS12jRQ5s.MtGyEoSLw4.0CkUK3r7s5wLwYGWqx1W</password>
     <phone_number>+79931632745</phone_number>
     <role>COURIER</role>
-    <superUser>false</superUser>
-  </user>
-  <user id="3">
-    <name>John</name>
-    <surname>Ivanov</surname>
-    <email>timur2005@yandex.ru</email>
-    <password>$2a$04$vBjQmmmbCRmLgJcS0W.yJO0DJRo8LSdd39166DIWsMpIaJPO32Qiu</password>
-    <phone_number>89991634558</phone_number>
-    <role>CLIENT</role>
     <superUser>false</superUser>
   </user>
 </users>

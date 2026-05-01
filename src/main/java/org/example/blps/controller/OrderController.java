@@ -32,14 +32,14 @@ public class OrderController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @PreAuthorize("@accessSecurity.isApprovedCourier(authentication)")
+    @PreAuthorize("hasAuthority('VIEW_ORDER')")
     @GetMapping(value="/active")
     public ResponseEntity<?> getOrder(@AuthenticationPrincipal CustomUserDetails userDetails){
         OrderResponseDto responseDto = orderService.getOrder(userDetails.getUsername());
         return ResponseEntity.ok(responseDto);
     }
 
-    @PreAuthorize("@accessSecurity.isApprovedCourier(authentication)")
+    @PreAuthorize("hasAuthority('UPDATE_STATUS_ORDER')")
     @PatchMapping(value = "/{id}/status")
     public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails,
                                                               @RequestBody @Valid OrderStatusRequestDto orderStatusRequestDto) {
@@ -47,21 +47,21 @@ public class OrderController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @PreAuthorize("@accessSecurity.isApprovedCourier(authentication)")
+    @PreAuthorize("hasAuthority('CANCEL_ORDER')")
     @PatchMapping(value ="/{id}/cancel")
     public ResponseEntity<?> cancelOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
         orderService.cancelOrderById(id, userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("@accessSecurity.isApprovedCourier(authentication)")
+    @PreAuthorize("hasAuthority('ACCEPT_ORDER')")
     @PatchMapping(value = "/{id}/accept")
     public ResponseEntity<?> acceptOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
         orderService.acceptOrderByCourierId(id,userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAuthority('VIEW_STATUS_ORDER')")
     @GetMapping(value = "/{id}/status")
     public ResponseEntity<?> getStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
         OrderResponseDto status = orderService.getStatusOrder(id, userDetails.getUsername());
@@ -69,7 +69,7 @@ public class OrderController {
         return ResponseEntity.ok(status);
     }
 
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAuthority('VIEW_ORDER_HISTORY')")
     @GetMapping(value = "/history")
     public ResponseEntity<?> getOrderHistory(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size) {
         ResponsePaginationDto<OrderResponseDto> history = orderService.getOrderHistory(userDetails.getUsername(),page,size);

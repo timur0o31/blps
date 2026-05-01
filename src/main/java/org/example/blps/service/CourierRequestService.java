@@ -1,5 +1,7 @@
 package org.example.blps.service;
 
+import org.example.blps.annotations.isApprovedAdmin;
+import org.example.blps.annotations.isApprovedAdminProcess;
 import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.entity.Admin;
@@ -51,7 +53,9 @@ public class CourierRequestService {
         courierRequest.setStatus(CourierRequestStatus.PENDING);
         courierRequestRepository.save(courierRequest);
     }
+
     @Transactional
+    @isApprovedAdmin
     public void approveRequest(String email, Long id){
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
         CourierRequest courierRequest = courierRequestRepository.findCourierRequestById(id)
@@ -64,6 +68,7 @@ public class CourierRequestService {
         courierRequestRepository.save(courierRequest);
         courierService.saveCourier(courier);
     }
+    @isApprovedAdmin
     public void declineRequest(String email, Long id){
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
         CourierRequest courierRequest = courierRequestRepository.findCourierRequestById(id)
@@ -73,6 +78,8 @@ public class CourierRequestService {
         courierRequest.setReviewedBy(admin);
         courierRequestRepository.save(courierRequest);
     }
+
+    @isApprovedAdmin
     public ResponsePaginationDto<CourierApplicationsResponseDto> getAll(String page, String size, Long courierId, String status){
         CourierRequestStatus parsedStatus = null;
         if (status != null && !status.isBlank()) {
