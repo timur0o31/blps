@@ -25,9 +25,6 @@ public class PaginationUtil {
         Long lastPage = 0L;
         if (totalPages!=0) lastPage = totalPages-1;
         return new ResponsePaginationDto<>(data, String.valueOf(params.page()), String.valueOf(params.size()), totalElements,
-                lastPage,
-                0L,
-                totalPages
-        );
+                lastPage, 0L, totalPages);
     }
 }

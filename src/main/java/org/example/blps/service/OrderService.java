@@ -3,7 +3,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.blps.annotations.isApprovedCourier;
 import org.example.blps.annotations.isApprovedCourierProcess;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
-import org.example.blps.repository.CourierRepository;
 import org.example.blps.utils.PaginationUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,13 +35,15 @@ public class OrderService {
     private final OrderAttemptService orderAttemptService;
     private final CourierService courierService;
     private final Integer LIMIT = 3;
+    private final OrderAssignmentPublisherService orderAssignmentPublisherService;
     private final org.example.blps.annotations.isApprovedCourierProcess isApprovedCourierProcess;
 
     @Autowired
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
                         UserService userService, ClientService clientService,
                         OrderAttemptService orderAttemptService,
-                        CourierService courierService, CourierRepository courierRepository, isApprovedCourierProcess isApprovedCourierProcess) {
+                        CourierService courierService, isApprovedCourierProcess isApprovedCourierProcess,
+                        OrderAssignmentPublisherService orderAssignmentPublisherService) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.courierService = courierService;
@@ -50,6 +51,7 @@ public class OrderService {
         this.clientService = clientService;
         this.orderAttemptService = orderAttemptService;
         this.isApprovedCourierProcess = isApprovedCourierProcess;
+        this.orderAssignmentPublisherService = orderAssignmentPublisherService;
     }
 
     // Получить активные заказы (для курьера)
@@ -64,22 +66,13 @@ public class OrderService {
             Order newOrder = orderMapper.fromDtoToEntity(orderRequestDto);
             Client client = clientService.findByUser(userService.findByEmail(email));
             newOrder.setClient(client);
-            Courier courier = courierService.findCourierWithOnlineStatus();
-            if  (courier == null) {
-                newOrder.setStatus(OrderStatus.WAITING);
-               // throw new RuntimeException("тест отката транзакции");
-                return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
-            }
-            newOrder.setCourier(courier);
-            newOrder.setStatus(OrderStatus.PENDING);
-            orderRepository.save(newOrder);
-            orderAttemptService.addOrderAttempt(courier,newOrder, OrderAttemptStatus.ASSIGNED);
-            courier.setStatus(CourierStatus.ACCEPTING_ORDER);
-            //throw new RuntimeException("тест отката транзакции");
-            return orderMapper.fromEntityToDto(newOrder);
+            newOrder.setStatus(OrderStatus.WAITING);
+            Order savedOrder = orderRepository.save(newOrder);
+            orderAssignmentPublisherService.publishAssignOrder(savedOrder.getId());
+            return orderMapper.fromEntityToDto(savedOrder);
     }
-    // Обновить заказ (для курьера)
 
+    // Обновить заказ (для курьера)
     @Transactional
     @isApprovedCourier
     public OrderResponseDto updateOrder(Long id, OrderStatusRequestDto orderRequestDto, String email) {
