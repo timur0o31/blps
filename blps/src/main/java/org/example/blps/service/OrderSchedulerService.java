@@ -1,7 +1,5 @@
 package org.example.blps.service;
 
-import org.example.blps.entity.Order;
-import org.example.blps.entity.OrderAttempt;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 

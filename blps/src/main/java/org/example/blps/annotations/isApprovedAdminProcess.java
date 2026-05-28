@@ -4,7 +4,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.example.blps.entity.Admin;
 import org.example.blps.entity.User;
-import org.example.blps.enums.Role;
 import org.example.blps.repository.AdminRepository;
 import org.example.blps.repository.UserRepository;
 import org.example.blps.security.CustomUserDetails;
@@ -28,7 +27,7 @@ public class isApprovedAdminProcess {
         this.adminRepository = adminRepository;
     }
 
-    @Around("@annotation(isApprovedAdmin)")
+    @Around("@annotation(org.example.blps.annotations.isApprovedAdmin)")
     public Object isApprovedAdminProcess(ProceedingJoinPoint joinPoint) throws Throwable {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();

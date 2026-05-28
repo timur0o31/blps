@@ -2,7 +2,6 @@ package org.example.blps.service;
 import jakarta.persistence.EntityNotFoundException;
 import org.example.blps.annotations.isApprovedAdmin;
 import org.example.blps.annotations.isApprovedCourier;
-import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
 import org.example.blps.dto.responseDto.CourierResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.entity.Admin;

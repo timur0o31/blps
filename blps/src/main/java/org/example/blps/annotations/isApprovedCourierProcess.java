@@ -27,7 +27,7 @@ public class isApprovedCourierProcess {
         this.courierRepository = courierRepository;
     }
 
-    @Around("@annotation(isApprovedCourier)")
+    @Around("@annotation(org.example.blps.annotations.isApprovedCourier)")
     public Object isApprovedCourier(ProceedingJoinPoint joinPoint) throws Throwable {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();

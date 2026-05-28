@@ -1,7 +1,6 @@
 package org.example.blps.service;
 
 import org.example.blps.annotations.isApprovedAdmin;
-import org.example.blps.annotations.isApprovedAdminProcess;
 import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.entity.Admin;

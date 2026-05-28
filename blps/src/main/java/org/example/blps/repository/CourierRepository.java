@@ -1,9 +1,7 @@
 package org.example.blps.repository;
 
 import org.example.blps.entity.Courier;
-import org.example.blps.entity.CourierRequest;
 import org.example.blps.enums.CourierAccountState;
-import org.example.blps.enums.CourierRequestStatus;
 import org.example.blps.enums.CourierStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

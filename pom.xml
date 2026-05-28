@@ -9,7 +9,8 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>blps</module>
         <module>bitrix24</module>
+        <module>blps</module>
     </modules>
+
 </project>

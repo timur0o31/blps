@@ -28,7 +28,7 @@ public class isSuperUserProcess {
         this.adminRepository = adminRepository;
     }
 
-    @Around("@annotation(isSuperUser)")
+    @Around("@annotation(org.example.blps.annotations.isSuperUser)")
     public Object isApprovedCourier(ProceedingJoinPoint joinPoint) throws Throwable {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
