@@ -1,27 +1,30 @@
-package org.example;
+package org.example.blps.service.consumers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import org.example.blps.service.OrderProducerService;
 import org.jboss.logging.Logger;
 import org.example.blps.dto.JmsMessageDto;
 import org.example.blps.enums.OrderAssignmentMessageType;
+import org.springframework.context.annotation.Profile;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.JmsException;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
 
 @Service
+@Profile("worker")
 public class OrderAssigmentConsumerService {
     private static final Logger LOG = Logger.getLogger(OrderAssigmentConsumerService.class);
-    private final OrderService orderService;
+    private final OrderAssigmentService orderAssigmentService;
     private final ObjectMapper objectMapper;
     private final String nodeId;
 
-    public OrderAssigmentConsumerService(OrderService orderService,
+    public OrderAssigmentConsumerService(OrderAssigmentService orderAssigmentService,
                                          ObjectMapper objectMapper,
                                          @Value("${app.node-id:${jboss.node.name:${server.port:local}}}") String nodeId) {
-        this.orderService = orderService;
+        this.orderAssigmentService = orderAssigmentService;
         this.objectMapper = objectMapper;
         this.nodeId = nodeId;
     }
@@ -38,10 +41,10 @@ public class OrderAssigmentConsumerService {
             OrderAssignmentMessageType type = dto.type();
             LOG.infov("Node {0} received JMS message from {1}: {2}", nodeId, OrderProducerService.ASSIGNMENT_QUEUE, dto);
             if (type == OrderAssignmentMessageType.ASSIGN_ORDER){
-                orderService.refreshWaitingOrder(dto.orderId());
+                orderAssigmentService.refreshWaitingOrder(dto.orderId());
             }
             if (type == OrderAssignmentMessageType.EXPIRE_ASSIGNMENT){
-                orderService.refreshAssignedOrder(dto.orderAttemptId());
+                orderAssigmentService.refreshAssignedOrder(dto.orderAttemptId());
             }
             LOG.infov("Node {0} processed JMS message type {1}", nodeId, type);
         }catch(JmsException e){

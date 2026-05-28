@@ -58,17 +58,8 @@ public class CourierService {
         return courier.getStatus();
     }
 
-    public Courier findOnlineCourier(List<Long> declinedCouriers){
-        if (declinedCouriers.isEmpty()) return courierRepository.findFirstByStatus(CourierStatus.ON_SHIFT).orElse(null);
-        return courierRepository.findFirstByStatusAndIdNotIn(CourierStatus.ON_SHIFT, declinedCouriers).orElse(null);
-    }
-
     public Courier findCourierByEmail(String email) {
         return courierRepository.findByUserId(userService.findByEmail(email).getId()).orElseThrow(() -> new IllegalStateException("Курьера с таким email не существует!"));
-    }
-
-    public Courier findCourierWithOnlineStatus() {
-        return courierRepository.findFirstByStatus(CourierStatus.ON_SHIFT).orElse(null);
     }
 
     public void saveCourier(Courier courier) {

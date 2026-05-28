@@ -3,6 +3,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.blps.annotations.isApprovedCourier;
 import org.example.blps.annotations.isApprovedCourierProcess;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
+import org.example.blps.service.consumers.OrderAssigmentService;
 import org.example.blps.utils.PaginationUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,16 +35,16 @@ public class OrderService {
     private final ClientService clientService;
     private final OrderAttemptService orderAttemptService;
     private final CourierService courierService;
-    private final Integer LIMIT = 3;
     private final OrderAssignmentPublisherService orderAssignmentPublisherService;
     private final org.example.blps.annotations.isApprovedCourierProcess isApprovedCourierProcess;
-
+    private final OrderAssigmentService orderAssigmentService;
     @Autowired
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
                         UserService userService, ClientService clientService,
                         OrderAttemptService orderAttemptService,
                         CourierService courierService, isApprovedCourierProcess isApprovedCourierProcess,
-                        OrderAssignmentPublisherService orderAssignmentPublisherService) {
+                        OrderAssignmentPublisherService orderAssignmentPublisherService,
+                        OrderAssigmentService orderAssigmentService) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.courierService = courierService;
@@ -52,6 +53,7 @@ public class OrderService {
         this.orderAttemptService = orderAttemptService;
         this.isApprovedCourierProcess = isApprovedCourierProcess;
         this.orderAssignmentPublisherService = orderAssignmentPublisherService;
+        this.orderAssigmentService = orderAssigmentService;
     }
 
     // Получить активные заказы (для курьера)
@@ -136,27 +138,7 @@ public class OrderService {
         Courier courier = courierService.findCourierByEmail(email);
         validateOrder(order);
         if (!order.getCourier().getId().equals(courier.getId())) throw new AccessDeniedException("Курьер не может отменять чужие заказы");
-        changeCourier(order, courier, OrderAttemptStatus.REJECTED);
-    }
-
-    private void changeCourier(Order order, Courier courier, OrderAttemptStatus status) {
-        order.setCourier(null);
-        if (courier.getStatus()!=CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.ON_SHIFT);
-        else courier.setStatus(CourierStatus.OFF_SHIFT);
-        orderAttemptService.changeAttemptStatus(courier, order,status);
-        if (order.getWaitingCycles()+orderAttemptService.countAttemptsForOrder(order)>=LIMIT){
-            order.setStatus(OrderStatus.FAILED);
-            return;
-        }
-        Courier newCourier = courierService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
-        if (newCourier == null) {
-            order.setStatus(OrderStatus.WAITING);
-            return;
-        }
-        orderAttemptService.addOrderAttempt(newCourier, order, OrderAttemptStatus.ASSIGNED);
-        order.setCourier(newCourier);
-        order.setStatus(OrderStatus.PENDING);
-        newCourier.setStatus(CourierStatus.ACCEPTING_ORDER);
+        orderAssigmentService.changeCourier(order, courier, OrderAttemptStatus.REJECTED);
     }
 
     @Transactional
@@ -175,41 +157,5 @@ public class OrderService {
         else courier.setStatus(CourierStatus.END_SHIFT);
         orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.ACCEPTED);
         orderRepository.save(order);
-    }
-
-    public List<Long> getTop10WaitingOrders(){
-        return orderRepository.findTop10ByStatus(OrderStatus.WAITING)
-                .stream().map((Order order)-> order.getId()).toList();
-    }
-    @Transactional
-    public void refreshWaitingOrder(Long id){
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Заказа с данным id не существует"));
-        if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
-            order.setStatus(OrderStatus.FAILED);
-            return;
-        }
-        Courier courier = courierService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
-        if (courier == null){
-            order.setWaitingCycles(order.getWaitingCycles()+1);
-            if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) order.setStatus(OrderStatus.FAILED);
-            else order.setStatus(OrderStatus.WAITING);
-            return;
-        }
-        order.setCourier(courier);
-        order.setStatus(OrderStatus.PENDING);
-        courier.setStatus(CourierStatus.ACCEPTING_ORDER);
-        orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ASSIGNED);
-    }
-
-    @Transactional
-    public void refreshAssignedOrder(Long id){
-        OrderAttempt orderAttempt = orderAttemptService.findById(id);
-        Order order = orderAttempt.getOrder();
-        if (order.getStatus() == OrderStatus.PENDING){
-            Courier oldCourier = orderAttempt.getCourier();
-            if (oldCourier != null)
-                changeCourier(order, oldCourier, OrderAttemptStatus.EXPIRED);
-        }
     }
 }

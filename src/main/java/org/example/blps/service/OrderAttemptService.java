@@ -18,32 +18,13 @@ public class OrderAttemptService {
     public OrderAttemptService(OrderAttemptRepository orderAttemptRepository){
         this.orderAttemptRepository = orderAttemptRepository;
     }
-    public void addOrderAttempt(Courier courier, Order order, OrderAttemptStatus status){
-        OrderAttempt orderAttempt = new OrderAttempt();
-        orderAttempt.setCourier(courier);
-        orderAttempt.setOrder(order);
-        orderAttempt.setAssigmentAt(LocalDateTime.now());
-        orderAttempt.setStatus(status);
-        orderAttemptRepository.save(orderAttempt);
-    }
-    public Integer countAttemptsForOrder(Order order){
-        return orderAttemptRepository.countOrderAttemptByOrderAndStatusIn(order, List.of(OrderAttemptStatus.REJECTED, OrderAttemptStatus.EXPIRED));
+    public List<Long> findAssignedAttempts(LocalDateTime deadline) {
+        return orderAttemptRepository.findTop10ByStatusAndAssigmentAtBefore(OrderAttemptStatus.ASSIGNED, deadline)
+                .stream().map((OrderAttempt orderAttempt) -> orderAttempt.getId()).toList();
     }
     public void changeAttemptStatus(Courier courier, Order order, OrderAttemptStatus status){
         OrderAttempt orderAttempt = orderAttemptRepository.findByCourierAndOrderAndStatus(courier, order,OrderAttemptStatus.ASSIGNED)
                 .orElseThrow(()->new IllegalStateException("Не найдено активной попытки"));
         orderAttempt.setStatus(status);
-    }
-    public List<Long> findCouriersIdByOrder(Order order){
-        return orderAttemptRepository.findByOrder(order).stream()
-                .map(attempt -> attempt.getCourier().getId())
-                .toList();
-    }
-    public List<Long> findAssignedAttempts(LocalDateTime deadline) {
-        return orderAttemptRepository.findTop10ByStatusAndAssigmentAtBefore(OrderAttemptStatus.ASSIGNED, deadline)
-                .stream().map((OrderAttempt orderAttempt) -> orderAttempt.getId()).toList();
-    }
-    public OrderAttempt findById(Long id){
-        return orderAttemptRepository.findById(id).orElseThrow(()-> new IllegalStateException("не найдено попытки с таким id"));
     }
 }
