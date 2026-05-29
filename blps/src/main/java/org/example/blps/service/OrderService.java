@@ -1,5 +1,10 @@
 package org.example.blps.service;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.resource.ResourceException;
+import org.example.bitrix24.api.OrderConnection;
+import org.example.bitrix24.api.OrderConnectionFactory;
+import org.example.bitrix24.dto.BitrixOrderDto;
+import org.example.bitrix24.dto.BitrixOrderStatus;
 import org.example.blps.annotations.isApprovedCourier;
 import org.example.blps.annotations.isApprovedCourierProcess;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
@@ -22,6 +27,7 @@ import org.example.blps.enums.CourierStatus;
 import org.example.blps.enums.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.example.blps.annotations.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,13 +42,16 @@ public class OrderService {
     private final OrderAttemptService orderAttemptService;
     private final CourierService courierService;
     private final Integer LIMIT = 3;
-    private final org.example.blps.annotations.isApprovedCourierProcess isApprovedCourierProcess;
+    private final isApprovedCourierProcess isApprovedCourierProcess;
+    private final OrderConnectionFactory orderConnectionFactory;
+
 
     @Autowired
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
                         UserService userService, ClientService clientService,
                         OrderAttemptService orderAttemptService,
-                        CourierService courierService, CourierRepository courierRepository, isApprovedCourierProcess isApprovedCourierProcess) {
+                        CourierService courierService, CourierRepository courierRepository, isApprovedCourierProcess isApprovedCourierProcess,
+                        OrderConnectionFactory orderConnectionFactory) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.courierService = courierService;
@@ -50,6 +59,7 @@ public class OrderService {
         this.clientService = clientService;
         this.orderAttemptService = orderAttemptService;
         this.isApprovedCourierProcess = isApprovedCourierProcess;
+        this.orderConnectionFactory = orderConnectionFactory;
     }
 
     // Получить активные заказы (для курьера)
@@ -68,10 +78,13 @@ public class OrderService {
             if  (courier == null) {
                 newOrder.setStatus(OrderStatus.WAITING);
                // throw new RuntimeException("тест отката транзакции");
+                saveOrderToBitrix(newOrder);
                 return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
+
             }
             newOrder.setCourier(courier);
             newOrder.setStatus(OrderStatus.PENDING);
+            saveOrderToBitrix(newOrder);
             orderRepository.save(newOrder);
             orderAttemptService.addOrderAttempt(courier,newOrder, OrderAttemptStatus.ASSIGNED);
             courier.setStatus(CourierStatus.ACCEPTING_ORDER);
@@ -217,6 +230,22 @@ public class OrderService {
             Courier oldCourier = orderAttempt.getCourier();
             if (oldCourier != null)
                 changeCourier(order, oldCourier, OrderAttemptStatus.EXPIRED);
+        }
+    }
+
+    private void saveOrderToBitrix(Order order) {
+        try (OrderConnection connection = orderConnectionFactory.getConnection()) {
+            BitrixOrderDto bitrixOrder = new BitrixOrderDto(
+                    null,
+                    order.getId(),
+                    order.getContent(),
+                    order.getAddress(),
+                    BitrixOrderStatus.NEW
+            );
+
+            Long bitrixId = connection.createOrder(bitrixOrder);
+        } catch (ResourceException e) {
+            throw new RuntimeException("Ошибка при сохранении заказа в Bitrix24", e);
         }
     }
 }

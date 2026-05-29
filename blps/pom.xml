@@ -57,6 +57,22 @@
         </dependency>
 
         <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>bitrix24</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <classifier>api</classifier>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Jakarta EE API -->
+        <dependency>
+            <groupId>jakarta.platform</groupId>
+            <artifactId>jakarta.jakartaee-api</artifactId>
+            <version>10.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
             <version>0.12.6</version>
