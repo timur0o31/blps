@@ -13,8 +13,6 @@
     <artifactId>bitrix24</artifactId>
     <packaging>rar</packaging>
 
-
-
     <build>
         <plugins>
             <plugin>
@@ -28,6 +26,27 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <configuration>
+                            <includes>
+                                <include>org/example/bitrix24/Bitrix24ResourceAdapter.class</include>
+                                <include>org/example/bitrix24/outbound/**</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>api-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>api</classifier>
+                            <includes>
+                                <include>org/example/bitrix24/api/**</include>
+                                <include>org/example/bitrix24/dto/**</include>
+                            </includes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
