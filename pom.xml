@@ -17,6 +17,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>bitrix24</module>
         <module>blps-domain</module>
         <module>blps-main</module>
         <module>blps-worker</module>
@@ -27,4 +28,12 @@
         <jackson-bom.version>2.18.3</jackson-bom.version>
         <smack.version>4.4.8</smack.version>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>jakarta.resource</groupId>
+            <artifactId>jakarta.resource-api</artifactId>
+            <version>2.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 </project>

@@ -1,0 +1,6 @@
+<jboss-web>
+    <resource-ref>
+        <res-ref-name>DefaultDataSource</res-ref-name>
+        <jndi-name>java:/PostgresDS</jndi-name>
+    </resource-ref>
+</jboss-web>

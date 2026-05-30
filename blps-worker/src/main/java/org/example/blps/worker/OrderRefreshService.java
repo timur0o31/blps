@@ -1,6 +1,11 @@
 package org.example.blps.worker;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.resource.ResourceException;
+import org.example.bitrix24.api.OrderConnection;
+import org.example.bitrix24.api.OrderConnectionFactory;
+import org.example.bitrix24.dto.ResourceOrderDto;
+import org.example.bitrix24.dto.ResourceOrderStatus;
 import org.example.blps.entity.Courier;
 import org.example.blps.entity.Order;
 import org.example.blps.entity.OrderAttempt;
@@ -20,11 +25,13 @@ public class OrderRefreshService {
     private final OrderAttemptService orderAttemptService;
     private final OrderRepository orderRepository;
     private final CourierFindService courierFindService;
+    private final OrderConnectionFactory orderConnectionFactory;
     public OrderRefreshService(OrderRepository orderRepository, CourierFindService courierConsumer,
-                               OrderAttemptService orderAttemptService){
+                               OrderAttemptService orderAttemptService,  OrderConnectionFactory orderConnectionFactory) {
         this.orderRepository = orderRepository;
         this.courierFindService = courierConsumer;
         this.orderAttemptService = orderAttemptService;
+        this.orderConnectionFactory = orderConnectionFactory;
     }
     @Transactional
     public void refreshWaitingOrder(Long id){
@@ -73,6 +80,7 @@ public class OrderRefreshService {
         orderAttemptService.changeAttemptStatus(courier, order,status);
         if (order.getWaitingCycles()+ orderAttemptService.countAttemptsForOrder(order)>=LIMIT){
             order.setStatus(OrderStatus.FAILED);
+            updateOrderInBitrix(order);
             LOG.infov("Order {0} moved to FAILED after courier change: waitingCycles={1}",
                     order.getId(), order.getWaitingCycles());
             return;
@@ -80,14 +88,29 @@ public class OrderRefreshService {
         Courier newCourier = courierFindService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
         if (newCourier == null) {
             order.setStatus(OrderStatus.WAITING);
+            updateOrderInBitrix(order);
             LOG.infov("Order {0} returned to WAITING after courier change: waitingCycles={1}", order.getId(), order.getWaitingCycles());
             return;
         }
         orderAttemptService.addOrderAttempt(newCourier, order, OrderAttemptStatus.ASSIGNED);
         order.setCourier(newCourier);
         order.setStatus(OrderStatus.PENDING);
+        updateOrderInBitrix(order);
         newCourier.setStatus(CourierStatus.ACCEPTING_ORDER);
         LOG.infov("Order {0} reassigned to courier {1}: status={2}, waitingCycles={3}",
                 order.getId(), newCourier.getId(), order.getStatus(), order.getWaitingCycles());
+    }
+    private void updateOrderInBitrix(Order order) {
+        try (OrderConnection connection = orderConnectionFactory.getConnection()) {
+            ResourceOrderDto resourceOrderDto = new ResourceOrderDto(
+                    order.getId(),
+                    order.getAddress(),
+                    order.getContent(),
+                    ResourceOrderStatus.valueOf(order.getStatus().name())
+            );
+            connection.updateOrder(resourceOrderDto);
+        } catch (ResourceException e) {
+            throw new RuntimeException("Ошибка при обновлении заказа в Bitrix24", e);
+        }
     }
 }
