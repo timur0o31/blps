@@ -81,11 +81,8 @@ public class XmppToJmsGatewayService {
     }
     private XMPPTCPConnectionConfiguration connectionConfiguration() throws Exception {
         return XMPPTCPConnectionConfiguration.builder()
-                .setHost(host)
-                .setPort(port)
-                .setXmppDomain(domain)
-                .setUsernameAndPassword(username, password)
-                .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
-                .build();
+                .setHost(host).setPort(port)
+                .setXmppDomain(domain).setUsernameAndPassword(username, password)
+                .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled).build();
     }
 }

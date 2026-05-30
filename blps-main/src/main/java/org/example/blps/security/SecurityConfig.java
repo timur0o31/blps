@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.blps.security.jwt.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -41,9 +42,11 @@ public class SecurityConfig {
                                 """);
                         })
                 )
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/registration/**", "/auth/**").permitAll()
-                        .requestMatchers("/**")
-                        .authenticated())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/orders/bitrix/update").permitAll()
+                        .requestMatchers("/registration/**", "/auth/**").permitAll()
+                        .anyRequest().authenticated()
+                )
                 .sessionManagement(session-> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

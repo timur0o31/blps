@@ -39,6 +39,7 @@ public class OrderRefreshService {
                 () -> new EntityNotFoundException("Заказа с данным id не существует"));
         if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
             order.setStatus(OrderStatus.FAILED);
+            updateOrderInBitrix(order);
             LOG.infov("Order {0} moved to FAILED: waitingCycles={1}", order.getId(), order.getWaitingCycles());
             return;
         }
@@ -50,12 +51,14 @@ public class OrderRefreshService {
             } else {
                 order.setStatus(OrderStatus.WAITING);
             }
+            updateOrderInBitrix(order);
             LOG.infov("Order {0} has no available courier: status={1}, waitingCycles={2}",
                     order.getId(), order.getStatus(), order.getWaitingCycles());
             return;
         }
         order.setCourier(courier);
         order.setStatus(OrderStatus.PENDING);
+        updateOrderInBitrix(order);
         courier.setStatus(CourierStatus.ACCEPTING_ORDER);
         orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ASSIGNED);
         LOG.infov("Order {0} assigned to courier {1}: status={2}, waitingCycles={3}",
@@ -73,7 +76,7 @@ public class OrderRefreshService {
         }
     }
 
-    public void changeCourier(Order order, Courier courier, OrderAttemptStatus status) {
+    private void changeCourier(Order order, Courier courier, OrderAttemptStatus status) {
         order.setCourier(null);
         if (courier.getStatus()!=CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.ON_SHIFT);
         else courier.setStatus(CourierStatus.OFF_SHIFT);
@@ -101,16 +104,27 @@ public class OrderRefreshService {
                 order.getId(), newCourier.getId(), order.getStatus(), order.getWaitingCycles());
     }
     private void updateOrderInBitrix(Order order) {
+        LOG.infov("Sending order {0} status {1} to Bitrix24", order.getId(), order.getStatus());
         try (OrderConnection connection = orderConnectionFactory.getConnection()) {
+            LOG.infov("Bitrix24 connection acquired for order {0}: {1}", order.getId(), connection.getClass().getName());
             ResourceOrderDto resourceOrderDto = new ResourceOrderDto(
                     order.getId(),
                     order.getAddress(),
                     order.getContent(),
                     ResourceOrderStatus.valueOf(order.getStatus().name())
             );
+            LOG.infov("Calling Bitrix24 update for order {0}", order.getId());
             connection.updateOrder(resourceOrderDto);
+            LOG.infov("Order {0} status {1} sent to Bitrix24", order.getId(), order.getStatus());
         } catch (ResourceException e) {
+            LOG.errorv(e, "Failed to update order {0} status {1} in Bitrix24", order.getId(), order.getStatus());
             throw new RuntimeException("Ошибка при обновлении заказа в Bitrix24", e);
+        } catch (LinkageError e) {
+            LOG.errorv(e, "Bitrix24 API/RAR classes are incompatible while updating order {0} status {1}", order.getId(), order.getStatus());
+            throw e;
+        } catch (RuntimeException e) {
+            LOG.errorv(e, "Unexpected error while updating order {0} status {1} in Bitrix24", order.getId(), order.getStatus());
+            throw e;
         }
     }
 }
