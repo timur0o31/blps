@@ -3,6 +3,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.blps.annotations.isApprovedCourier;
 import org.example.blps.annotations.isApprovedCourierProcess;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
+import org.example.blps.service.producer.OrderAssignmentPublisherService;
 import org.example.blps.utils.PaginationUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +28,6 @@ import java.util.List;
 
 @Service
 public class OrderService {
-
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final UserService userService;
@@ -37,7 +37,6 @@ public class OrderService {
     private final Integer LIMIT = 3;
     private final OrderAssignmentPublisherService orderAssignmentPublisherService;
     private final org.example.blps.annotations.isApprovedCourierProcess isApprovedCourierProcess;
-
     @Autowired
     public OrderService(OrderRepository orderRepository, OrderMapper orderMapper,
                         UserService userService, ClientService clientService,
@@ -71,7 +70,6 @@ public class OrderService {
             orderAssignmentPublisherService.publishAssignOrder(savedOrder.getId());
             return orderMapper.fromEntityToDto(savedOrder);
     }
-
     // Обновить заказ (для курьера)
     @Transactional
     @isApprovedCourier
@@ -147,7 +145,6 @@ public class OrderService {
         order.setStatus(OrderStatus.WAITING);
         orderAssignmentPublisherService.publishAssignOrder(order.getId());
     }
-
 
     @Transactional
     @isApprovedCourier

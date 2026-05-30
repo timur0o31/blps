@@ -1,4 +1,4 @@
-package org.example.blps.xmp;
+package org.example.blps.service.xmpp;
 
 import org.jboss.logging.Logger;
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -7,11 +7,9 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jxmpp.jid.impl.JidCreate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
-@Profile("xmpp")
 public class XmppOrderAssignmentSenderService implements XmppOrderAssignmentSender {
     private static final Logger LOG = Logger.getLogger(XmppOrderAssignmentSenderService.class);
 

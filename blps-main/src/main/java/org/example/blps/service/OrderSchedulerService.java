@@ -3,7 +3,7 @@ package org.example.blps.service;
 import org.example.blps.entity.Order;
 import org.example.blps.enums.OrderStatus;
 import org.example.blps.repository.OrderRepository;
-import org.springframework.context.annotation.Profile;
+import org.example.blps.service.producer.OrderAssignmentPublisherService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +15,7 @@ public class OrderSchedulerService {
     private final OrderAttemptService orderAttemptService;
     private final OrderAssignmentPublisherService orderAssignmentPublisherService;
     private final OrderRepository orderRepository;
-
-    public OrderSchedulerService(OrderAttemptService orderAttemptService,
-                                 OrderAssignmentPublisherService orderAssignmentPublisherService,
+    public OrderSchedulerService(OrderAttemptService orderAttemptService, OrderAssignmentPublisherService orderAssignmentPublisherService,
                                  OrderRepository orderRepository){
         this.orderAttemptService = orderAttemptService;
         this.orderAssignmentPublisherService = orderAssignmentPublisherService;

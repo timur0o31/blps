@@ -8,10 +8,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class CourierConsumerService {
+public class CourierFindService {
     private CourierRepository courierRepository;
-
-    public CourierConsumerService(CourierRepository courierRepository) {
+    public CourierFindService(CourierRepository courierRepository) {
         this.courierRepository=courierRepository;
     }
 

@@ -11,11 +11,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class OrderAttemptConsumerService {
+public class OrderAttemptService {
     private final OrderAttemptRepository orderAttemptRepository;
-    public OrderAttemptConsumerService(OrderAttemptRepository orderAttemptRepository) {
+    public OrderAttemptService(OrderAttemptRepository orderAttemptRepository) {
         this.orderAttemptRepository = orderAttemptRepository;
     }
+    //Этот метод дублируется
     public Integer countAttemptsForOrder(Order order){
         return orderAttemptRepository.countOrderAttemptByOrderAndStatusIn(order, List.of(OrderAttemptStatus.REJECTED, OrderAttemptStatus.EXPIRED));
     }
@@ -35,7 +36,7 @@ public class OrderAttemptConsumerService {
         orderAttempt.setStatus(status);
         orderAttemptRepository.save(orderAttempt);
     }
-
+    //Этот метод дублируется
     public void changeAttemptStatus(Courier courier, Order order, OrderAttemptStatus status){
         OrderAttempt orderAttempt = orderAttemptRepository.findByCourierAndOrderAndStatus(courier, order,OrderAttemptStatus.ASSIGNED)
                 .orElseThrow(()->new IllegalStateException("Не найдено активной попытки"));

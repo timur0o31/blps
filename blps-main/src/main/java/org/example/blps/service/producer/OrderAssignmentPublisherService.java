@@ -1,10 +1,9 @@
-package org.example.blps.service;
+package org.example.blps.service.producer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.blps.dto.JmsMessageDto;
 import org.example.blps.enums.OrderAssignmentMessageType;
-import org.example.blps.xmp.XmppOrderAssignmentSender;
+import org.example.blps.mapper.JmsMessageMapper;
+import org.example.blps.service.xmpp.XmppOrderAssignmentSender;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -12,14 +11,16 @@ import org.springframework.stereotype.Service;
 public class OrderAssignmentPublisherService {
     private final OrderProducerService orderProducerService;
     private final XmppOrderAssignmentSender xmppSender;
-    private final ObjectMapper objectMapper;
+    private final JmsMessageMapper jmsMessageMapper;
     private final String transport;
 
-    public OrderAssignmentPublisherService(OrderProducerService orderProducerService, XmppOrderAssignmentSender xmppSender,
-                                           ObjectMapper objectMapper, @Value("${app.assignment.transport:jms}") String transport) {
+    public OrderAssignmentPublisherService(OrderProducerService orderProducerService,
+                                           XmppOrderAssignmentSender xmppSender,
+                                           JmsMessageMapper jmsMessageMapper,
+                                           @Value("${app.assignment.transport:jms}") String transport) {
         this.orderProducerService = orderProducerService;
         this.xmppSender = xmppSender;
-        this.objectMapper = objectMapper;
+        this.jmsMessageMapper = jmsMessageMapper;
         this.transport = transport;
     }
 
@@ -32,19 +33,11 @@ public class OrderAssignmentPublisherService {
     }
 
     private void publish(JmsMessageDto messageDto) {
-        String payload = toJson(messageDto);
+        String data = jmsMessageMapper.toJson(messageDto);
         if ("xmpp".equalsIgnoreCase(transport)) {
-            xmppSender.send(payload);
+            xmppSender.send(data);
             return;
         }
-        orderProducerService.publishMessage(payload);
-    }
-
-    private String toJson(JmsMessageDto messageDto) {
-        try {
-            return objectMapper.writeValueAsString(messageDto);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Не удалось сериализовать сообщение для очереди", e);
-        }
+        orderProducerService.sendJmsMessage(data);
     }
 }
