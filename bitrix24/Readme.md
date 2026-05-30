@@ -12,3 +12,12 @@ OrderManagedConnectionFactory - /* The container's connection manager uses this 
 
 
 ra.xml - это файл настройки адаптера ресурсов   
+
+
+rarSourceDirectory>
+Single directory for extra files to include in the RAR.
+Type: java.io.File
+Required: Yes
+Default: ${basedir}/src/main/rar
+
+

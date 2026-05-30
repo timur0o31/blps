@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.resource.ResourceException;
 import jakarta.resource.spi.*;
 import org.example.bitrix24.dto.BitrixRequestDto;
+import org.example.bitrix24.dto.BitrixRequestUpdateDto;
 import org.example.bitrix24.dto.ResourceOrderDto;
 import org.example.bitrix24.dto.ResourceOrderStatus;
 
@@ -39,9 +40,6 @@ public class OrderManagedConnection implements ManagedConnection {
         return connection;
     }
 
-    OrderManagedConnectionFactory getManagedConnectionFactory() {
-        return managedConnectionFactory;
-    }
 
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -86,27 +84,19 @@ public class OrderManagedConnection implements ManagedConnection {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("entityTypeId", managedConnectionFactory.getEntityTypeId());
         payload.put("filter", Map.of(managedConnectionFactory.getBackendOrderIdFieldName(), backendId));
-
         String response = post("crm.item.list.json", objectMapper.writeValueAsString(payload));
         JsonNode items = objectMapper.readTree(response).path("result").path("items");
-
         if (!items.isArray() || items.isEmpty()) {
             throw new ResourceException("Bitrix заказ не найден по backendId: " + backendId);
         }
-
         return items.get(0).path("id").asLong();
     }
 
     Long updateOrder(ResourceOrderDto order) throws ResourceException {
         try {
             Long bitrixId = findBitrixIdByBackendId(order.getBackendId());
-            Map<String, Object> fields = mapToBitrixFields(order);
-            Map<String, Object> payload = new LinkedHashMap<>();
-            payload.put("entityTypeId", managedConnectionFactory.getEntityTypeId());
-            payload.put("id", bitrixId);
-            payload.put("fields", fields);
-            String json = objectMapper.writeValueAsString(payload);
-            post("crm.item.update.json", json);
+            BitrixRequestUpdateDto request = new BitrixRequestUpdateDto(managedConnectionFactory.getEntityTypeId(), bitrixId, mapToBitrixFields(order));
+            post("crm.item.update.json", objectMapper.writeValueAsString(request));
             return bitrixId;
         } catch (Exception e) {
             throw new ResourceException("Не удалось обновить заказ в Bitrix", e);
@@ -119,11 +109,11 @@ public class OrderManagedConnection implements ManagedConnection {
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
         connection.setRequestProperty("Content-Type", "application/json");
-        try (OutputStream out = connection.getOutputStream()) {
-            out.write(json.getBytes(StandardCharsets.UTF_8));
+        try (OutputStream outputStream = connection.getOutputStream()) {
+            outputStream.write(json.getBytes(StandardCharsets.UTF_8));
         }
-        try (InputStream in = connection.getInputStream()) {
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        try (InputStream inputStream = connection.getInputStream()) {
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
 
@@ -143,7 +133,7 @@ public class OrderManagedConnection implements ManagedConnection {
     @Override
     public void associateConnection(Object o) throws ResourceException {
         if (!(o instanceof OrderConnectionImpl)) {
-            throw new ResourceException("Unknown connection handle: " + o);
+            throw new ResourceException("Неправильный connection!: " + o);
         }
         OrderConnectionImpl connection = (OrderConnectionImpl) o;
         connection.setManagedConnection(this);
@@ -177,7 +167,6 @@ public class OrderManagedConnection implements ManagedConnection {
 
     @Override
     public void setLogWriter(PrintWriter printWriter) throws ResourceException {
-
     }
 
     @Override
@@ -186,14 +175,8 @@ public class OrderManagedConnection implements ManagedConnection {
     }
 
     void closeConnection(OrderConnectionImpl connection) {
-        if (!connections.remove(connection)) {
-            return;
-        }
-        ConnectionEvent event = new ConnectionEvent(this, ConnectionEvent.CONNECTION_CLOSED);
-        event.setConnectionHandle(connection);
-        for (ConnectionEventListener listener : new ArrayList<>(listeners)) {
-            listener.connectionClosed(event);
-        }
+        connections.remove(connection);
     }
+
 }
 

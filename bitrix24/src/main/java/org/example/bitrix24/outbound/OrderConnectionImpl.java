@@ -16,19 +16,19 @@ public class OrderConnectionImpl implements OrderConnection {
     }
 
     @Override
-    public Long createOrder(ResourceOrderDto order) throws ResourceException {
+    public void createOrder(ResourceOrderDto order) throws ResourceException {
         if (!valid || managedConnection == null) {
-            throw new ResourceException("Connection is closed");
+            throw new ResourceException("Connection закрыт");
         }
-        return managedConnection.createOrder(order);
+         managedConnection.createOrder(order);
     }
 
     @Override
-    public Long updateOrder(ResourceOrderDto order) throws ResourceException {
+    public void updateOrder(ResourceOrderDto order) throws ResourceException {
         if (!valid || managedConnection == null) {
-            throw new ResourceException("Connection is closed");
+            throw new ResourceException("Connection закрыт");
         }
-        return managedConnection.updateOrder(order);
+        managedConnection.updateOrder(order);
     }
 
     void setManagedConnection(OrderManagedConnection managedConnection) {

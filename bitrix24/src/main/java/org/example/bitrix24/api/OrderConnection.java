@@ -5,9 +5,9 @@ import org.example.bitrix24.dto.ResourceOrderDto;
 
 public interface OrderConnection extends AutoCloseable {
 
-    Long createOrder(ResourceOrderDto order) throws ResourceException;
+    void createOrder(ResourceOrderDto order) throws ResourceException;
 
-    Long updateOrder(ResourceOrderDto order) throws ResourceException;
+    void updateOrder(ResourceOrderDto order) throws ResourceException;
 
     @Override
     void close() throws ResourceException;

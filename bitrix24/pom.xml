@@ -7,7 +7,6 @@
         <groupId>org.example</groupId>
         <artifactId>blps-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>bitrix24</artifactId>
@@ -88,7 +87,6 @@
             <version>2.1.0</version>
             <scope>provided</scope>
         </dependency>
-
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
