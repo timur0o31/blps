@@ -27,7 +27,6 @@ public class OrderManagedConnectionFactory implements ManagedConnectionFactory {
     private String backendOrderIdFieldName;
     private String contentFieldName;
     private String addressFieldName;
-    private String statusFieldName;
     private String titleFieldName;
 
     @Override
@@ -88,7 +87,6 @@ public class OrderManagedConnectionFactory implements ManagedConnectionFactory {
                 backendOrderIdFieldName,
                 contentFieldName,
                 addressFieldName,
-                statusFieldName,
                 titleFieldName
         );
     }
@@ -107,7 +105,6 @@ public class OrderManagedConnectionFactory implements ManagedConnectionFactory {
                 && Objects.equals(backendOrderIdFieldName, other.backendOrderIdFieldName)
                 && Objects.equals(contentFieldName, other.contentFieldName)
                 && Objects.equals(addressFieldName, other.addressFieldName)
-                && Objects.equals(statusFieldName, other.statusFieldName)
                 && Objects.equals(titleFieldName, other.titleFieldName);
     }
 
@@ -151,14 +148,6 @@ public class OrderManagedConnectionFactory implements ManagedConnectionFactory {
 
     public void setAddressFieldName(String addressFieldName) {
         this.addressFieldName = addressFieldName;
-    }
-
-    public String getStatusFieldName() {
-        return statusFieldName;
-    }
-
-    public void setStatusFieldName(String statusFieldName) {
-        this.statusFieldName = statusFieldName;
     }
 
     public String getTitleFieldName() {

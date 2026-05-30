@@ -26,22 +26,17 @@
                 <config-property>
                     <config-property-name>backendOrderIdFieldName</config-property-name>
                     <config-property-type>java.lang.String</config-property-type>
-                    <config-property-value>ufCrm7_1779647790</config-property-value>
+                    <config-property-value>ufCrm7_1780091417164</config-property-value>
                 </config-property>
                 <config-property>
                     <config-property-name>contentFieldName</config-property-name>
                     <config-property-type>java.lang.String</config-property-type>
-                    <config-property-value>ufCrm7_1779648018844</config-property-value>
+                    <config-property-value>ufCrm7_1780091871693</config-property-value>
                 </config-property>
                 <config-property>
                     <config-property-name>addressFieldName</config-property-name>
                     <config-property-type>java.lang.String</config-property-type>
-                    <config-property-value>ufCrm7_1779648554200</config-property-value>
-                </config-property>
-                <config-property>
-                    <config-property-name>statusFieldName</config-property-name>
-                    <config-property-type>java.lang.String</config-property-type>
-                    <config-property-value>ufCrm7_1779648192986</config-property-value>
+                    <config-property-value>ufCrm7_1780091806867</config-property-value>
                 </config-property>
                 <config-property>
                     <config-property-name>titleFieldName</config-property-name>

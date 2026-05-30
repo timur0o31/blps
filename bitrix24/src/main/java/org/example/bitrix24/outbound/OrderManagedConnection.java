@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.resource.ResourceException;
 import jakarta.resource.spi.*;
-import org.example.bitrix24.dto.BitrixOrderDto;
+import org.example.bitrix24.dto.BitrixRequestDto;
+import org.example.bitrix24.dto.ResourceOrderDto;
+import org.example.bitrix24.dto.ResourceOrderStatus;
 
 import javax.security.auth.Subject;
 import javax.transaction.xa.XAResource;
@@ -43,35 +45,80 @@ public class OrderManagedConnection implements ManagedConnection {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    Long createOrder(BitrixOrderDto order) throws ResourceException {
+    private String mapStatusToStageId(ResourceOrderStatus status) {
+        return switch (status) {
+            case NEW -> "DT1040_15:NEW";
+            case WAITING -> "DT1040_15:PREPARATION";
+            case PENDING -> "DT1040_15:CLIENT";
+            case ACCEPTED -> "DT1040_15:UC_70WZ8L";
+            case PICKED_UP -> "DT1040_15:UC_UKHRN8";
+            case ON_THE_WAY -> "DT1040_15:UC_7XYPQQ";
+            case DELIVERED -> "DT1040_15:UC_7X4QXU";
+            case FAILED -> "DT1040_15:UC_UR4J9L";
+        };
+    }
+
+
+    private Map<String, Object> mapToBitrixFields(ResourceOrderDto order) {
         Map<String, Object> fields = new LinkedHashMap<>();
         fields.put(managedConnectionFactory.getTitleFieldName(), "Order #" + order.getBackendId());
         fields.put(managedConnectionFactory.getBackendOrderIdFieldName(), order.getBackendId());
         fields.put(managedConnectionFactory.getContentFieldName(), order.getContent());
         fields.put(managedConnectionFactory.getAddressFieldName(), order.getAddress());
-        fields.put(managedConnectionFactory.getStatusFieldName(), order.getStatus().name());
-        Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("entityTypeId", managedConnectionFactory.getEntityTypeId());
-        payload.put("fields", fields);
+        fields.put("stageId", mapStatusToStageId(order.getStatus()));
+        return fields;
+    }
 
+    Long createOrder(ResourceOrderDto order) throws ResourceException {
+        Map<String, Object> fields = mapToBitrixFields(order);
+        BitrixRequestDto request = new BitrixRequestDto(managedConnectionFactory.getEntityTypeId(), fields);
         try {
-            String json = objectMapper.writeValueAsString(payload);
+            String json = objectMapper.writeValueAsString(request);
             String response = post("crm.item.add.json", json);
             JsonNode root = objectMapper.readTree(response);
             return root.path("result").path("item").path("id").asLong();
         } catch (Exception e) {
-            throw new ResourceException("Cannot create order in Bitrix", e);
+            throw new ResourceException("Не удалось создать заказ в Bitrix", e);
+        }
+    }
+
+    private Long findBitrixIdByBackendId(Long backendId) throws Exception {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("entityTypeId", managedConnectionFactory.getEntityTypeId());
+        payload.put("filter", Map.of(managedConnectionFactory.getBackendOrderIdFieldName(), backendId));
+
+        String response = post("crm.item.list.json", objectMapper.writeValueAsString(payload));
+        JsonNode items = objectMapper.readTree(response).path("result").path("items");
+
+        if (!items.isArray() || items.isEmpty()) {
+            throw new ResourceException("Bitrix заказ не найден по backendId: " + backendId);
+        }
+
+        return items.get(0).path("id").asLong();
+    }
+
+    Long updateOrder(ResourceOrderDto order) throws ResourceException {
+        try {
+            Long bitrixId = findBitrixIdByBackendId(order.getBackendId());
+            Map<String, Object> fields = mapToBitrixFields(order);
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("entityTypeId", managedConnectionFactory.getEntityTypeId());
+            payload.put("id", bitrixId);
+            payload.put("fields", fields);
+            String json = objectMapper.writeValueAsString(payload);
+            post("crm.item.update.json", json);
+            return bitrixId;
+        } catch (Exception e) {
+            throw new ResourceException("Не удалось обновить заказ в Bitrix", e);
         }
     }
 
     private String post(String method, String json) throws Exception {
         URL url = new URL(managedConnectionFactory.getWebhookUrl() + method);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
         connection.setRequestProperty("Content-Type", "application/json");
-
         try (OutputStream out = connection.getOutputStream()) {
             out.write(json.getBytes(StandardCharsets.UTF_8));
         }
@@ -149,5 +196,4 @@ public class OrderManagedConnection implements ManagedConnection {
         }
     }
 }
-
 

@@ -3,8 +3,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.resource.ResourceException;
 import org.example.bitrix24.api.OrderConnection;
 import org.example.bitrix24.api.OrderConnectionFactory;
-import org.example.bitrix24.dto.BitrixOrderDto;
-import org.example.bitrix24.dto.BitrixOrderStatus;
+import org.example.bitrix24.dto.ResourceOrderDto;
+import org.example.bitrix24.dto.ResourceOrderStatus;
 import org.example.blps.annotations.isApprovedCourier;
 import org.example.blps.annotations.isApprovedCourierProcess;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
@@ -27,7 +27,6 @@ import org.example.blps.enums.CourierStatus;
 import org.example.blps.enums.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.example.blps.annotations.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,14 +77,15 @@ public class OrderService {
             if  (courier == null) {
                 newOrder.setStatus(OrderStatus.WAITING);
                // throw new RuntimeException("тест отката транзакции");
-                saveOrderToBitrix(newOrder);
-                return orderMapper.fromEntityToDto(orderRepository.save(newOrder));
-
+                Order savedOrder = orderRepository.save(newOrder);
+                saveOrderToBitrix(savedOrder);
+                return orderMapper.fromEntityToDto(savedOrder);
             }
             newOrder.setCourier(courier);
             newOrder.setStatus(OrderStatus.PENDING);
-            saveOrderToBitrix(newOrder);
-            orderRepository.save(newOrder);
+
+            Order savedOrder = orderRepository.save(newOrder);
+            saveOrderToBitrix(savedOrder);
             orderAttemptService.addOrderAttempt(courier,newOrder, OrderAttemptStatus.ASSIGNED);
             courier.setStatus(CourierStatus.ACCEPTING_ORDER);
             //throw new RuntimeException("тест отката транзакции");
@@ -108,6 +108,7 @@ public class OrderService {
             throw new IllegalStateException("Из состояния "+prevOrderStatus +" нельзя перейти в "+ orderRequestDto.getOrderStatus());
         }
         order.setStatus(orderRequestDto.getOrderStatus());
+        updateOrderInBitrix(order);
         if (orderRequestDto.getOrderStatus()==OrderStatus.DELIVERED){
             if (courier.getStatus()==CourierStatus.END_SHIFT){
                courier.setStatus(CourierStatus.OFF_SHIFT);
@@ -166,16 +167,19 @@ public class OrderService {
         orderAttemptService.changeAttemptStatus(courier, order,status);
         if (order.getWaitingCycles()+orderAttemptService.countAttemptsForOrder(order)>=LIMIT){
             order.setStatus(OrderStatus.FAILED);
+            updateOrderInBitrix(order);
             return;
         }
         Courier newCourier = courierService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
         if (newCourier == null) {
             order.setStatus(OrderStatus.WAITING);
+            updateOrderInBitrix(order);
             return;
         }
         orderAttemptService.addOrderAttempt(newCourier, order, OrderAttemptStatus.ASSIGNED);
         order.setCourier(newCourier);
         order.setStatus(OrderStatus.PENDING);
+        updateOrderInBitrix(order);
         newCourier.setStatus(CourierStatus.ACCEPTING_ORDER);
     }
 
@@ -191,6 +195,7 @@ public class OrderService {
         if (order.getStatus()!=OrderStatus.PENDING)
             throw new IllegalStateException("Только из состояния PENDING можно принять заказ!");
         order.setStatus(OrderStatus.ACCEPTED);
+        updateOrderInBitrix(order);
         if (courier.getStatus()!=CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.BUSY);
         else courier.setStatus(CourierStatus.END_SHIFT);
         orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.ACCEPTED);
@@ -207,6 +212,7 @@ public class OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("Заказа с данным id не существует"));
         if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
             order.setStatus(OrderStatus.FAILED);
+            updateOrderInBitrix(order);
             return;
         }
         Courier courier = courierService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
@@ -214,10 +220,12 @@ public class OrderService {
             order.setWaitingCycles(order.getWaitingCycles()+1);
             if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) order.setStatus(OrderStatus.FAILED);
             else order.setStatus(OrderStatus.WAITING);
+            updateOrderInBitrix(order);
             return;
         }
         order.setCourier(courier);
         order.setStatus(OrderStatus.PENDING);
+        updateOrderInBitrix(order);
         courier.setStatus(CourierStatus.ACCEPTING_ORDER);
         orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ASSIGNED);
     }
@@ -235,17 +243,38 @@ public class OrderService {
 
     private void saveOrderToBitrix(Order order) {
         try (OrderConnection connection = orderConnectionFactory.getConnection()) {
-            BitrixOrderDto bitrixOrder = new BitrixOrderDto(
-                    null,
+            ResourceOrderDto resourceOrderDto = new ResourceOrderDto(
                     order.getId(),
-                    order.getContent(),
                     order.getAddress(),
-                    BitrixOrderStatus.NEW
+                    order.getContent(),
+                    ResourceOrderStatus.valueOf(order.getStatus().name())
             );
 
-            Long bitrixId = connection.createOrder(bitrixOrder);
+            connection.createOrder(resourceOrderDto);
         } catch (ResourceException e) {
             throw new RuntimeException("Ошибка при сохранении заказа в Bitrix24", e);
         }
     }
+
+    private void updateOrderInBitrix(Order order) {
+        try (OrderConnection connection = orderConnectionFactory.getConnection()) {
+            ResourceOrderDto resourceOrderDto = new ResourceOrderDto(
+                    order.getId(),
+                    order.getAddress(),
+                    order.getContent(),
+                    ResourceOrderStatus.valueOf(order.getStatus().name())
+            );
+            connection.updateOrder(resourceOrderDto);
+        } catch (ResourceException e) {
+            throw new RuntimeException("Ошибка при обновлении заказа в Bitrix24", e);
+        }
+    }
+
+    @Transactional
+    public void updateOrderFromBitrix(Long backendId, String status) {
+        Order order = orderRepository.findById(backendId).orElseThrow(() -> new EntityNotFoundException("Заказ с таким id не найден!"));
+        order.setStatus(OrderStatus.valueOf(status));
+        orderRepository.save(order);
+    }
+
 }

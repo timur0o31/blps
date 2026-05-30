@@ -1,6 +1,6 @@
 package org.example.bitrix24.dto;
 
-public enum BitrixOrderStatus {
+public enum ResourceOrderStatus {
     NEW,
     WAITING,
     PENDING,

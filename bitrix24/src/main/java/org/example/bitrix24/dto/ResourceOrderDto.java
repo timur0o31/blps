@@ -7,10 +7,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class BitrixOrderDto {
+public class ResourceOrderDto {
     private Long backendId;
-    private Long bitrixId;
     private String address;
     private String content;
-    private BitrixOrderStatus status;
+    private ResourceOrderStatus status;
 }

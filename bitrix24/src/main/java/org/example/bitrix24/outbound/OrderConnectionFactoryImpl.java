@@ -19,18 +19,18 @@ public class OrderConnectionFactoryImpl implements OrderConnectionFactory, Refer
     private final ConnectionManager connectionManager;
     private Reference reference;
 
-    // Контейнер создает экземпляры этого класса * с помощью метода
     public OrderConnectionFactoryImpl(ManagedConnectionFactory managedConnectionFactory, ConnectionManager connectionManager) {
         this.managedConnectionFactory = managedConnectionFactory;
         this.connectionManager = connectionManager;
     }
 
-    //Приложения вызывают этот метод, который делегирует диспетчеру
-    // соединений контейнера * получение экземпляра соединения через * TradeManagedConnectionFactory */
+    //Приложения вызывают этот метод, который делегирует менеджеру
+    // соединений контейнера
+    // получение экземпляра соединения через
     @Override
     public OrderConnection getConnection() throws ResourceException {
         log.info("[OrderConnectionFactoryImpl] getConnection()");
-        return (OrderConnection) connectionManager.allocateConnection(managedConnectionFactory, null);
+            return (OrderConnection) connectionManager.allocateConnection(managedConnectionFactory, null);
     }
 
     @Override

@@ -1,6 +1,8 @@
 package org.example.blps.controller;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.example.bitrix24.dto.BitrixRequestDto;
+import org.example.bitrix24.dto.ResourceOrderDto;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
@@ -8,10 +10,12 @@ import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.AccessDeniedException;
 
 @Slf4j
 @RestController
@@ -19,6 +23,9 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderService orderService;
+
+    @Value("${bitrix.secret.token}")
+    private String bitrixWebhookSecret;
 
     @Autowired
     public OrderController(OrderService orderService){
@@ -74,5 +81,15 @@ public class OrderController {
     public ResponseEntity<?> getOrderHistory(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue="10") String size) {
         ResponsePaginationDto<OrderResponseDto> history = orderService.getOrderHistory(userDetails.getUsername(),page,size);
         return ResponseEntity.ok(history);
+    }
+
+
+    @PostMapping("/bitrix/update")
+    public ResponseEntity<?> updateOrderFromBitrix(@RequestParam String token, @RequestParam Long backendId, @RequestParam String status) {
+        if (!bitrixWebhookSecret.equals(token)) {
+            throw  new AccessDeniedException("Неверный Bitrix token атата!");
+        }
+        orderService.updateOrderFromBitrix(backendId, status);
+        return ResponseEntity.ok().build();
     }
 }

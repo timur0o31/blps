@@ -3,7 +3,7 @@ package org.example.bitrix24.outbound;
 import jakarta.resource.ResourceException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bitrix24.api.OrderConnection;
-import org.example.bitrix24.dto.BitrixOrderDto;
+import org.example.bitrix24.dto.ResourceOrderDto;
 
 @Slf4j
 public class OrderConnectionImpl implements OrderConnection {
@@ -16,11 +16,19 @@ public class OrderConnectionImpl implements OrderConnection {
     }
 
     @Override
-    public Long createOrder(BitrixOrderDto order) throws ResourceException {
+    public Long createOrder(ResourceOrderDto order) throws ResourceException {
         if (!valid || managedConnection == null) {
             throw new ResourceException("Connection is closed");
         }
         return managedConnection.createOrder(order);
+    }
+
+    @Override
+    public Long updateOrder(ResourceOrderDto order) throws ResourceException {
+        if (!valid || managedConnection == null) {
+            throw new ResourceException("Connection is closed");
+        }
+        return managedConnection.updateOrder(order);
     }
 
     void setManagedConnection(OrderManagedConnection managedConnection) {
