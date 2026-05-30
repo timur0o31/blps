@@ -2,6 +2,8 @@ package org.example.bitrix24.outbound;
 
 import jakarta.resource.ResourceException;
 import jakarta.resource.spi.*;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.bitrix24.api.OrderConnection;
 import org.example.bitrix24.api.OrderConnectionFactory;
@@ -20,6 +22,8 @@ import java.util.Set;
     )
 
 @Slf4j
+@Getter
+@Setter
 public class OrderManagedConnectionFactory implements ManagedConnectionFactory {
 
     private String webhookUrl;
@@ -57,18 +61,23 @@ public class OrderManagedConnectionFactory implements ManagedConnectionFactory {
     }
 
     @Override
-    public ManagedConnection matchManagedConnections(Set set, Subject subject, ConnectionRequestInfo connectionRequestInfo) throws ResourceException {
-        for (Object candidate : set) {
-            if (candidate instanceof OrderManagedConnection) {
-                OrderManagedConnection connection = (OrderManagedConnection) candidate;
-                if (equals(connection.getManagedConnectionFactory())) {
-                    return connection;
-                }
+    public ManagedConnection matchManagedConnections(Set connectionSet,
+                                                     Subject subject,
+                                                     ConnectionRequestInfo cxRequestInfo) throws ResourceException {
+        log.info("[TradeManagedConnectionFactory] matchManagedConnections()");
+        /* This resource adapter does not use security (Subject) */
+        OrderManagedConnection match = null;
+        /* This resource adapter has no additional parameters for connections,
+         * so any open connection can be used by an application */
+        for (Object mco : connectionSet) {
+            if (mco != null) {
+                match = (OrderManagedConnection) mco;
+                log.info("Connection match!");
+                break;
             }
         }
-        return null;
+        return match;
     }
-
     @Override
     public void setLogWriter(PrintWriter printWriter) throws ResourceException {
 
@@ -93,72 +102,12 @@ public class OrderManagedConnectionFactory implements ManagedConnectionFactory {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof OrderManagedConnectionFactory)) {
-            return false;
-        }
-        OrderManagedConnectionFactory other = (OrderManagedConnectionFactory) obj;
-        return Objects.equals(webhookUrl, other.webhookUrl)
+        return obj instanceof OrderManagedConnectionFactory other
+                && Objects.equals(webhookUrl, other.webhookUrl)
                 && Objects.equals(entityTypeId, other.entityTypeId)
                 && Objects.equals(backendOrderIdFieldName, other.backendOrderIdFieldName)
                 && Objects.equals(contentFieldName, other.contentFieldName)
                 && Objects.equals(addressFieldName, other.addressFieldName)
                 && Objects.equals(titleFieldName, other.titleFieldName);
     }
-
-
-    // достаем конфигурацию из ra.xml
-    public String getWebhookUrl() {
-        return webhookUrl;
-    }
-
-    public void setWebhookUrl(String webhookUrl) {
-        this.webhookUrl = webhookUrl;
-    }
-
-    public Integer getEntityTypeId() {
-        return entityTypeId;
-    }
-
-    public void setEntityTypeId(Integer entityTypeId) {
-        this.entityTypeId = entityTypeId;
-    }
-
-    public String getBackendOrderIdFieldName() {
-        return backendOrderIdFieldName;
-    }
-
-    public void setBackendOrderIdFieldName(String backendOrderIdFieldName) {
-        this.backendOrderIdFieldName = backendOrderIdFieldName;
-    }
-
-    public String getContentFieldName() {
-        return contentFieldName;
-    }
-
-    public void setContentFieldName(String contentFieldName) {
-        this.contentFieldName = contentFieldName;
-    }
-
-    public String getAddressFieldName() {
-        return addressFieldName;
-    }
-
-    public void setAddressFieldName(String addressFieldName) {
-        this.addressFieldName = addressFieldName;
-    }
-
-    public String getTitleFieldName() {
-        return titleFieldName;
-    }
-
-    public void setTitleFieldName(String titleFieldName) {
-        this.titleFieldName = titleFieldName;
-    }
-
-
-
-
 }
