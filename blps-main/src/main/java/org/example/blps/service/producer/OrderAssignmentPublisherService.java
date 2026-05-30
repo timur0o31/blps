@@ -13,15 +13,18 @@ public class OrderAssignmentPublisherService {
     private final XmppOrderAssignmentSender xmppSender;
     private final JmsMessageMapper jmsMessageMapper;
     private final String transport;
+    private final boolean xmppEnabled;
 
     public OrderAssignmentPublisherService(OrderProducerService orderProducerService,
                                            XmppOrderAssignmentSender xmppSender,
                                            JmsMessageMapper jmsMessageMapper,
-                                           @Value("${app.assignment.transport:jms}") String transport) {
+                                           @Value("${app.assignment.transport:jms}") String transport,
+                                           @Value("${app.xmpp.enabled:false}") boolean xmppEnabled) {
         this.orderProducerService = orderProducerService;
         this.xmppSender = xmppSender;
         this.jmsMessageMapper = jmsMessageMapper;
         this.transport = transport;
+        this.xmppEnabled = xmppEnabled;
     }
 
     public void publishAssignOrder(Long orderId) {
@@ -34,7 +37,7 @@ public class OrderAssignmentPublisherService {
 
     private void publish(JmsMessageDto messageDto) {
         String data = jmsMessageMapper.toJson(messageDto);
-        if ("xmpp".equalsIgnoreCase(transport)) {
+        if (xmppEnabled && "xmpp".equalsIgnoreCase(transport)) {
             xmppSender.send(data);
             return;
         }

@@ -16,7 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Service
-@ConditionalOnProperty(name = "app.assignment.transport", havingValue = "xmpp")
+@ConditionalOnProperty(name = "app.xmpp.enabled", havingValue = "true")
 public class XmppToJmsGatewayService {
     private static final Logger LOG = Logger.getLogger(XmppToJmsGatewayService.class);
 
@@ -29,12 +29,9 @@ public class XmppToJmsGatewayService {
     private final String password;
     private XMPPTCPConnection connection;
 
-    public XmppToJmsGatewayService(OrderProducerService orderProducerService,
-                                   JmsMessageMapper jmsMessageMapper,
-                                   @Value("${app.xmpp.host:localhost}") String host,
-                                   @Value("${app.xmpp.port:5222}") int port,
-                                   @Value("${app.xmpp.domain:localhost}") String domain,
-                                   @Value("${app.xmpp.gateway.username:blps-gateway}") String username,
+    public XmppToJmsGatewayService(OrderProducerService orderProducerService, JmsMessageMapper jmsMessageMapper,
+                                   @Value("${app.xmpp.host:localhost}") String host, @Value("${app.xmpp.port:5222}") int port,
+                                   @Value("${app.xmpp.domain:localhost}") String domain, @Value("${app.xmpp.gateway.username:blps-gateway}") String username,
                                    @Value("${app.xmpp.gateway.password:blps-gateway}") String password) {
         this.orderProducerService = orderProducerService;
         this.jmsMessageMapper = jmsMessageMapper;
@@ -79,7 +76,7 @@ public class XmppToJmsGatewayService {
             LOG.infov("Routed XMPP message from {0} to JMS queue {1}: {2}",
                     message.getFrom(), "order.assignment.queue", body);
         } catch (Exception e) {
-            LOG.errorv(e, "Failed to route XMPP message to JMS queue: {0}", body);
+            LOG.errorv(e, "Ошибка передачи сообщения в JMS queue: {0}", body);
         }
     }
     private XMPPTCPConnectionConfiguration connectionConfiguration() throws Exception {

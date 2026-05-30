@@ -40,7 +40,4 @@ public class OrderAssigmentConsumerService {
             throw new IllegalArgumentException("Не удалось обработать");
         }
     }
-
-
-
 }
