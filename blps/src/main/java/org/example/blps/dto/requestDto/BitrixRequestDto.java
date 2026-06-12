@@ -14,5 +14,5 @@ public class BitrixRequestDto {
 
     @NotBlank
     @Size(max = 150)
-    private String status;
+    private OrderStatus status;
 }

@@ -90,8 +90,9 @@ public class OrderController {
         if (!bitrixWebhookSecret.equals(token)) {
             throw  new AccessDeniedException("Неверный Bitrix token атата!");
         }
+
         Long backendId = dto.getBackendId();
-        String status = dto.getStatus();
+        OrderStatus status = dto.getStatus();
         orderService.updateOrderFromBitrix(backendId, status);
         return ResponseEntity.ok().build();
     }

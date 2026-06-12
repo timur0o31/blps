@@ -273,8 +273,7 @@ public class OrderService {
     }
 
     @Transactional
-    public void updateOrderFromBitrix(Long backendId, String status) {
-        OrderStatus orderStatus = OrderStatus.valueOf(status);
+    public void updateOrderFromBitrix(Long backendId, OrderStatus orderStatus) {
         Order order = orderRepository.findById(backendId).orElseThrow(() -> new EntityNotFoundException("Заказ с таким id не найден!"));
         if (order.getStatus().isMovedBackTo(orderStatus)) {
             updateOrderInBitrix(order);
