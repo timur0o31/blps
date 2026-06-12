@@ -32,6 +32,7 @@ public class OrderManagedConnectionFactory implements ManagedConnectionFactory {
     private String contentFieldName;
     private String addressFieldName;
     private String titleFieldName;
+    private String courierIdFieldName;
 
     @Override
     public Object createConnectionFactory() throws ResourceException {
@@ -96,7 +97,8 @@ public class OrderManagedConnectionFactory implements ManagedConnectionFactory {
                 backendOrderIdFieldName,
                 contentFieldName,
                 addressFieldName,
-                titleFieldName
+                titleFieldName,
+                courierIdFieldName
         );
     }
 
@@ -108,6 +110,7 @@ public class OrderManagedConnectionFactory implements ManagedConnectionFactory {
                 && Objects.equals(backendOrderIdFieldName, other.backendOrderIdFieldName)
                 && Objects.equals(contentFieldName, other.contentFieldName)
                 && Objects.equals(addressFieldName, other.addressFieldName)
-                && Objects.equals(titleFieldName, other.titleFieldName);
+                && Objects.equals(titleFieldName, other.titleFieldName)
+                && Objects.equals(courierIdFieldName, other.courierIdFieldName);
     }
 }

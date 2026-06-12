@@ -1,8 +1,5 @@
 <jboss-deployment-structure>
     <deployment>
-        <dependencies>
-            <module name="org.example.bitrix24.api"/>
-        </dependencies>
         <exclude-subsystems>
             <subsystem name="datasources"/>
         </exclude-subsystems>

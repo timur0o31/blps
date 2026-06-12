@@ -69,7 +69,6 @@ public class OrderService {
             newOrder.setClient(client);
             newOrder.setStatus(OrderStatus.WAITING);
             Order savedOrder = orderRepository.save(newOrder);
-            saveOrderToBitrix(savedOrder);
             return orderMapper.fromEntityToDto(savedOrder);
     }
     // Обновить заказ (для курьера)
@@ -143,11 +142,9 @@ public class OrderService {
         orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.REJECTED);
         if (order.getWaitingCycles()+orderAttemptService.countAttemptsForOrder(order)>=LIMIT){
             order.setStatus(OrderStatus.FAILED);
-            updateOrderInBitrix(order);
             return;
         }
         order.setStatus(OrderStatus.WAITING);
-        updateOrderInBitrix(order);
     }
 
     @Transactional
@@ -162,18 +159,31 @@ public class OrderService {
         if (order.getStatus()!=OrderStatus.PENDING)
             throw new IllegalStateException("Только из состояния PENDING можно принять заказ!");
         order.setStatus(OrderStatus.ACCEPTED);
-        updateOrderInBitrix(order);
+        saveOrderToBitrix(order);
         if (courier.getStatus()!=CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.BUSY);
         else courier.setStatus(CourierStatus.END_SHIFT);
         orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.ACCEPTED);
         orderRepository.save(order);
     }
+
+
+    private boolean validateStatusBeforeSendInBitrix(OrderStatus status) {
+        return status == OrderStatus.ACCEPTED
+                || status == OrderStatus.ON_THE_WAY
+                || status == OrderStatus.PICKED_UP
+                || status == OrderStatus.DELIVERED;
+    }
+
     private void saveOrderToBitrix(Order order) {
+        if (!validateStatusBeforeSendInBitrix(order.getStatus())) {
+            throw new IllegalArgumentException("Неправильный статус перед отправкой в Bitrix!");
+        }
         try (OrderConnection connection = orderConnectionFactory.getConnection()) {
             ResourceOrderDto resourceOrderDto = new ResourceOrderDto(
                     order.getId(),
                     order.getAddress(),
                     order.getContent(),
+                    order.getCourier() == null ? null : order.getCourier().getId(),
                     ResourceOrderStatus.valueOf(order.getStatus().name()));
             connection.createOrder(resourceOrderDto);
         } catch (ResourceException e) {
@@ -182,11 +192,15 @@ public class OrderService {
     }
 
     private void updateOrderInBitrix(Order order) {
+        if (!validateStatusBeforeSendInBitrix(order.getStatus())) {
+            throw new IllegalArgumentException("Неправильный статус перед отправкой в Bitrix!");
+        }
         try (OrderConnection connection = orderConnectionFactory.getConnection()) {
             ResourceOrderDto resourceOrderDto = new ResourceOrderDto(
                     order.getId(),
                     order.getAddress(),
                     order.getContent(),
+                    order.getCourier() == null ? null : order.getCourier().getId(),
                     ResourceOrderStatus.valueOf(order.getStatus().name())
             );
             connection.updateOrder(resourceOrderDto);

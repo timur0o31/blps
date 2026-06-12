@@ -11,5 +11,6 @@ public class ResourceOrderDto {
     private Long backendId;
     private String address;
     private String content;
+    private Long courierId;
     private ResourceOrderStatus status;
 }

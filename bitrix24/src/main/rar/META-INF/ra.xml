@@ -34,6 +34,11 @@
                     <config-property-value>ufCrm8_1781279810181</config-property-value>
                 </config-property>
                 <config-property>
+                    <config-property-name>courierIdFieldName</config-property-name>
+                    <config-property-type>java.lang.String</config-property-type>
+                    <config-property-value>ufCrm8_1781303401797</config-property-value>
+                </config-property>
+                <config-property>
                     <config-property-name>addressFieldName</config-property-name>
                     <config-property-type>java.lang.String</config-property-type>
                     <config-property-value>ufCrm8_1781279837225</config-property-value>

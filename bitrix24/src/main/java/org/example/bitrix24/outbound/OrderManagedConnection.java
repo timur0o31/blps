@@ -45,13 +45,10 @@ public class OrderManagedConnection implements ManagedConnection {
 
     private String mapStatusToStageId(ResourceOrderStatus status) {
         return switch (status) {
-            case WAITING -> "DT1038_14:NEW";
-            case PENDING -> "DT1038_14:PREPARATION";
-            case ACCEPTED -> "DT1038_14:CLIENT";
+            case ACCEPTED -> "DT1038_14:NEW";
+            case ON_THE_WAY -> "DT1038_14:PREPARATION";
             case PICKED_UP -> "DT1038_14:UC_0XIW7M";
-            case ON_THE_WAY -> "DT1038_14:UC_QC67K9";
             case DELIVERED -> "DT1038_14:UC_3VH638";
-            case FAILED -> "DT1038_14:UC_0N7R0I";
         };
     }
 
@@ -62,6 +59,7 @@ public class OrderManagedConnection implements ManagedConnection {
         fields.put(managedConnectionFactory.getBackendOrderIdFieldName(), order.getBackendId());
         fields.put(managedConnectionFactory.getContentFieldName(), order.getContent());
         fields.put(managedConnectionFactory.getAddressFieldName(), order.getAddress());
+        fields.put(managedConnectionFactory.getCourierIdFieldName(), order.getCourierId());
         fields.put("stageId", mapStatusToStageId(order.getStatus()));
         return fields;
     }
