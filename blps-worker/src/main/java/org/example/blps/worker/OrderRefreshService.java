@@ -39,8 +39,8 @@ public class OrderRefreshService {
                 () -> new EntityNotFoundException("Заказа с данным id не существует"));
         if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
             order.setStatus(OrderStatus.FAILED);
-            updateOrderInBitrix(order);
-            LOG.infov("Order {0} moved to FAILED: waitingCycles={1}", order.getId(), order.getWaitingCycles());
+            //updateOrderInBitrix(order);
+            LOG.infov("Заказ {0} перемещен в FAILED: waitingCycles={1}", order.getId(), order.getWaitingCycles());
             return;
         }
         Courier courier = courierFindService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
@@ -51,17 +51,17 @@ public class OrderRefreshService {
             } else {
                 order.setStatus(OrderStatus.WAITING);
             }
-            updateOrderInBitrix(order);
-            LOG.infov("Order {0} has no available courier: status={1}, waitingCycles={2}",
+            //updateOrderInBitrix(order);
+            LOG.infov("Заказ {0} не может найти доступных курьеров: status={1}, waitingCycles={2}",
                     order.getId(), order.getStatus(), order.getWaitingCycles());
             return;
         }
         order.setCourier(courier);
         order.setStatus(OrderStatus.PENDING);
-        updateOrderInBitrix(order);
+        //updateOrderInBitrix(order);
         courier.setStatus(CourierStatus.ACCEPTING_ORDER);
         orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ASSIGNED);
-        LOG.infov("Order {0} assigned to courier {1}: status={2}, waitingCycles={3}",
+        LOG.infov("Заказ {0} назначен курьеру {1}: status={2}, waitingCycles={3}",
                 order.getId(), courier.getId(), order.getStatus(), order.getWaitingCycles());
     }
 
@@ -83,47 +83,43 @@ public class OrderRefreshService {
         orderAttemptService.changeAttemptStatus(courier, order,status);
         if (order.getWaitingCycles()+ orderAttemptService.countAttemptsForOrder(order)>=LIMIT){
             order.setStatus(OrderStatus.FAILED);
-            updateOrderInBitrix(order);
-            LOG.infov("Order {0} moved to FAILED after courier change: waitingCycles={1}",
+            //updateOrderInBitrix(order);
+            LOG.infov("Заказ {0} перевод в FAILED: waitingCycles={1}",
                     order.getId(), order.getWaitingCycles());
             return;
         }
         Courier newCourier = courierFindService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
         if (newCourier == null) {
             order.setStatus(OrderStatus.WAITING);
-            updateOrderInBitrix(order);
-            LOG.infov("Order {0} returned to WAITING after courier change: waitingCycles={1}", order.getId(), order.getWaitingCycles());
+          //  updateOrderInBitrix(order);
+            LOG.infov("Заказ {0} возврат к WAITING: waitingCycles={1}", order.getId(), order.getWaitingCycles());
             return;
         }
         orderAttemptService.addOrderAttempt(newCourier, order, OrderAttemptStatus.ASSIGNED);
         order.setCourier(newCourier);
         order.setStatus(OrderStatus.PENDING);
-        updateOrderInBitrix(order);
+        //updateOrderInBitrix(order);
         newCourier.setStatus(CourierStatus.ACCEPTING_ORDER);
-        LOG.infov("Order {0} reassigned to courier {1}: status={2}, waitingCycles={3}",
+        LOG.infov("Заказ {0} переназначение курьеру {1}: status={2}, waitingCycles={3}",
                 order.getId(), newCourier.getId(), order.getStatus(), order.getWaitingCycles());
     }
     private void updateOrderInBitrix(Order order) {
-        LOG.infov("Sending order {0} status {1} to Bitrix24", order.getId(), order.getStatus());
+        LOG.infov("Пересылка заказа {0} статус {1} в Bitrix24", order.getId(), order.getStatus());
         try (OrderConnection connection = orderConnectionFactory.getConnection()) {
-            LOG.infov("Bitrix24 connection acquired for order {0}: {1}", order.getId(), connection.getClass().getName());
+            LOG.infov("Bitrix24 попытка обновить {0}: {1}", order.getId(), connection.getClass().getName());
             ResourceOrderDto resourceOrderDto = new ResourceOrderDto(
                     order.getId(),
                     order.getAddress(),
                     order.getContent(),
                     ResourceOrderStatus.valueOf(order.getStatus().name())
             );
-            LOG.infov("Calling Bitrix24 update for order {0}", order.getId());
             connection.updateOrder(resourceOrderDto);
-            LOG.infov("Order {0} status {1} sent to Bitrix24", order.getId(), order.getStatus());
+            LOG.infov(" Заказ {0} статус {1} пересылка в Bitrix24", order.getId(), order.getStatus());
         } catch (ResourceException e) {
-            LOG.errorv(e, "Failed to update order {0} status {1} in Bitrix24", order.getId(), order.getStatus());
             throw new RuntimeException("Ошибка при обновлении заказа в Bitrix24", e);
         } catch (LinkageError e) {
-            LOG.errorv(e, "Bitrix24 API/RAR classes are incompatible while updating order {0} status {1}", order.getId(), order.getStatus());
             throw e;
         } catch (RuntimeException e) {
-            LOG.errorv(e, "Unexpected error while updating order {0} status {1} in Bitrix24", order.getId(), order.getStatus());
             throw e;
         }
     }

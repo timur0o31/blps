@@ -11,7 +11,6 @@ public class Bitrix24AdapterConfig {
 
     @Bean
     public OrderConnectionFactory orderConnectionFactory() throws Exception {
-        return (OrderConnectionFactory) new InitialContext()
-                .lookup("java:/eis/Bitrix24ConnectionFactory");
+        return (OrderConnectionFactory) new InitialContext().lookup("java:/eis/Bitrix24ConnectionFactory");
     }
 }

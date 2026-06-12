@@ -4,7 +4,6 @@ import jakarta.resource.ResourceException;
 import org.example.blps.annotations.isApprovedCourier;
 import org.example.blps.annotations.isApprovedCourierProcess;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
-import org.example.blps.service.producer.OrderAssignmentPublisherService;
 import org.example.blps.utils.PaginationUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +37,6 @@ public class OrderService {
     private final OrderAttemptService orderAttemptService;
     private final CourierService courierService;
     private final Integer LIMIT = 3;
-    private final OrderAssignmentPublisherService orderAssignmentPublisherService;
     private final OrderConnectionFactory orderConnectionFactory;
     private final org.example.blps.annotations.isApprovedCourierProcess isApprovedCourierProcess;
     @Autowired
@@ -46,7 +44,6 @@ public class OrderService {
                         UserService userService, ClientService clientService,
                         OrderAttemptService orderAttemptService,
                         CourierService courierService, isApprovedCourierProcess isApprovedCourierProcess,
-                        OrderAssignmentPublisherService orderAssignmentPublisherService,
                         OrderConnectionFactory orderConnectionFactory) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
@@ -55,7 +52,6 @@ public class OrderService {
         this.clientService = clientService;
         this.orderAttemptService = orderAttemptService;
         this.isApprovedCourierProcess = isApprovedCourierProcess;
-        this.orderAssignmentPublisherService = orderAssignmentPublisherService;
         this.orderConnectionFactory = orderConnectionFactory;
     }
 
@@ -73,8 +69,7 @@ public class OrderService {
             newOrder.setClient(client);
             newOrder.setStatus(OrderStatus.WAITING);
             Order savedOrder = orderRepository.save(newOrder);
-            orderAssignmentPublisherService.publishAssignOrder(savedOrder.getId());
-            saveOrderToBitrix(savedOrder);
+            //saveOrderToBitrix(savedOrder);
             return orderMapper.fromEntityToDto(savedOrder);
     }
     // Обновить заказ (для курьера)
@@ -93,7 +88,7 @@ public class OrderService {
             throw new IllegalStateException("Из состояния "+prevOrderStatus +" нельзя перейти в "+ orderRequestDto.getOrderStatus());
         }
         order.setStatus(orderRequestDto.getOrderStatus());
-        updateOrderInBitrix(order);
+        //updateOrderInBitrix(order);
         if (orderRequestDto.getOrderStatus()==OrderStatus.DELIVERED){
             if (courier.getStatus()==CourierStatus.END_SHIFT){
                courier.setStatus(CourierStatus.OFF_SHIFT);
@@ -148,12 +143,11 @@ public class OrderService {
         orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.REJECTED);
         if (order.getWaitingCycles()+orderAttemptService.countAttemptsForOrder(order)>=LIMIT){
             order.setStatus(OrderStatus.FAILED);
-            updateOrderInBitrix(order);
+            //updateOrderInBitrix(order);
             return;
         }
         order.setStatus(OrderStatus.WAITING);
-        updateOrderInBitrix(order);
-        orderAssignmentPublisherService.publishAssignOrder(order.getId());
+        //updateOrderInBitrix(order);
     }
 
     @Transactional
@@ -168,7 +162,7 @@ public class OrderService {
         if (order.getStatus()!=OrderStatus.PENDING)
             throw new IllegalStateException("Только из состояния PENDING можно принять заказ!");
         order.setStatus(OrderStatus.ACCEPTED);
-        updateOrderInBitrix(order);
+        //updateOrderInBitrix(order);
         if (courier.getStatus()!=CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.BUSY);
         else courier.setStatus(CourierStatus.END_SHIFT);
         orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.ACCEPTED);
