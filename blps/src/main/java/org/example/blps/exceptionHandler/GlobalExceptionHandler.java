@@ -95,20 +95,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(errorResponceDto);
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponceDto> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        String message;
-        if (ex.getCause() instanceof InvalidFormatException) {
-            InvalidFormatException invalidFormatException = (InvalidFormatException) ex.getCause();
-            if (invalidFormatException.getTargetType() == OrderStatus.class) {
-                message = "Неверный статус заказа. Доступные значения: NEW, PENDING, WAITING, ACCEPTED, PICKED_UP, ON_THE_WAY, DELIVERED, FAILED";
-                return ResponseEntity.status(status).body(new ErrorResponceDto(status.value(), message));
-            }
-        }
-        message = "Неверный формат json";
-        return ResponseEntity.status(status).body(new ErrorResponceDto(status.value(), message));
-    }
+//    @ExceptionHandler(HttpMessageNotReadableException.class)
+//    public ResponseEntity<ErrorResponceDto> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+//        HttpStatus status = HttpStatus.BAD_REQUEST;
+//        String message;
+//        if (ex.getCause() instanceof InvalidFormatException) {
+//            InvalidFormatException invalidFormatException = (InvalidFormatException) ex.getCause();
+//            if (invalidFormatException.getTargetType() == OrderStatus.class) {
+//                message = "Неверный статус заказа. Доступные значения: NEW, PENDING, WAITING, ACCEPTED, PICKED_UP, ON_THE_WAY, DELIVERED, FAILED";
+//                return ResponseEntity.status(status).body(new ErrorResponceDto(status.value(), message));
+//            }
+//        }
+//        message = "Неверный формат json";
+//        return ResponseEntity.status(status).body(new ErrorResponceDto(status.value(), message));
+//    }
 
 }
 

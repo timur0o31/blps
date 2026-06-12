@@ -13,7 +13,7 @@ import java.io.PrintWriter;
 import java.util.Objects;
 import java.util.Set;
 
-// @ConnectionDefinition нужен, чтобы JCA-контейнер понял, какие классы составляют “соединение” твоего адаптера.
+
 @ConnectionDefinition(
         connectionFactory = OrderConnectionFactory.class,
         connectionFactoryImpl = OrderConnectionFactoryImpl.class,

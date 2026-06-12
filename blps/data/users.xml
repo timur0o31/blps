@@ -3,7 +3,7 @@
     <name>Admin</name>
     <surname>Admin</surname>
     <email>admin@gmail.com</email>
-    <password>$2a$04$saW8ioaKG0RUW15UBxKkF.iPqzj61HO6EYuHIP/eSJsdp08xGgfO2</password>
+    <password>$2a$04$1UUcANtYSc5k7yJE8WCpD.ToeVorrJPtRoKtSjimHMFILXQj4m3e.</password>
     <phone_number>+70000000000</phone_number>
     <role>ADMIN</role>
     <superUser>true</superUser>
@@ -12,7 +12,7 @@
     <name>John</name>
     <surname>Ivanov</surname>
     <email>dans2005@yandex.ru</email>
-    <password>$2a$04$ziw0KYD22Shwev8/ZPb7veTu5Sots4vrENOLVar9rIgzQacwsfsT2</password>
+    <password>$2a$04$obM59dGde2zB4D4VINVzWOdGXS.u396arlF3vF0/36LHsfPxVzT8u</password>
     <phone_number>89991634558</phone_number>
     <role>CLIENT</role>
     <superUser>false</superUser>

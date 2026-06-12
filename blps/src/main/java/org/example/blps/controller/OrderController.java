@@ -91,9 +91,8 @@ public class OrderController {
             throw  new AccessDeniedException("Неверный Bitrix token атата!");
         }
         Long backendId = dto.getBackendId();
-        OrderStatus status = dto.getStatus();
-        orderService.updateOrderFromBitrix(backendId, status.name());
-        // возможно нужно добавить проверку статуса
+        String status = dto.getStatus();
+        orderService.updateOrderFromBitrix(backendId, status);
         return ResponseEntity.ok().build();
     }
 }

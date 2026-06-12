@@ -1,6 +1,7 @@
 package org.example.blps.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.resource.ResourceException;
+import lombok.extern.slf4j.Slf4j;
 import org.example.bitrix24.api.OrderConnection;
 import org.example.bitrix24.api.OrderConnectionFactory;
 import org.example.bitrix24.dto.ResourceOrderDto;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class OrderService {
 
@@ -272,9 +274,13 @@ public class OrderService {
 
     @Transactional
     public void updateOrderFromBitrix(Long backendId, String status) {
+        OrderStatus orderStatus = OrderStatus.valueOf(status);
         Order order = orderRepository.findById(backendId).orElseThrow(() -> new EntityNotFoundException("Заказ с таким id не найден!"));
-        order.setStatus(OrderStatus.valueOf(status));
+        if (order.getStatus().isMovedBackTo(orderStatus)) {
+            updateOrderInBitrix(order);
+            return;
+        }
+        order.setStatus(orderStatus);
         orderRepository.save(order);
     }
-
 }

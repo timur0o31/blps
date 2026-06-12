@@ -16,27 +16,27 @@
                 <config-property>
                     <config-property-name>webhookUrl</config-property-name>
                     <config-property-type>java.lang.String</config-property-type>
-                    <config-property-value>https://b24-vntxlx.bitrix24.ru/rest/1/hkn13o6jku5kf782/</config-property-value>
+                    <config-property-value>https://b24-bapkcm.bitrix24.ru/rest/1/hc5w8pcl9xbsolod/</config-property-value>
                 </config-property>
                 <config-property>
                     <config-property-name>entityTypeId</config-property-name>
                     <config-property-type>java.lang.Integer</config-property-type>
-                    <config-property-value>1040</config-property-value>
+                    <config-property-value>1038</config-property-value>
                 </config-property>
                 <config-property>
                     <config-property-name>backendOrderIdFieldName</config-property-name>
                     <config-property-type>java.lang.String</config-property-type>
-                    <config-property-value>ufCrm7_1780091417164</config-property-value>
+                    <config-property-value>ufCrm8_1781279783059</config-property-value>
                 </config-property>
                 <config-property>
                     <config-property-name>contentFieldName</config-property-name>
                     <config-property-type>java.lang.String</config-property-type>
-                    <config-property-value>ufCrm7_1780091871693</config-property-value>
+                    <config-property-value>ufCrm8_1781279810181</config-property-value>
                 </config-property>
                 <config-property>
                     <config-property-name>addressFieldName</config-property-name>
                     <config-property-type>java.lang.String</config-property-type>
-                    <config-property-value>ufCrm7_1780091806867</config-property-value>
+                    <config-property-value>ufCrm8_1781279837225</config-property-value>
                 </config-property>
                 <config-property>
                     <config-property-name>titleFieldName</config-property-name>

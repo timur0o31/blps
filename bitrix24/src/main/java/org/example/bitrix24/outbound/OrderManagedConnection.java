@@ -45,14 +45,13 @@ public class OrderManagedConnection implements ManagedConnection {
 
     private String mapStatusToStageId(ResourceOrderStatus status) {
         return switch (status) {
-            case NEW -> "DT1040_15:NEW";
-            case WAITING -> "DT1040_15:PREPARATION";
-            case PENDING -> "DT1040_15:CLIENT";
-            case ACCEPTED -> "DT1040_15:UC_70WZ8L";
-            case PICKED_UP -> "DT1040_15:UC_UKHRN8";
-            case ON_THE_WAY -> "DT1040_15:UC_7XYPQQ";
-            case DELIVERED -> "DT1040_15:UC_7X4QXU";
-            case FAILED -> "DT1040_15:UC_UR4J9L";
+            case WAITING -> "DT1038_14:NEW";
+            case PENDING -> "DT1038_14:PREPARATION";
+            case ACCEPTED -> "DT1038_14:CLIENT";
+            case PICKED_UP -> "DT1038_14:UC_0XIW7M";
+            case ON_THE_WAY -> "DT1038_14:UC_QC67K9";
+            case DELIVERED -> "DT1038_14:UC_3VH638";
+            case FAILED -> "DT1038_14:UC_0N7R0I";
         };
     }
 
@@ -179,4 +178,3 @@ public class OrderManagedConnection implements ManagedConnection {
     }
 
 }
-

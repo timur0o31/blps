@@ -21,4 +21,20 @@ public enum OrderStatus {
                 return false;
         }
     }
+    public int statusNumber() {
+        return switch (this) {
+            case NEW -> 0;
+            case WAITING -> 1;
+            case PENDING -> 2;
+            case ACCEPTED -> 3;
+            case ON_THE_WAY -> 4;
+            case PICKED_UP -> 5;
+            case DELIVERED -> 6;
+            case FAILED -> 7;
+        };
+    }
+
+    public boolean isMovedBackTo(OrderStatus newStatus) {
+        return newStatus.statusNumber() < this.statusNumber();
+    }
 }
