@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.resource.ResourceException;
 import jakarta.resource.spi.*;
-import org.example.bitrix24.dto.BitrixRequestDto;
-import org.example.bitrix24.dto.BitrixRequestUpdateDto;
+import org.example.bitrix24.dto.BitrixResponceDto;
+import org.example.bitrix24.dto.BitrixResponceUpdateDto;
 import org.example.bitrix24.dto.ResourceOrderDto;
 import org.example.bitrix24.dto.ResourceOrderStatus;
 
@@ -45,14 +45,13 @@ public class OrderManagedConnection implements ManagedConnection {
 
     private String mapStatusToStageId(ResourceOrderStatus status) {
         return switch (status) {
-            case NEW -> "DT1040_15:NEW";
-            case WAITING -> "DT1040_15:PREPARATION";
-            case PENDING -> "DT1040_15:CLIENT";
-            case ACCEPTED -> "DT1040_15:UC_70WZ8L";
-            case PICKED_UP -> "DT1040_15:UC_UKHRN8";
-            case ON_THE_WAY -> "DT1040_15:UC_7XYPQQ";
-            case DELIVERED -> "DT1040_15:UC_7X4QXU";
-            case FAILED -> "DT1040_15:UC_UR4J9L";
+            case WAITING -> "DT1038_14:NEW";
+            case PENDING -> "DT1038_14:PREPARATION";
+            case ACCEPTED -> "DT1038_14:CLIENT";
+            case PICKED_UP -> "DT1038_14:UC_0XIW7M";
+            case ON_THE_WAY -> "DT1038_14:UC_QC67K9";
+            case DELIVERED -> "DT1038_14:UC_3VH638";
+            case FAILED -> "DT1038_14:UC_0N7R0I";
         };
     }
 
@@ -69,7 +68,7 @@ public class OrderManagedConnection implements ManagedConnection {
 
     Long createOrder(ResourceOrderDto order) throws ResourceException {
         Map<String, Object> fields = mapToBitrixFields(order);
-        BitrixRequestDto request = new BitrixRequestDto(managedConnectionFactory.getEntityTypeId(), fields);
+        BitrixResponceDto request = new BitrixResponceDto(managedConnectionFactory.getEntityTypeId(), fields);
         try {
             String json = objectMapper.writeValueAsString(request);
             String response = post("crm.item.add.json", json);
@@ -95,7 +94,7 @@ public class OrderManagedConnection implements ManagedConnection {
     Long updateOrder(ResourceOrderDto order) throws ResourceException {
         try {
             Long bitrixId = findBitrixIdByBackendId(order.getBackendId());
-            BitrixRequestUpdateDto request = new BitrixRequestUpdateDto(managedConnectionFactory.getEntityTypeId(), bitrixId, mapToBitrixFields(order));
+            BitrixResponceUpdateDto request = new BitrixResponceUpdateDto(managedConnectionFactory.getEntityTypeId(), bitrixId, mapToBitrixFields(order));
             post("crm.item.update.json", objectMapper.writeValueAsString(request));
             return bitrixId;
         } catch (Exception e) {
@@ -179,4 +178,3 @@ public class OrderManagedConnection implements ManagedConnection {
     }
 
 }
-

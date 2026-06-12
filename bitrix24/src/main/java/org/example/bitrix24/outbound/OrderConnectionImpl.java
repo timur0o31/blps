@@ -6,7 +6,7 @@ import org.example.bitrix24.api.OrderConnection;
 import org.example.bitrix24.dto.ResourceOrderDto;
 
 @Slf4j
-public class    OrderConnectionImpl implements OrderConnection {
+public class OrderConnectionImpl implements OrderConnection {
 
     private OrderManagedConnection managedConnection;
     private boolean valid = true;

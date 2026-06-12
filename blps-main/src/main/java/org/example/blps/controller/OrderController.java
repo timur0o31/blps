@@ -1,10 +1,12 @@
 package org.example.blps.controller;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.example.blps.dto.requestDto.BitrixRequestDto;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
+import org.example.blps.enums.OrderStatus;
 import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,10 +84,12 @@ public class OrderController {
 
 
     @PostMapping("/bitrix/update")
-    public ResponseEntity<?> updateOrderFromBitrix(@RequestParam String token, @RequestParam Long backendId, @RequestParam String status) {
+    public ResponseEntity<?> updateOrderFromBitrix(@RequestHeader("bitrix.secret.token") String token, @RequestBody BitrixRequestDto dto) {
         if (!bitrixWebhookSecret.equals(token)) {
             throw  new AccessDeniedException("Неверный Bitrix token атата!");
         }
+        Long backendId = dto.getBackendId();
+        OrderStatus status = dto.getStatus();
         orderService.updateOrderFromBitrix(backendId, status);
         return ResponseEntity.ok().build();
     }

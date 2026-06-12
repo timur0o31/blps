@@ -39,7 +39,7 @@ public class OrderRefreshService {
                 () -> new EntityNotFoundException("Заказа с данным id не существует"));
         if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
             order.setStatus(OrderStatus.FAILED);
-            //updateOrderInBitrix(order);
+            updateOrderInBitrix(order);
             LOG.infov("Заказ {0} перемещен в FAILED: waitingCycles={1}", order.getId(), order.getWaitingCycles());
             return;
         }
@@ -51,14 +51,14 @@ public class OrderRefreshService {
             } else {
                 order.setStatus(OrderStatus.WAITING);
             }
-            //updateOrderInBitrix(order);
+            updateOrderInBitrix(order);
             LOG.infov("Заказ {0} не может найти доступных курьеров: status={1}, waitingCycles={2}",
                     order.getId(), order.getStatus(), order.getWaitingCycles());
             return;
         }
         order.setCourier(courier);
         order.setStatus(OrderStatus.PENDING);
-        //updateOrderInBitrix(order);
+        updateOrderInBitrix(order);
         courier.setStatus(CourierStatus.ACCEPTING_ORDER);
         orderAttemptService.addOrderAttempt(courier, order, OrderAttemptStatus.ASSIGNED);
         LOG.infov("Заказ {0} назначен курьеру {1}: status={2}, waitingCycles={3}",
@@ -83,7 +83,7 @@ public class OrderRefreshService {
         orderAttemptService.changeAttemptStatus(courier, order,status);
         if (order.getWaitingCycles()+ orderAttemptService.countAttemptsForOrder(order)>=LIMIT){
             order.setStatus(OrderStatus.FAILED);
-            //updateOrderInBitrix(order);
+            updateOrderInBitrix(order);
             LOG.infov("Заказ {0} перевод в FAILED: waitingCycles={1}",
                     order.getId(), order.getWaitingCycles());
             return;
@@ -91,14 +91,14 @@ public class OrderRefreshService {
         Courier newCourier = courierFindService.findOnlineCourier(orderAttemptService.findCouriersIdByOrder(order));
         if (newCourier == null) {
             order.setStatus(OrderStatus.WAITING);
-          //  updateOrderInBitrix(order);
+            updateOrderInBitrix(order);
             LOG.infov("Заказ {0} возврат к WAITING: waitingCycles={1}", order.getId(), order.getWaitingCycles());
             return;
         }
         orderAttemptService.addOrderAttempt(newCourier, order, OrderAttemptStatus.ASSIGNED);
         order.setCourier(newCourier);
         order.setStatus(OrderStatus.PENDING);
-        //updateOrderInBitrix(order);
+        updateOrderInBitrix(order);
         newCourier.setStatus(CourierStatus.ACCEPTING_ORDER);
         LOG.infov("Заказ {0} переназначение курьеру {1}: status={2}, waitingCycles={3}",
                 order.getId(), newCourier.getId(), order.getStatus(), order.getWaitingCycles());

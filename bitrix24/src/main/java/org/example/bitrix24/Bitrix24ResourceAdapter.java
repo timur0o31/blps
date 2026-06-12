@@ -11,12 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.transaction.xa.XAResource;
 
-@Connector(
-        displayName = "Bitrix24ResourceAdapter",
+@Connector(displayName = "Bitrix24ResourceAdapter",
         vendorName = "org.example",
         version = "1.0",
-        transactionSupport = TransactionSupportLevel.NoTransaction
-)
+        transactionSupport = TransactionSupportLevel.NoTransaction)
 
 @Slf4j
 public class Bitrix24ResourceAdapter implements ResourceAdapter {
