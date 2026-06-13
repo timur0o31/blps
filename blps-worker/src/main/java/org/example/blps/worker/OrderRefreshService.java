@@ -31,6 +31,7 @@ public class OrderRefreshService {
                 () -> new EntityNotFoundException("Заказа с данным id не существует"));
         if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
             order.setStatus(OrderStatus.FAILED);
+            clearCourier(order);
             LOG.infov("Заказ {0} перемещен в FAILED: waitingCycles={1}", order.getId(), order.getWaitingCycles());
             return;
         }
@@ -39,8 +40,10 @@ public class OrderRefreshService {
             order.setWaitingCycles(order.getWaitingCycles()+1);
             if (order.getWaitingCycles() + orderAttemptService.countAttemptsForOrder(order) >= LIMIT) {
                 order.setStatus(OrderStatus.FAILED);
+                clearCourier(order);
             } else {
                 order.setStatus(OrderStatus.WAITING);
+                clearCourier(order);
             }
             LOG.infov("Заказ {0} не может найти доступных курьеров: status={1}, waitingCycles={2}",
                     order.getId(), order.getStatus(), order.getWaitingCycles());
@@ -88,5 +91,15 @@ public class OrderRefreshService {
         newCourier.setStatus(CourierStatus.ACCEPTING_ORDER);
         LOG.infov("Заказ {0} переназначение курьеру {1}: status={2}, waitingCycles={3}",
                 order.getId(), newCourier.getId(), order.getStatus(), order.getWaitingCycles());
+    }
+
+    private void clearCourier(Order order) {
+        Courier courier = order.getCourier();
+        if (courier != null) {
+            order.setCourier(null);
+            if (courier.getStatus() != CourierStatus.END_SHIFT) courier.setStatus(CourierStatus.ON_SHIFT);
+            else courier.setStatus(CourierStatus.OFF_SHIFT);
+            orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.EXPIRED);
+        }
     }
 }

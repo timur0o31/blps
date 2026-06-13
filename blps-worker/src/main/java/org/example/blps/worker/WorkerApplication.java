@@ -10,8 +10,7 @@ import org.springframework.jms.annotation.EnableJms;
 
 @EnableJms
 @EntityScan(basePackages = "org.example.blps.entity")
-@EnableJpaRepositories(basePackages = {"org.example.blps.repository",
-        "org.example.blps.worker"})
+@EnableJpaRepositories(basePackages = {"org.example.blps.repository"})
 @SpringBootApplication(scanBasePackages = {"org.example.blps.worker", "org.example.blps.mapper"})
 public class WorkerApplication extends SpringBootServletInitializer {
     public static void main(String[] args) {
