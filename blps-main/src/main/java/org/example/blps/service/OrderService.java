@@ -217,7 +217,16 @@ public class OrderService {
             return;
         }
         order.setStatus(orderStatus);
+        Courier courier = order.getCourier();
         orderRepository.save(order);
+        if (orderStatus==OrderStatus.DELIVERED){
+            if (courier.getStatus()==CourierStatus.END_SHIFT){
+                courier.setStatus(CourierStatus.OFF_SHIFT);
+            }else {
+                courier.setStatus(CourierStatus.ON_SHIFT);
+                courierService.saveCourier(courier);
+            }
+        }
     }
 
 }

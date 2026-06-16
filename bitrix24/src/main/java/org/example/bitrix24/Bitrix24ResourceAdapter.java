@@ -19,8 +19,6 @@ import javax.transaction.xa.XAResource;
 @Slf4j
 public class Bitrix24ResourceAdapter implements ResourceAdapter {
 
-
-
     @Override
     public void start(BootstrapContext ctx) throws ResourceAdapterInternalException {
         log.info("[Bitrix24ResourceAdapter] start()");
