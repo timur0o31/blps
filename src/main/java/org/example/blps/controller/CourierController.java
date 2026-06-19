@@ -1,5 +1,8 @@
 package org.example.blps.controller;
 import jakarta.validation.constraints.Positive;
+import org.example.blps.CamundaRequestProperties.CamundaVariable;
+import org.example.blps.annotations.isApprovedCourier;
+import org.example.blps.camundaRequest.CamundaProcessClient;
 import org.example.blps.dto.responseDto.CourierResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.dto.responseDto.ShiftStatusResponceDto;
@@ -13,25 +16,34 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/couriers")
 @Validated
 public class CourierController {
 
     private final CourierService courierService;
+    private final CamundaProcessClient camundaProcessClient;
 
     @Autowired
-    public CourierController(CourierService courierService) {
+    public CourierController(CourierService courierService, CamundaProcessClient camundaProcessClient) {
         this.courierService = courierService;
+        this.camundaProcessClient = camundaProcessClient;
     }
 
     @PreAuthorize("hasAuthority('TOGGLE_SHIFT_STATUS')")
     @PatchMapping("/shift-status")
+    @isApprovedCourier
     public ResponseEntity<ShiftStatusResponceDto> toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
         String email = userDetails.getUsername();
-        CourierStatus status = courierService.toggleCourierShiftStatus(email);
-        return ResponseEntity.ok(new ShiftStatusResponceDto(status));
+        Map<String, CamundaVariable> variables = new HashMap<>();
+        variables.put("email", CamundaVariable.string(userDetails.getUsername()));
+        camundaProcessClient.startProcess("courier_shift_status_process", variables);
+        return ResponseEntity.accepted().build();
     }
+
     @PreAuthorize("hasAuthority('BLOCK_COURIER')")
     @PatchMapping("/{id}/block")
     public ResponseEntity<?> blockCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable @Positive Long id){
