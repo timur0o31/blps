@@ -6,7 +6,6 @@ import org.camunda.bpm.client.task.ExternalTaskHandler;
 import org.camunda.bpm.client.task.ExternalTaskService;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
-import org.example.blps.security.jwt.JwtService;
 import org.example.blps.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -19,22 +18,16 @@ import java.util.Map;
 public class SaveOrderTask implements ExternalTaskHandler {
 
     private final OrderService orderService;
-    private final JwtService jwtService;
 
     @Autowired
-    public SaveOrderTask(OrderService orderService, JwtService jwtService) {
+    public SaveOrderTask(OrderService orderService) {
         this.orderService = orderService;
-        this.jwtService = jwtService;
     }
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
         try {
-            String jwt = task.getVariable("jwt");
-            if (jwt == null || !jwtService.validateJwtToken(jwt)) {
-                throw new IllegalStateException("JWT отсутствует или недействителен");
-            }
-            String email = jwtService.getEmailFromToken(jwt);
+            String email = task.getVariable("email");
             String content = task.getVariable("content");
             String address = task.getVariable("address");
 

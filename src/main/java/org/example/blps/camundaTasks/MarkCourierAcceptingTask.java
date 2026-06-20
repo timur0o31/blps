@@ -28,9 +28,7 @@ public class MarkCourierAcceptingTask implements ExternalTaskHandler {
             Long courierId = task.getVariable("courierId");
             orderService.markCourierAsAccepting(courierId);
             Map<String, Object> variables = new HashMap<>();
-            variables.put("jwt", null);
             variables.put("email", null);
-            variables.put("password", null);
             variables.put("accepted", null);
             service.complete(task, variables);
         } catch (RuntimeException exception) {

@@ -55,7 +55,6 @@ public class OrderService {
     }
 
     // Получить активные заказы (для курьера)
-    @isApprovedCourier
     public OrderResponseDto getOrder(String email){
         Courier courier = courierService.findCourierByEmail(email);
         return orderMapper.fromEntityToDto(orderRepository.findByCourierAndStatus(courier, OrderStatus.PENDING));
@@ -127,7 +126,6 @@ public class OrderService {
     }
 
     @Transactional
-    @isApprovedCourier
     public void ensureOrderAssignedToCourier(Long orderId, String email) {
         Order order = findOrderById(orderId);
         Courier courier = courierService.findCourierByEmail(email);
@@ -136,7 +134,6 @@ public class OrderService {
         }
     }
 
-    @isApprovedCourier
     @Transactional
     public void cancelOrderById(Long orderId, Long courierId) {
         Order order = findOrderById(orderId);
@@ -163,7 +160,6 @@ public class OrderService {
         orderAttemptService.changeAttemptStatus(courier, order, OrderAttemptStatus.ACCEPTED);
     }
 
-    @isApprovedCourier
     @Transactional
     public boolean updateOrder(Long orderId, Long courierId, OrderStatus nextStatus) {
         Order order = findOrderById(orderId);

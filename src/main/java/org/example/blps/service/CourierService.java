@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +67,14 @@ public class CourierService {
         return courierRepository.findByUserId(userService.findByEmail(email).getId()).orElseThrow(() -> new IllegalStateException("Курьера с таким email не существует!"));
     }
 
+    public Courier findActiveCourierByEmail(String email) {
+        Courier courier = findCourierByEmail(email);
+        if (courier.getAccountState() != CourierAccountState.ACTIVE) {
+            throw new AccessDeniedException("Доступ разрешён только активному курьеру");
+        }
+        return courier;
+    }
+
     public void saveCourier(Courier courier) {
         courierRepository.save(courier);
     }
@@ -108,4 +117,3 @@ public class CourierService {
         return courierRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Курьер не найден"));
     }
 }
-
