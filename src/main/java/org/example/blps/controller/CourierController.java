@@ -11,6 +11,7 @@ import org.example.blps.security.CustomUserDetails;
 import org.example.blps.service.CourierService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -37,10 +38,15 @@ public class CourierController {
     @PreAuthorize("hasAuthority('TOGGLE_SHIFT_STATUS')")
     @PatchMapping("/shift-status")
     @isApprovedCourier
-    public ResponseEntity<ShiftStatusResponceDto> toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ShiftStatusResponceDto> toggleShiftStatus(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
+    ) {
         String email = userDetails.getUsername();
+        String jwt = authorizationHeader.substring(7);
         Map<String, CamundaVariable> variables = new HashMap<>();
         variables.put("email", new CamundaVariable(email, "String"));
+        variables.put("jwt", new CamundaVariable(jwt, "String"));
         String processInstanceId = camundaProcessClient.startProcess("courier_shift_status_process", variables);
         camundaProcessClient.completeTask(processInstanceId, "Task_CourierShiftDecision", variables);
         return ResponseEntity.accepted().build();
