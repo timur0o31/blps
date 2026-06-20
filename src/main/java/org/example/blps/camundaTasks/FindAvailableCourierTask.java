@@ -24,14 +24,18 @@ public class FindAvailableCourierTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
-        Long orderId = task.getVariable("orderId");
-        Long courierId = orderService.findAvailableCourier(orderId);
+        try {
+            Long orderId = task.getVariable("orderId");
+            Long courierId = orderService.findAvailableCourier(orderId);
 
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("courierFound", courierId != null);
-        if (courierId != null) {
-            variables.put("courierId", courierId);
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("courierFound", courierId != null);
+            if (courierId != null) {
+                variables.put("courierId", courierId);
+            }
+            service.complete(task, variables);
+        } catch (RuntimeException exception) {
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
         }
-        service.complete(task, variables);
     }
 }

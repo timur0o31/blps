@@ -23,11 +23,15 @@ public class PublishOrderCreatedTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
-        Long orderId = task.getVariable("orderId");
+        try {
+            Long orderId = task.getVariable("orderId");
 
-        Map<String, CamundaVariable> variables = new HashMap<>();
-        variables.put("orderId", new CamundaVariable(orderId, "Long"));
-        camundaProcessClient.correlateMessage("order-created", variables);
-        service.complete(task);
+            Map<String, CamundaVariable> variables = new HashMap<>();
+            variables.put("orderId", new CamundaVariable(orderId, "Long"));
+            camundaProcessClient.correlateMessage("order-created", variables);
+            service.complete(task);
+        } catch (RuntimeException exception) {
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
+        }
     }
 }

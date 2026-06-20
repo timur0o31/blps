@@ -33,6 +33,7 @@ public class CourierController {
         this.camundaProcessClient = camundaProcessClient;
     }
 
+
     @PreAuthorize("hasAuthority('TOGGLE_SHIFT_STATUS')")
     @PatchMapping("/shift-status")
     @isApprovedCourier
@@ -40,7 +41,8 @@ public class CourierController {
         String email = userDetails.getUsername();
         Map<String, CamundaVariable> variables = new HashMap<>();
         variables.put("email", new CamundaVariable(email, "String"));
-        camundaProcessClient.startProcess("courier_shift_status_process", variables);
+        String processInstanceId = camundaProcessClient.startProcess("courier_shift_status_process", variables);
+        camundaProcessClient.completeTask(processInstanceId, "Task_CourierShiftDecision", variables);
         return ResponseEntity.accepted().build();
     }
 
@@ -60,4 +62,3 @@ public class CourierController {
         return ResponseEntity.ok(response);
     }
 }
-

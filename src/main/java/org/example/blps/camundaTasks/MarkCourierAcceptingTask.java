@@ -21,8 +21,12 @@ public class MarkCourierAcceptingTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
-        Long courierId = task.getVariable("courierId");
-        orderService.markCourierAsAccepting(courierId);
-        service.complete(task);
+        try {
+            Long courierId = task.getVariable("courierId");
+            orderService.markCourierAsAccepting(courierId);
+            service.complete(task);
+        } catch (RuntimeException exception) {
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
+        }
     }
 }

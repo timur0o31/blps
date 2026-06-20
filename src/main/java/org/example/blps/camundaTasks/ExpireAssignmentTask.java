@@ -21,8 +21,12 @@ public class ExpireAssignmentTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
-        Long attemptId = task.getVariable("attemptId");
-        orderService.expireAssignment(attemptId);
-        service.complete(task);
+        try {
+            Long attemptId = task.getVariable("attemptId");
+            orderService.expireAssignment(attemptId);
+            service.complete(task);
+        } catch (RuntimeException exception) {
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
+        }
     }
 }

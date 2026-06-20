@@ -24,19 +24,17 @@ public class UpdateOrderDeliveryStatusTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
-        Long orderId = task.getVariable("orderId");
-        Long courierId = task.getVariable("courierId");
         try {
+            Long orderId = task.getVariable("orderId");
+            Long courierId = task.getVariable("courierId");
             OrderStatus nextStatus = OrderStatus.valueOf(task.getVariable("nextOrderStatus"));
             boolean delivered = orderService.updateOrder(orderId, courierId, nextStatus);
             Map<String, Object> variables = new HashMap<>();
             variables.put("orderDelivered", delivered);
             variables.put("statusValidationError", null);
             service.complete(task, variables);
-        } catch (IllegalArgumentException | IllegalStateException exception) {
-            Map<String, Object> variables = new HashMap<>();
-            variables.put("statusValidationError", exception.getMessage());
-            service.handleBpmnError(task, "INVALID_ORDER_STATUS", exception.getMessage(), variables);
+        } catch (RuntimeException exception) {
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
         }
     }
 }

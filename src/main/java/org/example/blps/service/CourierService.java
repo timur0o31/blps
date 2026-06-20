@@ -40,9 +40,6 @@ public class CourierService {
         this.mapper = mapper;
     }
 
-
-    // Проверить!
-    @isApprovedCourier
     public CourierStatus toggleCourierShiftStatus(String email) {
         User user = userService.findByEmail(email);
         Courier courier = courierRepository.findByUserId(user.getId()).orElseThrow(() -> new EntityNotFoundException("Курьер не найден"));

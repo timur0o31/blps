@@ -20,8 +20,14 @@ public class ChangeShiftStatusTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask externalTask, ExternalTaskService externalTaskService) {
-        String email = externalTask.getVariable("email");
-        courierService.toggleCourierShiftStatus(email);
-        externalTaskService.complete(externalTask);
+        try {
+            String email = externalTask.getVariable("email");
+            courierService.toggleCourierShiftStatus(email);
+            externalTaskService.complete(externalTask);
+        } catch (RuntimeException exception) {
+            externalTaskService.handleFailure(
+                    externalTask, exception.getMessage(), exception.toString(), 0, 0L
+            );
+        }
     }
 }

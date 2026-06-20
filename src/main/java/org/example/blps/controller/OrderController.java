@@ -66,15 +66,21 @@ public class OrderController {
     @PreAuthorize("hasAuthority('CANCEL_ORDER')")
     @PatchMapping(value ="/{id}/cancel")
     public ResponseEntity<?> cancelOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
-        orderService.cancelOrderById(id, userDetails.getUsername());
-        return ResponseEntity.ok().build();
+        orderService.ensureOrderAssignedToCourier(id, userDetails.getUsername());
+        Map<String, CamundaVariable> variables = new HashMap<>();
+        variables.put("accepted", new CamundaVariable(false, "Boolean"));
+        camundaProcessClient.completeTask("process_order_assignment", "Task_CourierDecision", id, variables);
+        return ResponseEntity.accepted().build();
     }
 
     @PreAuthorize("hasAuthority('ACCEPT_ORDER')")
     @PatchMapping(value = "/{id}/accept")
     public ResponseEntity<?> acceptOrderByCourier(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id){
-        orderService.acceptOrderByCourierId(id,userDetails.getUsername());
-        return ResponseEntity.ok().build();
+        orderService.ensureOrderAssignedToCourier(id, userDetails.getUsername());
+        Map<String, CamundaVariable> variables = new HashMap<>();
+        variables.put("accepted", new CamundaVariable(true, "Boolean"));
+        camundaProcessClient.completeTask("process_order_assignment", "Task_CourierDecision", id, variables);
+        return ResponseEntity.accepted().build();
     }
 
     @PreAuthorize("hasAuthority('VIEW_STATUS_ORDER')")

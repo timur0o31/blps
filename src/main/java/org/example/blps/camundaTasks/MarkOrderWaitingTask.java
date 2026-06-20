@@ -21,8 +21,12 @@ public class MarkOrderWaitingTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
-        Long orderId = task.getVariable("orderId");
-        orderService.markOrderWaiting(orderId);
-        service.complete(task);
+        try {
+            Long orderId = task.getVariable("orderId");
+            orderService.markOrderWaiting(orderId);
+            service.complete(task);
+        } catch (RuntimeException exception) {
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
+        }
     }
 }

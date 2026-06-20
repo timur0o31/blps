@@ -24,10 +24,14 @@ public class CheckAssignmentLimitTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
-        Long orderId = task.getVariable("orderId");
-        boolean limitReached = orderService.isAssignmentLimitReached(orderId);
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("limitReached", limitReached);
-        service.complete(task, variables);
+        try {
+            Long orderId = task.getVariable("orderId");
+            boolean limitReached = orderService.isAssignmentLimitReached(orderId);
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("limitReached", limitReached);
+            service.complete(task, variables);
+        } catch (RuntimeException exception) {
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
+        }
     }
 }

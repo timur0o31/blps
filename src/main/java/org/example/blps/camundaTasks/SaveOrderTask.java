@@ -26,14 +26,18 @@ public class SaveOrderTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
-        String email = task.getVariable("email");
-        String content = task.getVariable("content");
-        String address = task.getVariable("address");
+        try {
+            String email = task.getVariable("email");
+            String content = task.getVariable("content");
+            String address = task.getVariable("address");
 
-        OrderResponseDto order = orderService.addOrder(email, new OrderRequestDto(content, address));
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("orderId", order.id());
-        service.complete(task, variables);
+            OrderResponseDto order = orderService.addOrder(email, new OrderRequestDto(content, address));
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("orderId", order.id());
+            service.complete(task, variables);
+        } catch (RuntimeException exception) {
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
+        }
 
     }
 }

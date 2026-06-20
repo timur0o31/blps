@@ -21,8 +21,12 @@ public class MarkOrderFailedTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
-        Long orderId = task.getVariable("orderId");
-        orderService.markOrderFailed(orderId);
-        service.complete(task);
+        try {
+            Long orderId = task.getVariable("orderId");
+            orderService.markOrderFailed(orderId);
+            service.complete(task);
+        } catch (RuntimeException exception) {
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
+        }
     }
 }

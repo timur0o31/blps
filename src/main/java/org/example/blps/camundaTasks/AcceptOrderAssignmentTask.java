@@ -21,9 +21,13 @@ public class AcceptOrderAssignmentTask implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
-        Long orderId = task.getVariable("orderId");
-        Long courierId = task.getVariable("courierId");
-        orderService.acceptOrderByCourierId(orderId, courierId);
-        service.complete(task);
+        try {
+            Long orderId = task.getVariable("orderId");
+            Long courierId = task.getVariable("courierId");
+            orderService.acceptOrderByCourierId(orderId, courierId);
+            service.complete(task);
+        } catch (Exception exception) {
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
+        }
     }
 }
