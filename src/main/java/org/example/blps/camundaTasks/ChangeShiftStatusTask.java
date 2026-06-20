@@ -9,12 +9,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ExternalTaskSubscription("courier-status-toggle")
-public class ChangeShiftStatus implements ExternalTaskHandler {
+public class ChangeShiftStatusTask implements ExternalTaskHandler {
 
     private CourierService courierService;
 
     @Autowired
-    public ChangeShiftStatus(CourierService courierService) {
+    public ChangeShiftStatusTask(CourierService courierService) {
         this.courierService = courierService;
     }
 

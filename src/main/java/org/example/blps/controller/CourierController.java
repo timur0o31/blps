@@ -39,7 +39,7 @@ public class CourierController {
     public ResponseEntity<ShiftStatusResponceDto> toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
         String email = userDetails.getUsername();
         Map<String, CamundaVariable> variables = new HashMap<>();
-        variables.put("email", CamundaVariable.string(userDetails.getUsername()));
+        variables.put("email", new CamundaVariable(email, "String"));
         camundaProcessClient.startProcess("courier_shift_status_process", variables);
         return ResponseEntity.accepted().build();
     }

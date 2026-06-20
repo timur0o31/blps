@@ -11,7 +11,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findTop10ByStatus(OrderStatus status);
     Order findByCourierAndStatus(Courier courier, OrderStatus status);
     Page<Order> findOrdersByClientId(Long clientId, Pageable pageable);
     Long countOrderByClientId(Long userId);

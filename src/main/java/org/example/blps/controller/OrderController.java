@@ -1,6 +1,8 @@
 package org.example.blps.controller;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.example.blps.CamundaRequestProperties.CamundaVariable;
+import org.example.blps.camundaRequest.CamundaProcessClient;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.requestDto.OrderStatusRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
@@ -13,6 +15,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/orders")
@@ -20,16 +25,25 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    private final CamundaProcessClient camundaProcessClient;
+
     @Autowired
-    public OrderController(OrderService orderService){
+    public OrderController(OrderService orderService, CamundaProcessClient camundaProcessClient){
         this.orderService=orderService;
+        this.camundaProcessClient = camundaProcessClient;
     }
 
     @PreAuthorize("hasAuthority('CREATE_ORDER')")
     @PostMapping
-    public ResponseEntity<OrderResponseDto> createOrder(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid OrderRequestDto orderRequestDto) {
-        OrderResponseDto responseDto = orderService.addOrder(userDetails.getUsername(), orderRequestDto);
-        return ResponseEntity.ok(responseDto);
+    public ResponseEntity<Void> createOrder(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid OrderRequestDto orderRequestDto) {
+        Map<String, CamundaVariable> variables = new HashMap<>();
+        variables.put("email", new CamundaVariable(userDetails.getUsername(), "String"));
+        variables.put("content", new CamundaVariable(orderRequestDto.getContent(), "String"));
+        variables.put("address", new CamundaVariable(orderRequestDto.getAddress(), "String"));
+        Map<String, CamundaVariable> startVariables = new HashMap<>();
+        String processInstanceId = camundaProcessClient.startProcess("create_order_process", startVariables);
+        camundaProcessClient.completeTask(processInstanceId, "Task_FillOrder", variables);
+        return ResponseEntity.accepted().build();
     }
 
     @PreAuthorize("hasAuthority('VIEW_ORDER')")
@@ -41,10 +55,12 @@ public class OrderController {
 
     @PreAuthorize("hasAuthority('UPDATE_STATUS_ORDER')")
     @PatchMapping(value = "/{id}/status")
-    public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails,
-                                                              @RequestBody @Valid OrderStatusRequestDto orderStatusRequestDto) {
-        OrderResponseDto responseDto = orderService.updateOrder(id,orderStatusRequestDto, userDetails.getUsername());
-        return ResponseEntity.ok(responseDto);
+    public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid OrderStatusRequestDto orderStatusRequestDto) {
+        orderService.ensureOrderAssignedToCourier(id, userDetails.getUsername());
+        Map<String, CamundaVariable> variables = new HashMap<>();
+        variables.put("nextOrderStatus", new CamundaVariable(orderStatusRequestDto.getOrderStatus().name(), "String"));
+        camundaProcessClient.completeTask("process_order_assignment", "Task_UpdateOrderStatus", id, variables);
+        return ResponseEntity.accepted().build();
     }
 
     @PreAuthorize("hasAuthority('CANCEL_ORDER')")

@@ -5,10 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
-// настройка подключения к камунда
-// RestClient — это Spring-класс, который позволяет
-// Java-приложению делать HTTP-запросы к другому сервису.
-
 @Configuration
 public class CamundaRestClientConfig {
 

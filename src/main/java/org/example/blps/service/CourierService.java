@@ -40,6 +40,9 @@ public class CourierService {
         this.mapper = mapper;
     }
 
+
+    // Проверить!
+    @isApprovedCourier
     public CourierStatus toggleCourierShiftStatus(String email) {
         User user = userService.findByEmail(email);
         Courier courier = courierRepository.findByUserId(user.getId()).orElseThrow(() -> new EntityNotFoundException("Курьер не найден"));
@@ -64,10 +67,6 @@ public class CourierService {
 
     public Courier findCourierByEmail(String email) {
         return courierRepository.findByUserId(userService.findByEmail(email).getId()).orElseThrow(() -> new IllegalStateException("Курьера с таким email не существует!"));
-    }
-
-    public Courier findCourierWithOnlineStatus() {
-        return courierRepository.findFirstByStatus(CourierStatus.ON_SHIFT).orElse(null);
     }
 
     public void saveCourier(Courier courier) {
@@ -105,6 +104,11 @@ public class CourierService {
         for (Courier cr: couriers.getContent())
             result.add(mapper.fromEntityToDto(cr));
         return PaginationUtil.responsePaginationDto(result, params, totalElements);
+    }
+
+
+    public Courier findCourierById(Long id){
+        return courierRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Курьер не найден"));
     }
 }
 
