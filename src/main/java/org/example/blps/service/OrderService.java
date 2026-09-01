@@ -184,6 +184,12 @@ public class OrderService {
         }
     }
 
+    @Transactional
+    public String getCamundaUserIdByCourierId(Long courierId) {
+        Courier courier = findCourierById(courierId);
+        return "user" + courier.getUserId();
+    }
+
 
     // Истекшие попытки назначения
     @Transactional

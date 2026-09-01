@@ -19,12 +19,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import javax.naming.AuthenticationException;
 import java.io.IOException;
 import java.util.Optional;
 
 @Service
 public class UserService {
+
     private final UserMapper userMapper;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
@@ -32,10 +35,12 @@ public class UserService {
     private final ClientRepository clientRepository;
     private final UserRepository userRepository;
     private final AdminRepository adminRepository;
+    private final CamundaIdentityService camundaIdentityService;
 
     @Autowired
     public UserService(UserRepository userRepository, UserMapper userMapper, JwtService jwtService,
-                       PasswordEncoder passwordEncoder, ClientRepository clientRepository, CourierRepository courierRepository, AdminRepository adminRepository) {
+                       PasswordEncoder passwordEncoder, ClientRepository clientRepository, CourierRepository courierRepository, AdminRepository adminRepository
+                       ,CamundaIdentityService camundaIdentityService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.jwtService = jwtService;
@@ -43,6 +48,7 @@ public class UserService {
         this.courierRepository = courierRepository;
         this.clientRepository = clientRepository;
         this.adminRepository = adminRepository;
+        this.camundaIdentityService = camundaIdentityService;
     }
 
 
@@ -70,6 +76,7 @@ public class UserService {
         }
     }
 
+    @Transactional
     public void createClient(UserRequestDto userRequestDto) throws DataIntegrityViolationException, IOException {
            checkUserData(userRequestDto);
            User user = createUser(userRequestDto);
@@ -78,8 +85,10 @@ public class UserService {
            Client client = new Client();
            client.setUserId(user.getId());
            clientRepository.save(client);
+        camundaIdentityService.createUser(user, userRequestDto.getPassword(), "CLIENT");
     }
 
+    @Transactional
     public void createCourier(UserRequestDto userRequestDto) throws DataIntegrityViolationException, IOException{
         checkUserData(userRequestDto);
         User user = createUser(userRequestDto);
@@ -90,6 +99,7 @@ public class UserService {
         courier.setStatus(CourierStatus.OFF_SHIFT);
         courier.setAccountState(CourierAccountState.INACTIVE);
         courierRepository.save(courier);
+        camundaIdentityService.createUser(user, userRequestDto.getPassword(), "COURIER");
     }
 
     public void createAdmin(UserRequestDto userRequestDto) throws IOException{

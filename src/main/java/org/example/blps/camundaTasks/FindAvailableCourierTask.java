@@ -32,6 +32,7 @@ public class FindAvailableCourierTask implements ExternalTaskHandler {
             variables.put("courierFound", courierId != null);
             if (courierId != null) {
                 variables.put("courierId", courierId);
+                variables.put("courierCamundaUserId", orderService.getCamundaUserIdByCourierId(courierId));
             }
             service.complete(task, variables);
         } catch (RuntimeException exception) {

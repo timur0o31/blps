@@ -3,27 +3,27 @@
     <name>Admin</name>
     <surname>Admin</surname>
     <email>admin@gmail.com</email>
-    <password>$2a$04$nbQmMhTN8WBykSb9/69uoONb2OjSKFaGHBQPUcYn.REBvNVDkHI42</password>
+    <password>$2a$04$kkp.xK4/8npbyiwQmoufdugk8U9uJ.6kR/HtidP.cNSxU8OjjW.hG</password>
     <phone_number>+70000000000</phone_number>
     <role>ADMIN</role>
     <superUser>true</superUser>
   </user>
   <user id="2">
-    <name>Ivans</name>
+    <name>John</name>
     <surname>Ivanov</surname>
-    <email>timur2005@yandex.ru</email>
-    <password>$2a$04$sRaXHawDs3Tkdqtj3mA8FuOaxFtMuwxsv9co7whDcY/RW4xKISa9.</password>
-    <phone_number>+79931632735</phone_number>
-    <role>COURIER</role>
+    <email>dans2005@yandex.ru</email>
+    <password>$2a$04$bhTT7tp0ZdL..jM5FYej/er1tQw644YjZFpxDe6suK06XGscrxZqi</password>
+    <phone_number>89991634558</phone_number>
+    <role>CLIENT</role>
     <superUser>false</superUser>
   </user>
   <user id="3">
     <name>Ivans</name>
     <surname>Ivanov</surname>
-    <email>dans2005@yandex.ru</email>
-    <password>$2a$04$7jtzLgjdIlcWoB2Frlp9GuCuWNPFKx2dZ1aOvjtY.xGsCebvH/usa</password>
-    <phone_number>+72991234567</phone_number>
-    <role>CLIENT</role>
+    <email>timur2005@yandex.ru</email>
+    <password>$2a$04$NzkflBP7GLngX9p3queTlOBSYAN.ZulVJzuVEo92QbQ7ZqdeLD1d2</password>
+    <phone_number>+79931632735</phone_number>
+    <role>COURIER</role>
     <superUser>false</superUser>
   </user>
 </users>

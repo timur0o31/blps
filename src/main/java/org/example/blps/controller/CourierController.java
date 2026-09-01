@@ -38,11 +38,9 @@ public class CourierController {
     @PatchMapping("/shift-status")
     @isApprovedCourier
     public ResponseEntity<ShiftStatusResponceDto> toggleShiftStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        String email = userDetails.getUsername();
         Map<String, CamundaVariable> variables = new HashMap<>();
-        variables.put("email", new CamundaVariable(email, "String"));
-        String processInstanceId = camundaProcessClient.startProcess("courier_shift_status_process", variables);
-        camundaProcessClient.completeTask(processInstanceId, "Task_CourierShiftDecision", variables);
+        variables.put("courierCamundaUserId", new CamundaVariable("user" + userDetails.user().getId(), "String"));
+        camundaProcessClient.startProcess("courier_shift_status_process", variables);
         return ResponseEntity.accepted().build();
     }
 
