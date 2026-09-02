@@ -38,11 +38,11 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<Void> createOrder(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid OrderRequestDto orderRequestDto) {
         Map<String, CamundaVariable> variables = new HashMap<>();
-        variables.put("email", new CamundaVariable(userDetails.getUsername(), "String"));
+        variables.put("clientCamundaUserId", new CamundaVariable("user" + userDetails.user().getId(), "String"));
         variables.put("content", new CamundaVariable(orderRequestDto.getContent(), "String"));
         variables.put("address", new CamundaVariable(orderRequestDto.getAddress(), "String"));
         Map<String, CamundaVariable> startVariables = new HashMap<>();
-        startVariables.put("email", new CamundaVariable(userDetails.getUsername(), "String"));
+        startVariables.put("clientCamundaUserId", new CamundaVariable("user" + userDetails.user().getId(), "String"));
         String processInstanceId = camundaProcessClient.startProcess("create_order_process", startVariables);
         camundaProcessClient.completeTask(processInstanceId, "Task_FillOrder", variables);
         return ResponseEntity.accepted().build();

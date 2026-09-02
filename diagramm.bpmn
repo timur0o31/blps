@@ -19,13 +19,12 @@
         <bpmn:flowNodeRef>End_Create</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
-    <bpmn:startEvent id="Start_Create" name="Запрос на создание заказа">
+    <bpmn:startEvent id="Start_Create" name="Запрос на создание заказа" camunda:initiator="clientCamundaUserId">
       <bpmn:outgoing>F_Create_Fill</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Task_FillOrder" name="Оформить заказ">
+    <bpmn:userTask id="Task_FillOrder" name="Оформить заказ" camunda:assignee="${clientCamundaUserId}">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="email" label="Email" type="string" />
           <camunda:formField id="content" label="Содержимое" type="string" />
           <camunda:formField id="address" label="Адрес" type="string" />
         </camunda:formData>
@@ -195,7 +194,7 @@
       <bpmn:incoming>F_Reject_Link</bpmn:incoming>
       <bpmn:linkEventDefinition id="Link_RetryReject" name="Повторить назначение" />
     </bpmn:intermediateThrowEvent>
-    <bpmn:userTask id="Task_UpdateOrderStatus" name="Изменить статус доставки">
+    <bpmn:userTask id="Task_UpdateOrderStatus" name="Изменить статус доставки" camunda:assignee="${courierCamundaUserId}">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="nextOrderStatus" label="Новый статус" type="enum">
@@ -223,7 +222,7 @@
     <bpmn:sequenceFlow id="F_NotDelivered" name="нет" sourceRef="Gateway_Delivered" targetRef="Task_UpdateOrderStatus" />
     <bpmn:sequenceFlow id="Flow_1nwii46" sourceRef="Task_MarkCourier" targetRef="Task_CourierDecision" />
     <bpmn:sequenceFlow id="F_AssignmentTimeout_Expire" sourceRef="Boundary_AssignmentTimeout" targetRef="Task_Expire" />
-    <bpmn:userTask id="Task_CourierDecision" name="Принять или отклонить заказ">
+    <bpmn:userTask id="Task_CourierDecision" name="Принять или отклонить заказ" camunda:assignee="${courierCamundaUserId}">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="accepted" label="Принять заказ" type="boolean" />
@@ -254,19 +253,10 @@
         <bpmn:flowNodeRef>End_CourierShift</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
-    <bpmn:startEvent id="Start_CourierShift" name="Запрос изменения смены">
+    <bpmn:startEvent id="Start_CourierShift" name="Запрос изменения смены" camunda:initiator="courierCamundaUserId">
       <bpmn:outgoing>F_CourierShift_Start_Decision</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Task_CourierShiftDecision" name="Подтвердить изменение смены">
-      <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="email" label="Email курьера" type="string">
-            <camunda:validation>
-              <camunda:constraint name="required" />
-            </camunda:validation>
-          </camunda:formField>
-        </camunda:formData>
-      </bpmn:extensionElements>
+    <bpmn:userTask id="Task_CourierShiftDecision" name="Подтвердить изменение смены" camunda:assignee="${courierCamundaUserId}">
       <bpmn:incoming>F_CourierShift_Start_Decision</bpmn:incoming>
       <bpmn:outgoing>F_CourierShift_Decision_Change</bpmn:outgoing>
     </bpmn:userTask>

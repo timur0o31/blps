@@ -6,7 +6,9 @@ import org.camunda.bpm.client.task.ExternalTaskHandler;
 import org.camunda.bpm.client.task.ExternalTaskService;
 import org.example.blps.dto.requestDto.OrderRequestDto;
 import org.example.blps.dto.responseDto.OrderResponseDto;
+import org.example.blps.entity.User;
 import org.example.blps.service.OrderService;
+import org.example.blps.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,16 +20,18 @@ import java.util.Map;
 public class SaveOrderTask implements ExternalTaskHandler {
 
     private final OrderService orderService;
+    private final UserService userService;
 
     @Autowired
-    public SaveOrderTask(OrderService orderService) {
+    public SaveOrderTask(OrderService orderService, UserService userService) {
         this.orderService = orderService;
+        this.userService = userService;
     }
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
         try {
-            String email = task.getVariable("email");
+            String email = resolveClientEmail(task);
             String content = task.getVariable("content");
             String address = task.getVariable("address");
 
@@ -39,5 +43,20 @@ public class SaveOrderTask implements ExternalTaskHandler {
             service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
         }
 
+    }
+
+    private String resolveClientEmail(ExternalTask task) {
+        String clientCamundaUserId = task.getVariable("clientCamundaUserId");
+        if (clientCamundaUserId != null && clientCamundaUserId.startsWith("user")) {
+            Long userId = Long.parseLong(clientCamundaUserId.substring("user".length()));
+            User user = userService.findById(userId);
+            return user.getEmail();
+        }
+
+        String email = task.getVariable("email");
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalStateException("Не удалось определить клиента для заказа");
+        }
+        return email;
     }
 }
