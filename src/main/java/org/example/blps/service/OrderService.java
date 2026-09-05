@@ -134,6 +134,16 @@ public class OrderService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public void validateOrderStatusTransition(Long orderId, String email, OrderStatus nextStatus) {
+        Order order = findOrderById(orderId);
+        Courier courier = courierService.findCourierByEmail(email);
+        validateAssignedCourier(order, courier);
+        if (!order.getStatus().canSwitchTo(nextStatus)) {
+            throw new IllegalStateException("Из состояния " + order.getStatus() + " нельзя перейти в " + nextStatus);
+        }
+    }
+
     @Transactional
     public void cancelOrderById(Long orderId, Long courierId) {
         Order order = findOrderById(orderId);

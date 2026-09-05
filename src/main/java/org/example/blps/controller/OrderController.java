@@ -61,6 +61,7 @@ public class OrderController {
     @PatchMapping(value = "/{id}/status")
     public ResponseEntity<OrderResponseDto> updateStatusOrder(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid OrderStatusRequestDto orderStatusRequestDto) {
         orderService.ensureOrderAssignedToCourier(id, userDetails.getUsername());
+        orderService.validateOrderStatusTransition(id, userDetails.getUsername(), orderStatusRequestDto.getOrderStatus());
         Map<String, CamundaVariable> variables = new HashMap<>();
         variables.put("nextOrderStatus", new CamundaVariable(orderStatusRequestDto.getOrderStatus().name(), "String"));
         camundaProcessClient.completeTask("process_order_assignment", "Task_UpdateOrderStatus", id, variables);

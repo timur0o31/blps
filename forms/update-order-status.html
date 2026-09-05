@@ -1,0 +1,53 @@
+<form role="form" name="form">
+  <div class="alert alert-danger" ng-if="statusValidationError">
+    {{ statusValidationError }}
+  </div>
+
+  <div class="form-group">
+    <label>Текущий статус</label>
+    <p class="form-control-static">{{ currentOrderStatus || 'ACCEPTED' }}</p>
+  </div>
+
+  <div class="form-group">
+    <label for="nextOrderStatus">Новый статус</label>
+    <select
+      id="nextOrderStatus"
+      name="nextOrderStatus"
+      class="form-control"
+      cam-variable-name="nextOrderStatus"
+      cam-variable-type="String"
+      ng-model="nextOrderStatus"
+      required>
+      <option value="">Выберите статус</option>
+      <option value="ON_THE_WAY" ng-if="currentOrderStatus === 'ACCEPTED'">ON_THE_WAY</option>
+      <option value="PICKED_UP" ng-if="currentOrderStatus === 'ON_THE_WAY'">PICKED_UP</option>
+      <option value="DELIVERED" ng-if="currentOrderStatus === 'PICKED_UP'">DELIVERED</option>
+    </select>
+    <p class="help-block" ng-if="form.nextOrderStatus.$dirty && form.nextOrderStatus.$invalid">
+      Выберите допустимый следующий статус.
+    </p>
+  </div>
+
+  <script cam-script type="text/form-script">
+    var nextStatusByCurrentStatus = {
+      ACCEPTED: 'ON_THE_WAY',
+      ON_THE_WAY: 'PICKED_UP',
+      PICKED_UP: 'DELIVERED'
+    };
+
+    camForm.on('form-loaded', function() {
+      camForm.variableManager.fetchVariable('currentOrderStatus');
+      camForm.variableManager.fetchVariable('statusValidationError');
+    });
+
+    camForm.on('variables-fetched', function() {
+      var currentOrderStatus =
+        camForm.variableManager.variableValue('currentOrderStatus') || 'ACCEPTED';
+
+      $scope.currentOrderStatus = currentOrderStatus;
+      $scope.nextOrderStatus = nextStatusByCurrentStatus[currentOrderStatus] || null;
+      $scope.statusValidationError =
+        camForm.variableManager.variableValue('statusValidationError');
+    });
+  </script>
+</form>

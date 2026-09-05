@@ -30,6 +30,7 @@ public class UpdateOrderDeliveryStatusTask implements ExternalTaskHandler {
             boolean delivered = orderService.updateOrder(orderId, courierId, nextStatus);
             Map<String, Object> variables = new HashMap<>();
             variables.put("orderDelivered", delivered);
+            variables.put("currentOrderStatus", nextStatus.name());
             variables.put("statusValidationError", null);
             variables.put("nextOrderStatus", null);
             service.complete(task, variables);

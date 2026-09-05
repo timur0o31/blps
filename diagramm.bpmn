@@ -22,13 +22,7 @@
     <bpmn:startEvent id="Start_Create" name="Запрос на создание заказа" camunda:initiator="clientCamundaUserId">
       <bpmn:outgoing>F_Create_Fill</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Task_FillOrder" name="Оформить заказ" camunda:assignee="${clientCamundaUserId}">
-      <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="content" label="Содержимое" type="string" />
-          <camunda:formField id="address" label="Адрес" type="string" />
-        </camunda:formData>
-      </bpmn:extensionElements>
+    <bpmn:userTask id="Task_FillOrder" name="Оформить заказ" camunda:assignee="${clientCamundaUserId}" camunda:formKey="embedded:deployment:/forms/create-order.html">
       <bpmn:incoming>F_Create_Fill</bpmn:incoming>
       <bpmn:outgoing>F_Create_Save</bpmn:outgoing>
     </bpmn:userTask>
@@ -194,16 +188,7 @@
       <bpmn:incoming>F_Reject_Link</bpmn:incoming>
       <bpmn:linkEventDefinition id="Link_RetryReject" name="Повторить назначение" />
     </bpmn:intermediateThrowEvent>
-    <bpmn:userTask id="Task_UpdateOrderStatus" name="Изменить статус доставки" camunda:assignee="${courierCamundaUserId}">
-      <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="nextOrderStatus" label="Новый статус" type="enum">
-            <camunda:value id="ON_THE_WAY" name="ON_THE_WAY" />
-            <camunda:value id="PICKED_UP" name="PICKED_UP" />
-            <camunda:value id="DELIVERED" name="DELIVERED" />
-          </camunda:formField>
-        </camunda:formData>
-      </bpmn:extensionElements>
+    <bpmn:userTask id="Task_UpdateOrderStatus" name="Изменить статус доставки" camunda:assignee="${courierCamundaUserId}" camunda:formKey="embedded:deployment:/forms/update-order-status.html">
       <bpmn:incoming>F_Accept_Update</bpmn:incoming>
       <bpmn:incoming>F_NotDelivered</bpmn:incoming>
       <bpmn:outgoing>F_Update_Service</bpmn:outgoing>

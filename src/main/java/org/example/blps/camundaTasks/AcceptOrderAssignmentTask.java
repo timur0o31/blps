@@ -4,9 +4,13 @@ import org.camunda.bpm.client.spring.annotation.ExternalTaskSubscription;
 import org.camunda.bpm.client.task.ExternalTask;
 import org.camunda.bpm.client.task.ExternalTaskHandler;
 import org.camunda.bpm.client.task.ExternalTaskService;
+import org.example.blps.enums.OrderStatus;
 import org.example.blps.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @ExternalTaskSubscription("accept-order-assignment")
@@ -24,7 +28,9 @@ public class AcceptOrderAssignmentTask implements ExternalTaskHandler {
             Long orderId = task.getVariable("orderId");
             Long courierId = task.getVariable("courierId");
             orderService.acceptOrderByCourierId(orderId, courierId);
-            service.complete(task);
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("currentOrderStatus", OrderStatus.ACCEPTED.name());
+            service.complete(task, variables);
         } catch (Exception exception) {
             service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
         }
