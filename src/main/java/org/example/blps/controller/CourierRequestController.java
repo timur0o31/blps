@@ -2,6 +2,8 @@ package org.example.blps.controller;
 
 
 import jakarta.validation.constraints.Positive;
+import org.example.blps.CamundaRequestProperties.CamundaVariable;
+import org.example.blps.camundaRequest.CamundaProcessClient;
 import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.security.CustomUserDetails;
@@ -14,16 +16,22 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 @Validated
 @RequestMapping("/courier-requests")
 public class CourierRequestController {
 
     private final CourierRequestService courierRequestService;
+    private final CamundaProcessClient camundaProcessClient;
 
     @Autowired
-    public CourierRequestController(CourierRequestService courierRequestService){
+    public CourierRequestController(CourierRequestService courierRequestService,
+                                    CamundaProcessClient camundaProcessClient){
         this.courierRequestService =courierRequestService;
+        this.camundaProcessClient = camundaProcessClient;
     }
 
     @PreAuthorize("hasAuthority('VIEW_COURIER_APPLICATIONS')")
@@ -37,9 +45,10 @@ public class CourierRequestController {
     @PreAuthorize("hasAuthority('SUBMIT_REQUEST')")
     @PostMapping("/submit")
     public ResponseEntity<?> submitRequest(@AuthenticationPrincipal CustomUserDetails userDetails){
-        String email = userDetails.getUsername();
-        courierRequestService.submitRequest(email);
-        return ResponseEntity.ok().build();
+        Map<String, CamundaVariable> variables = new HashMap<>();
+        variables.put("courierCamundaUserId", new CamundaVariable("user" + userDetails.user().getId(), "String"));
+        String processInstanceId = camundaProcessClient.startProcess("courier_account_submit", variables);
+        return ResponseEntity.accepted().body(Map.of("processInstanceId", processInstanceId));
     }
 
     @PreAuthorize("hasAuthority('APPROVE_REQUEST')")

@@ -1,7 +1,6 @@
 package org.example.blps.service;
 
 import org.example.blps.entity.User;
-import org.example.blps.enums.Role;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -20,9 +19,37 @@ public class CamundaIdentityService {
 
     public void createUser(User user, String rawPassword, String groupId) {
         String camundaUserId = "user" + user.getId();
-        createCamundaUser(user, rawPassword, camundaUserId);
-        addUserToGroup(camundaUserId, groupId);
+        if (!camundaUserExists(camundaUserId)) {
+            createCamundaUser(user, rawPassword, camundaUserId);
+        }
+        if (!camundaUserBelongsToGroup(camundaUserId, groupId)) {
+            addUserToGroup(camundaUserId, groupId);
+        }
     }
+
+    private boolean camundaUserExists(String camundaUserId) {
+        CamundaUser[] users = camundaRestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/user")
+                        .queryParam("id", camundaUserId)
+                        .build())
+                .retrieve()
+                .body(CamundaUser[].class);
+        return users != null && users.length > 0;
+    }
+
+    private boolean camundaUserBelongsToGroup(String camundaUserId, String groupId) {
+        CamundaUser[] users = camundaRestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/user")
+                        .queryParam("id", camundaUserId)
+                        .queryParam("memberOfGroup", groupId)
+                        .build())
+                .retrieve()
+                .body(CamundaUser[].class);
+        return users != null && users.length > 0;
+    }
+
     private void createCamundaUser(User user, String rawPassword, String camundaUserId) {
         Map<String, Object> profile = new HashMap<>();
         profile.put("id", camundaUserId);
@@ -52,4 +79,6 @@ public class CamundaIdentityService {
                 .toBodilessEntity();
     }
 
+    private record CamundaUser(String id) {
+    }
 }

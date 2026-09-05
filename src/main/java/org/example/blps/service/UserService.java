@@ -102,6 +102,7 @@ public class UserService {
         camundaIdentityService.createUser(user, userRequestDto.getPassword(), "COURIER");
     }
 
+    @Transactional
     public void createAdmin(UserRequestDto userRequestDto) throws IOException{
         checkUserData(userRequestDto);
         User user = createUser(userRequestDto);
@@ -110,6 +111,7 @@ public class UserService {
         Admin admin = new Admin();
         admin.setUserId(user.getId());
         adminRepository.save(admin);
+        camundaIdentityService.createUser(user, userRequestDto.getPassword(), "ADMIN");
     }
     private User findByCredetionals(UserCredentialsRequestDto userCredetionalDto) throws AuthenticationException {
         Optional<User> userOptional = userRepository.findByEmail(userCredetionalDto.getEmail());

@@ -42,7 +42,8 @@ public class CourierRequestService {
         this.userService = userService;
     }
 
-    public void submitRequest(String email) {
+    @Transactional
+    public Long submitRequest(String email) {
         Courier courier = courierService.findCourierByEmail(email);
         if (courier.getAccountState()==CourierAccountState.BLOCKED)
             throw new AccessDeniedException("Заблокированным сотрудникам нельзя трудоустроиться");
@@ -53,13 +54,26 @@ public class CourierRequestService {
         CourierRequest courierRequest = new CourierRequest();
         courierRequest.setCourier(courier);
         courierRequest.setStatus(CourierRequestStatus.PENDING);
-        courierRequestRepository.save(courierRequest);
+        CourierRequest savedRequest = courierRequestRepository.save(courierRequest);
+        return savedRequest.getId();
     }
 
     @Transactional
     @isApprovedAdmin
     public void approveRequest(String email, Long id){
+        approveRequestInternal(email, id, false);
+    }
+
+    @Transactional
+    public void approveRequestFromProcess(String email, Long id) {
+        approveRequestInternal(email, id, true);
+    }
+
+    private void approveRequestInternal(String email, Long id, boolean verifyAdminState) {
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
+        if (verifyAdminState && !admin.isAccountState()) {
+            throw new AccessDeniedException("Аккаунт администратора не одобрен");
+        }
         CourierRequest courierRequest = courierRequestRepository.findCourierRequestById(id)
                 .orElseThrow(()->new IllegalStateException("заявки с данным id не существует"));
         if (courierRequest.getStatus()!=CourierRequestStatus.PENDING) throw new IllegalStateException("Заявку можно одобрить только из состояния ожидания!");
@@ -70,9 +84,22 @@ public class CourierRequestService {
         courierRequestRepository.save(courierRequest);
         courierService.saveCourier(courier);
     }
+    @Transactional
     @isApprovedAdmin
     public void declineRequest(String email, Long id){
+        declineRequestInternal(email, id, false);
+    }
+
+    @Transactional
+    public void declineRequestFromProcess(String email, Long id) {
+        declineRequestInternal(email, id, true);
+    }
+
+    private void declineRequestInternal(String email, Long id, boolean verifyAdminState) {
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
+        if (verifyAdminState && !admin.isAccountState()) {
+            throw new AccessDeniedException("Аккаунт администратора не одобрен");
+        }
         CourierRequest courierRequest = courierRequestRepository.findCourierRequestById(id)
                 .orElseThrow(()->new IllegalStateException("заявки с данным id не существует"));
         if (courierRequest.getStatus()!=CourierRequestStatus.PENDING) throw new IllegalStateException("Заявку можно отклонить только из состояния ожидания!");

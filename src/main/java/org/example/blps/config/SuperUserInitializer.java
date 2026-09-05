@@ -5,6 +5,7 @@ import org.example.blps.entity.User;
 import org.example.blps.enums.Role;
 import org.example.blps.repository.AdminRepository;
 import org.example.blps.repository.UserRepository;
+import org.example.blps.service.CamundaIdentityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,21 +19,25 @@ public class SuperUserInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdminRepository adminRepository;
+    private final CamundaIdentityService camundaIdentityService;
 
     @Autowired
-    public SuperUserInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder, AdminRepository adminRepository) {
+    public SuperUserInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                                AdminRepository adminRepository, CamundaIdentityService camundaIdentityService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.adminRepository = adminRepository;
+        this.camundaIdentityService = camundaIdentityService;
     }
 
     @Override
     public void run(String... args) throws Exception {
+        String rawPassword = "Gufi2001";
         User user = new User();
         user.setName("Admin");
         user.setSurname("Admin");
         user.setEmail("admin@gmail.com");
-        user.setPassword(passwordEncoder.encode("Gufi2001"));
+        user.setPassword(passwordEncoder.encode(rawPassword));
         user.setPhoneNumber("+70000000000");
         user.setRole(Role.ADMIN);
         user.setSuperUser(true);
@@ -42,6 +47,11 @@ public class SuperUserInitializer implements CommandLineRunner {
             admin.setUserId(user.getId());
             admin.setAccountState(true);
             adminRepository.save(admin);
+        } else {
+            user = userRepository.findByEmail(user.getEmail())
+                    .orElseThrow(() -> new IllegalStateException("Не удалось загрузить суперпользователя"));
         }
+        camundaIdentityService.createUser(user, rawPassword, "ADMIN");
+        camundaIdentityService.createUser(user, rawPassword, "camunda-admin");
     }
 }

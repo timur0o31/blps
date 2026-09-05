@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_OrderLifecycle" targetNamespace="http://example.org/blps" exporter="Camunda Modeler" exporterVersion="5.48.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_OrderLifecycle" targetNamespace="http://example.org/blps" exporter="Camunda Modeler" exporterVersion="5.50.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
   <bpmn:message id="Message_OrderCreated" name="order-created" />
   <bpmn:collaboration id="Collaboration_OrderLifecycle">
     <bpmn:participant id="Participant_Create" name="Создание заказа" processRef="create_order_process" />
     <bpmn:participant id="Participant_Lifecycle" name="Обработка заказа курьером" processRef="process_order_assignment" />
     <bpmn:participant id="Participant_CourierShift" name="Изменение статуса смены курьера" processRef="courier_shift_status_process" />
+    <bpmn:participant id="Participant_submit" name="Запрос на одобрение аккаунта курьера" processRef="courier_account_submit" />
     <bpmn:messageFlow id="MessageFlow_OrderCreated" name="order-created" sourceRef="Task_Publish" targetRef="Start_Assignment" />
   </bpmn:collaboration>
   <bpmn:process id="create_order_process" name="Создание заказа" isExecutable="true" camunda:historyTimeToLive="180">
@@ -255,6 +256,78 @@
     <bpmn:sequenceFlow id="F_CourierShift_Start_Decision" sourceRef="Start_CourierShift" targetRef="Task_CourierShiftDecision" />
     <bpmn:sequenceFlow id="F_CourierShift_Decision_Change" sourceRef="Task_CourierShiftDecision" targetRef="Task_ChangeCourierShift" />
     <bpmn:sequenceFlow id="F_CourierShift_Change_End" sourceRef="Task_ChangeCourierShift" targetRef="End_CourierShift" />
+  </bpmn:process>
+  <bpmn:process id="courier_account_submit" name="Запрос на одобрение аккаунта курьера" isExecutable="true" camunda:candidateStarterGroups="COURIER" camunda:historyTimeToLive="180">
+    <bpmn:laneSet id="LaneSet_1bbi064">
+      <bpmn:lane id="Lane_12o0v6q" name="Система">
+        <bpmn:flowNodeRef>Activity_01h7bz2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_18705ks</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_0k4pod6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_0ljddn1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_0dgjb9j</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_1xk2101" name="Курьер">
+        <bpmn:flowNodeRef>Event_1u7afq9</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_19gsr32" name="Админ">
+        <bpmn:flowNodeRef>Activity_1psr4vn</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_068ozs8</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Event_1u7afq9" name="Запрос на одобрение аккаунта" camunda:initiator="initiatorCamundaUserId">
+      <bpmn:outgoing>Flow_1np5t1f</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1np5t1f" sourceRef="Event_1u7afq9" targetRef="Activity_0dgjb9j" />
+    <bpmn:sequenceFlow id="Flow_0id0o26" sourceRef="Activity_01h7bz2" targetRef="Event_0k4pod6" />
+    <bpmn:userTask id="Activity_1psr4vn" name="Рассмотреть заявку курьера" camunda:candidateGroups="ADMIN">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="decision" label="Решение" type="enum">
+            <camunda:validation>
+              <camunda:constraint name="required" />
+            </camunda:validation>
+            <camunda:value id="APPROVED" name="Одобрить" />
+            <camunda:value id="DECLINED" name="Отклонить" />
+          </camunda:formField>
+        </camunda:formData>
+        <camunda:taskListener event="complete" expression="${execution.setVariable('reviewerCamundaUserId', task.assignee)}" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1msrtbb</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lakaf0</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0lakaf0" sourceRef="Activity_1psr4vn" targetRef="Gateway_068ozs8" />
+    <bpmn:exclusiveGateway id="Gateway_068ozs8" name="Заявка одобрена?">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_0lakaf0</bpmn:incoming>
+      <bpmn:outgoing>Flow_1362di1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_15ck3iv</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Activity_01h7bz2" name="Одобрить" camunda:type="external" camunda:topic="approve-courier-request">
+      <bpmn:incoming>Flow_1362di1</bpmn:incoming>
+      <bpmn:outgoing>Flow_0id0o26</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1362di1" name="Одобрить" sourceRef="Gateway_068ozs8" targetRef="Activity_01h7bz2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision == 'APPROVED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_15ck3iv" name="Отклонить" sourceRef="Gateway_068ozs8" targetRef="Activity_18705ks">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision == 'DECLINED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Activity_18705ks" name="Отклонить" camunda:type="external" camunda:topic="decline-courier-request">
+      <bpmn:incoming>Flow_15ck3iv</bpmn:incoming>
+      <bpmn:outgoing>Flow_080qy31</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_0k4pod6" name="Аккаунт верифицирован">
+      <bpmn:incoming>Flow_0id0o26</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_080qy31" sourceRef="Activity_18705ks" targetRef="Event_0ljddn1" />
+    <bpmn:endEvent id="Event_0ljddn1" name="Аккаунт не верифицирован">
+      <bpmn:incoming>Flow_080qy31</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Activity_0dgjb9j" name="Создать заявку со статусом PENDING" camunda:type="external" camunda:topic="create-courier-request">
+      <bpmn:incoming>Flow_1np5t1f</bpmn:incoming>
+      <bpmn:outgoing>Flow_1msrtbb</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1msrtbb" sourceRef="Activity_0dgjb9j" targetRef="Activity_1psr4vn" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="Diagram_OrderLifecycle">
     <bpmndi:BPMNPlane id="Plane_OrderLifecycle" bpmnElement="Collaboration_OrderLifecycle">
@@ -617,6 +690,93 @@
       <bpmndi:BPMNEdge id="E_CourierShift_Change_End" bpmnElement="F_CourierShift_Change_End">
         <di:waypoint x="790" y="1460" />
         <di:waypoint x="860" y="1460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="BPMNShape_0kzviyx" bpmnElement="Participant_submit" isHorizontal="true">
+        <dc:Bounds x="160" y="1630" width="900" height="530" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1g5exec" bpmnElement="Lane_12o0v6q" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="190" y="1800" width="870" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1fl43nx" bpmnElement="Lane_1xk2101" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="190" y="1630" width="870" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_19gsr32_di" bpmnElement="Lane_19gsr32" isHorizontal="true">
+        <dc:Bounds x="190" y="1990" width="870" height="170" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1lqhhx9" bpmnElement="Event_1u7afq9">
+        <dc:Bounds x="230" y="1712" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="220" y="1662" width="56" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1n20w22" bpmnElement="Activity_1psr4vn">
+        <dc:Bounds x="330" y="2010" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_068ozs8_di" bpmnElement="Gateway_068ozs8" isMarkerVisible="true">
+        <dc:Bounds x="525" y="2025" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="523" y="2082" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0v6v40d" bpmnElement="Activity_01h7bz2">
+        <dc:Bounds x="630" y="1810" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_05ilxrx" bpmnElement="Activity_18705ks">
+        <dc:Bounds x="630" y="1910" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1dcgijt" bpmnElement="Event_0k4pod6">
+        <dc:Bounds x="892" y="1832" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="870" y="1875" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1wvdrvh" bpmnElement="Event_0ljddn1">
+        <dc:Bounds x="892" y="1932" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="870" y="1975" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_03lm293" bpmnElement="Activity_0dgjb9j">
+        <dc:Bounds x="220" y="1870" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_1xaco6f" bpmnElement="Flow_1np5t1f">
+        <di:waypoint x="248" y="1748" />
+        <di:waypoint x="248" y="1820" />
+        <di:waypoint x="290" y="1820" />
+        <di:waypoint x="290" y="1860" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_06p1ars" bpmnElement="Flow_0id0o26">
+        <di:waypoint x="770" y="1850" />
+        <di:waypoint x="892" y="1850" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lakaf0_di" bpmnElement="Flow_0lakaf0">
+        <di:waypoint x="470" y="2050" />
+        <di:waypoint x="525" y="2050" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1362di1_di" bpmnElement="Flow_1362di1">
+        <di:waypoint x="550" y="2025" />
+        <di:waypoint x="550" y="1850" />
+        <di:waypoint x="630" y="1850" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15ck3iv_di" bpmnElement="Flow_15ck3iv">
+        <di:waypoint x="550" y="2025" />
+        <di:waypoint x="550" y="1950" />
+        <di:waypoint x="630" y="1950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_080qy31_di" bpmnElement="Flow_080qy31">
+        <di:waypoint x="770" y="1950" />
+        <di:waypoint x="892" y="1950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1msrtbb_di" bpmnElement="Flow_1msrtbb">
+        <di:waypoint x="290" y="1950" />
+        <di:waypoint x="290" y="2050" />
+        <di:waypoint x="330" y="2050" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_MSG" bpmnElement="MessageFlow_OrderCreated">
         <di:waypoint x="795" y="330" />
