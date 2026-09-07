@@ -284,6 +284,7 @@
       <bpmn:lane id="Lane_12o0v6q" name="Система">
         <bpmn:flowNodeRef>Activity_0dgjb9j</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Activity_01h7bz2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CourierRequestActionResult</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Event_0k4pod6</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Event_0ljddn1</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Activity_18705ks</bpmn:flowNodeRef>
@@ -304,8 +305,15 @@
     <bpmn:sequenceFlow id="Flow_15ck3iv" name="нет" sourceRef="Gateway_068ozs8" targetRef="Activity_18705ks">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision == 'DECLINED'}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_0id0o26" sourceRef="Activity_01h7bz2" targetRef="Event_0k4pod6" />
-    <bpmn:sequenceFlow id="Flow_080qy31" sourceRef="Activity_18705ks" targetRef="Event_0ljddn1" />
+    <bpmn:sequenceFlow id="Flow_CourierApproveResult" sourceRef="Activity_01h7bz2" targetRef="Gateway_CourierRequestActionResult" />
+    <bpmn:sequenceFlow id="Flow_CourierDeclineResult" sourceRef="Activity_18705ks" targetRef="Gateway_CourierRequestActionResult" />
+    <bpmn:sequenceFlow id="Flow_0id0o26" sourceRef="Gateway_CourierRequestActionResult" targetRef="Event_0k4pod6">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requestActionSuccessful == true and decision == 'APPROVED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_080qy31" sourceRef="Gateway_CourierRequestActionResult" targetRef="Event_0ljddn1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requestActionSuccessful == true and decision == 'DECLINED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_CourierRequestActionRetry" name="исправить" sourceRef="Gateway_CourierRequestActionResult" targetRef="Activity_1psr4vn" />
     <bpmn:serviceTask id="Activity_0dgjb9j" name="Создать заявку со статусом PENDING" camunda:type="external" camunda:topic="create-courier-request">
       <bpmn:incoming>Flow_1np5t1f</bpmn:incoming>
       <bpmn:outgoing>Flow_1msrtbb</bpmn:outgoing>
@@ -315,6 +323,7 @@
         <camunda:taskListener expression="${execution.setVariable(&#39;reviewerCamundaUserId&#39;, task.assignee)}" event="complete" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1msrtbb</bpmn:incoming>
+      <bpmn:incoming>Flow_CourierRequestActionRetry</bpmn:incoming>
       <bpmn:outgoing>Flow_0lakaf0</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:startEvent id="Event_1u7afq9" name="Запрос на одобрение аккаунта" camunda:initiator="initiatorCamundaUserId">
@@ -322,7 +331,7 @@
     </bpmn:startEvent>
     <bpmn:serviceTask id="Activity_01h7bz2" name="Одобрить" camunda:type="external" camunda:topic="approve-courier-request">
       <bpmn:incoming>Flow_1362di1</bpmn:incoming>
-      <bpmn:outgoing>Flow_0id0o26</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CourierApproveResult</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:endEvent id="Event_0k4pod6" name="Аккаунт верифицирован">
       <bpmn:incoming>Flow_0id0o26</bpmn:incoming>
@@ -332,8 +341,15 @@
     </bpmn:endEvent>
     <bpmn:serviceTask id="Activity_18705ks" name="Отклонить" camunda:type="external" camunda:topic="decline-courier-request">
       <bpmn:incoming>Flow_15ck3iv</bpmn:incoming>
-      <bpmn:outgoing>Flow_080qy31</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CourierDeclineResult</bpmn:outgoing>
     </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_CourierRequestActionResult" name="Действие выполнено?" default="Flow_CourierRequestActionRetry">
+      <bpmn:incoming>Flow_CourierApproveResult</bpmn:incoming>
+      <bpmn:incoming>Flow_CourierDeclineResult</bpmn:incoming>
+      <bpmn:outgoing>Flow_0id0o26</bpmn:outgoing>
+      <bpmn:outgoing>Flow_080qy31</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CourierRequestActionRetry</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
   </bpmn:process>
   <bpmn:process id="client_registration_process" name="Регистрация клиента" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:laneSet id="LaneSet_0vcrtwg">
@@ -344,13 +360,13 @@
       </bpmn:lane>
       <bpmn:lane id="Lane_010czr0" name="Администратор">
         <bpmn:flowNodeRef>Event_04zijsk</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Activity_0yc84sa</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ClientRegistrationForm</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:startEvent id="Event_04zijsk" name="Запрос регистрации клиента" camunda:initiator="registrationInitiator">
       <bpmn:outgoing>Flow_1cxkz1y</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Activity_0yc84sa" name="Ввести данные клиента" camunda:formKey="embedded:deployment:/register-user.html" camunda:assignee="${registrationInitiator}">
+    <bpmn:userTask id="Task_ClientRegistrationForm" name="Ввести данные клиента" camunda:formKey="embedded:deployment:/register-user.html" camunda:assignee="${registrationInitiator}">
       <bpmn:incoming>Flow_1cxkz1y</bpmn:incoming>
       <bpmn:incoming>Flow_ClientRegistrationRetry</bpmn:incoming>
       <bpmn:outgoing>Flow_0wecqxi</bpmn:outgoing>
@@ -372,9 +388,9 @@
     <bpmn:endEvent id="Event_0dttix4" name="Регистрация произошла успешно">
       <bpmn:incoming>Flow_ClientRegistrationSuccess</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1cxkz1y" sourceRef="Event_04zijsk" targetRef="Activity_0yc84sa" />
-    <bpmn:sequenceFlow id="Flow_ClientRegistrationRetry" name="нет" sourceRef="Gateway_ClientRegistrationResult" targetRef="Activity_0yc84sa" />
-    <bpmn:sequenceFlow id="Flow_0wecqxi" sourceRef="Activity_0yc84sa" targetRef="Activity_15pylf7" />
+    <bpmn:sequenceFlow id="Flow_1cxkz1y" sourceRef="Event_04zijsk" targetRef="Task_ClientRegistrationForm" />
+    <bpmn:sequenceFlow id="Flow_ClientRegistrationRetry" name="нет" sourceRef="Gateway_ClientRegistrationResult" targetRef="Task_ClientRegistrationForm" />
+    <bpmn:sequenceFlow id="Flow_0wecqxi" sourceRef="Task_ClientRegistrationForm" targetRef="Activity_15pylf7" />
     <bpmn:sequenceFlow id="Flow_16hnmxm" sourceRef="Activity_15pylf7" targetRef="Gateway_ClientRegistrationResult" />
     <bpmn:sequenceFlow id="Flow_ClientRegistrationSuccess" name="да" sourceRef="Gateway_ClientRegistrationResult" targetRef="Event_0dttix4">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${registrationSuccessful == true}</bpmn:conditionExpression>
@@ -429,7 +445,7 @@
     <bpmn:laneSet id="LaneSet_13z6qmo">
       <bpmn:lane id="Lane_1qmz392" name="Админ">
         <bpmn:flowNodeRef>Event_1wliw0t</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Activity_1w1d3vd</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CourierRegistrationForm</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_0e6oe7n" name="Система">
         <bpmn:flowNodeRef>Activity_01inu2e</bpmn:flowNodeRef>
@@ -440,7 +456,7 @@
     <bpmn:startEvent id="Event_1wliw0t" name="Запрос регистрации курьера" camunda:initiator="registrationInitiator">
       <bpmn:outgoing>Flow_1un5juj</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Activity_1w1d3vd" name="Ввести данные курьера" camunda:formKey="embedded:deployment:/register-user.html" camunda:assignee="${registrationInitiator}">
+    <bpmn:userTask id="Task_CourierRegistrationForm" name="Ввести данные курьера" camunda:formKey="embedded:deployment:/register-user.html" camunda:assignee="${registrationInitiator}">
       <bpmn:incoming>Flow_1un5juj</bpmn:incoming>
       <bpmn:incoming>Flow_CourierRegistrationRetry</bpmn:incoming>
       <bpmn:outgoing>Flow_0oz4giz</bpmn:outgoing>
@@ -462,9 +478,9 @@
     <bpmn:endEvent id="Event_0w17ja8" name="Регистрация произошла успешно">
       <bpmn:incoming>Flow_CourierRegistrationSuccess</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1un5juj" sourceRef="Event_1wliw0t" targetRef="Activity_1w1d3vd" />
-    <bpmn:sequenceFlow id="Flow_CourierRegistrationRetry" name="нет" sourceRef="Gateway_CourierRegistrationResult" targetRef="Activity_1w1d3vd" />
-    <bpmn:sequenceFlow id="Flow_0oz4giz" sourceRef="Activity_1w1d3vd" targetRef="Activity_01inu2e" />
+    <bpmn:sequenceFlow id="Flow_1un5juj" sourceRef="Event_1wliw0t" targetRef="Task_CourierRegistrationForm" />
+    <bpmn:sequenceFlow id="Flow_CourierRegistrationRetry" name="нет" sourceRef="Gateway_CourierRegistrationResult" targetRef="Task_CourierRegistrationForm" />
+    <bpmn:sequenceFlow id="Flow_0oz4giz" sourceRef="Task_CourierRegistrationForm" targetRef="Activity_01inu2e" />
     <bpmn:sequenceFlow id="Flow_01zq7f0" sourceRef="Activity_01inu2e" targetRef="Gateway_CourierRegistrationResult" />
     <bpmn:sequenceFlow id="Flow_CourierRegistrationSuccess" name="да" sourceRef="Gateway_CourierRegistrationResult" targetRef="Event_0w17ja8">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${registrationSuccessful == true}</bpmn:conditionExpression>
@@ -946,6 +962,12 @@
         <dc:Bounds x="1660" y="330" width="140" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_CourierRequestActionResult" bpmnElement="Gateway_CourierRequestActionResult" isMarkerVisible="true">
+        <dc:Bounds x="1840" y="315" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1820" y="372" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="BPMNEdge_1xaco6f" bpmnElement="Flow_1np5t1f">
         <di:waypoint x="1230" y="148" />
         <di:waypoint x="1230" y="270" />
@@ -979,12 +1001,32 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_06p1ars" bpmnElement="Flow_0id0o26">
-        <di:waypoint x="1800" y="260" />
+        <di:waypoint x="1890" y="340" />
+        <di:waypoint x="1950" y="340" />
+        <di:waypoint x="1950" y="260" />
         <di:waypoint x="2012" y="260" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_080qy31_di" bpmnElement="Flow_080qy31">
-        <di:waypoint x="1800" y="370" />
+        <di:waypoint x="1890" y="340" />
+        <di:waypoint x="1950" y="340" />
+        <di:waypoint x="1950" y="370" />
         <di:waypoint x="2012" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CourierApproveResult" bpmnElement="Flow_CourierApproveResult">
+        <di:waypoint x="1800" y="260" />
+        <di:waypoint x="1865" y="260" />
+        <di:waypoint x="1865" y="315" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CourierDeclineResult" bpmnElement="Flow_CourierDeclineResult">
+        <di:waypoint x="1800" y="370" />
+        <di:waypoint x="1865" y="370" />
+        <di:waypoint x="1865" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CourierRequestActionRetry" bpmnElement="Flow_CourierRequestActionRetry">
+        <di:waypoint x="1865" y="365" />
+        <di:waypoint x="1865" y="570" />
+        <di:waypoint x="1400" y="570" />
+        <di:waypoint x="1400" y="540" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="BPMNShape_0yagds2" bpmnElement="Participant_0z77n3a" isHorizontal="true">
         <dc:Bounds x="1970" y="1410" width="860" height="360" />
@@ -1002,7 +1044,7 @@
           <dc:Bounds x="2026" y="1528" width="64" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0fc1mls" bpmnElement="Activity_0yc84sa">
+      <bpmndi:BPMNShape id="BPMNShape_0fc1mls" bpmnElement="Task_ClientRegistrationForm">
         <dc:Bounds x="2215" y="1470" width="140" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
@@ -1137,7 +1179,7 @@
           <dc:Bounds x="1136" y="1528" width="64" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0mfus12" bpmnElement="Activity_1w1d3vd">
+      <bpmndi:BPMNShape id="BPMNShape_0mfus12" bpmnElement="Task_CourierRegistrationForm">
         <dc:Bounds x="1325" y="1470" width="140" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>

@@ -26,13 +26,13 @@ public class RegistrationController {
 
     @PostMapping("/client")
     public ResponseEntity<?> createClient(@RequestBody @Valid UserRequestDto userDto) {
-        startRegistrationProcess("client_registration_process", "Activity_0yc84sa", userDto);
+        startRegistrationProcess("client_registration_process", "Task_ClientRegistrationForm", userDto);
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/courier")
     public ResponseEntity<?> createCourier(@RequestBody @Valid UserRequestDto userDto) {
-        startRegistrationProcess("courier_registration_process", "Activity_1w1d3vd", userDto);
+        startRegistrationProcess("courier_registration_process", "Task_CourierRegistrationForm", userDto);
         return ResponseEntity.accepted().build();
     }
 

@@ -7,7 +7,10 @@ import org.camunda.bpm.client.task.ExternalTaskService;
 import org.example.blps.entity.User;
 import org.example.blps.service.CourierRequestService;
 import org.example.blps.service.UserService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 @Component
 @ExternalTaskSubscription("approve-courier-request")
@@ -27,9 +30,14 @@ public class CourierApproveRequestTask implements ExternalTaskHandler {
             String reviewerCamundaUserId = task.getVariable("reviewerCamundaUserId");
             String reviewerEmail = resolveEmailByCamundaUserId(reviewerCamundaUserId);
             courierRequestService.approveRequest(reviewerEmail, requestId);
-            service.complete(task);
+            service.complete(task, Map.of("requestActionSuccessful", true, "requestActionError", ""));
+        } catch (AccessDeniedException | IllegalStateException exception) {
+            service.complete(task, Map.of("requestActionSuccessful", false, "requestActionError", exception.getMessage() == null
+                            ? "Не удалось одобрить заявку курьера"
+                            : exception.getMessage()
+            ));
         } catch (RuntimeException exception) {
-            service.handleFailure(task, exception.getMessage(), exception.toString(), 3, 5000L);
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
         }
     }
 
