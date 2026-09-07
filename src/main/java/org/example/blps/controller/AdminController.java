@@ -31,7 +31,7 @@ public class AdminController {
         this.camundaProcessClient = camundaProcessClient;
     }
 
-    @PatchMapping("{id}/change-state")
+    @PatchMapping("/{id}/change-state")
     @PreAuthorize("hasAuthority('CHANGE_STATE')")
     public ResponseEntity<?> changeState(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable @Positive Long id, @RequestParam boolean state) {
         String email = userDetails.getUsername();

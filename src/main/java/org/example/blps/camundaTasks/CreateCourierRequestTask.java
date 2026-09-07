@@ -9,6 +9,7 @@ import org.example.blps.service.CourierRequestService;
 import org.example.blps.service.UserService;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
@@ -32,7 +33,11 @@ public class CreateCourierRequestTask implements ExternalTaskHandler {
             }
             User courierUser = resolveUser(camundaUserId);
             Long requestId = courierRequestService.submitRequest(courierUser.getEmail());
-            service.complete(task, Map.of("courierRequestId", requestId));
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("courierRequestId", requestId);
+            variables.put("courierName", courierUser.getName());
+            variables.put("courierSurname", courierUser.getSurname());
+            service.complete(task, variables);
         } catch (RuntimeException exception) {
             service.handleFailure(task, exception.getMessage(), exception.toString(),
                     3, 5000L);

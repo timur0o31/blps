@@ -1,0 +1,56 @@
+<form role="form" name="form" novalidate>
+  <div class="alert alert-info" ng-if="admins.length === 0">
+    Нет администраторов, состояние которых можно изменить.
+  </div>
+
+  <div class="form-group">
+    <label for="adminId">Администратор</label>
+    <select id="adminId" name="adminId" class="form-control"
+            ng-model="selectedAdminId"
+            ng-options="admin.id as admin.label for admin in admins"
+            required>
+      <option value="">Выберите администратора</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="state">Новое состояние</label>
+    <select id="state" name="state" class="form-control" ng-model="selectedState" required>
+      <option value="">Выберите состояние</option>
+      <option value="true">Включить</option>
+      <option value="false">Выключить</option>
+    </select>
+  </div>
+
+  <script cam-script type="text/form-script">
+    $scope.admins = [];
+
+    camForm.on('form-loaded', function() {
+      camForm.variableManager.fetchVariable('adminOptionsJson');
+    });
+
+    camForm.on('variables-fetched', function() {
+      var json = camForm.variableManager.variableValue('adminOptionsJson') || '[]';
+      $scope.admins = JSON.parse(json).map(function(admin) {
+        return {
+          id: admin.id,
+          label: admin.name + ' ' + admin.surname + ' (' + admin.email + ') - ' +
+            (admin.enabled ? 'включен' : 'выключен')
+        };
+      });
+    });
+
+    camForm.on('submit', function() {
+      camForm.variableManager.createVariable({
+        name: 'adminId',
+        type: 'Long',
+        value: Number($scope.selectedAdminId)
+      });
+      camForm.variableManager.createVariable({
+        name: 'state',
+        type: 'Boolean',
+        value: $scope.selectedState === 'true'
+      });
+    });
+  </script>
+</form>

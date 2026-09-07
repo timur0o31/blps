@@ -6,6 +6,7 @@ import org.example.blps.dto.requestDto.UserRequestDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.entity.Admin;
 import org.example.blps.entity.User;
+import org.example.blps.enums.Role;
 import org.example.blps.repository.AdminRepository;
 import org.example.blps.utils.PaginationUtil;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 
@@ -30,20 +32,23 @@ public class AdminService {
         return adminRepository.findByUserId(id).orElseThrow(()-> new IllegalStateException("Пользователя с данным id не существует"));
     }
 
-    @isApprovedAdmin
-    public void changeState(String email,Long id, boolean state){
-        User user = userService.findByEmail(email);
+    @Transactional
+    public void changeState(String email, Long id, boolean state){
+        User changedBy = userService.findByEmail(email);
+        if (changedBy.getRole() != Role.ADMIN || !changedBy.isSuperUser()) {
+            throw new AccessDeniedException("Включать и выключать администраторов может только суперпользователь");
+        }
+
         Admin admin = adminRepository.findById(id).orElseThrow(
                 ()->new IllegalStateException("Админа с таким id не существует")
         );
-        Admin changedBy = adminRepository.findByUserId(user.getId()).orElseThrow(()->new IllegalStateException("Данный пользователь не является админом"));
-        if (!changedBy.isAccountState()){
-            throw new AccessDeniedException("Ваш аккаунт не одобрен, у вас нет привилегий администратора");
+
+        User targetUser = userService.findById(admin.getUserId());
+        if (targetUser.isSuperUser()) {
+            throw new IllegalStateException("Нельзя изменить состояние аккаунта суперпользователя");
         }
-        if (changedBy.getUserId()==id){
-            throw new IllegalStateException("Вы не можете менять свои привилегии");
-        }
-        admin.setAccountState(true);
+
+        admin.setAccountState(state);
         adminRepository.save(admin);
     }
 

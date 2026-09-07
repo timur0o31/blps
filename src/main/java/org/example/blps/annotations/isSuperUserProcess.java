@@ -37,7 +37,7 @@ public class isSuperUserProcess {
         if ( user != null
                 && user.getRole() == Role.ADMIN
                 && user.isSuperUser()) {
-            joinPoint.proceed();
+            return joinPoint.proceed();
         }
         throw new AccessDeniedException("Доступ к методу разрешён только для суперпользователя");
 

@@ -6,12 +6,10 @@ import static org.example.blps.enums.Privilege.*;
 
 @Getter
 public enum Role {
-
     ADMIN(Set.of(VIEW_COURIER_APPLICATIONS,
             VIEW_COURIERS,
             BLOCK_COURIER,
             CREATE_ADMIN,
-            CHANGE_STATE,
             APPROVE_REQUEST,
             DECLINE_REQUEST)),
 

@@ -9,6 +9,7 @@
     <bpmn:participant id="Participant_0z77n3a" name="Регистрация клиента" processRef="client_registration_process" />
     <bpmn:participant id="Participant_AdminRegistration" name="Регистрация админа" processRef="admin_registration_process" />
     <bpmn:participant id="Participant_1snnznm" name="Регистрация курьера" processRef="courier_registration_process" />
+    <bpmn:participant id="Participant_AdminState" name="Включение и выключение администратора" processRef="admin_account_state_process" />
     <bpmn:messageFlow id="MessageFlow_OrderCreated" name="order-created" sourceRef="Task_Publish" targetRef="Start_Assignment" />
   </bpmn:collaboration>
   <bpmn:process id="create_order_process" name="Создание заказа" isExecutable="true" camunda:historyTimeToLive="180">
@@ -309,17 +310,8 @@
       <bpmn:incoming>Flow_1np5t1f</bpmn:incoming>
       <bpmn:outgoing>Flow_1msrtbb</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:userTask id="Activity_1psr4vn" name="Рассмотреть заявку курьера" camunda:candidateGroups="ADMIN">
+    <bpmn:userTask id="Activity_1psr4vn" name="Рассмотреть заявку: ${courierName} ${courierSurname}" camunda:formKey="embedded:deployment:/courier-request-review.html" camunda:candidateGroups="ADMIN">
       <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="decision" label="Решение" type="enum">
-            <camunda:validation>
-              <camunda:constraint name="required" />
-            </camunda:validation>
-            <camunda:value id="APPROVED" name="Одобрить" />
-            <camunda:value id="DECLINED" name="Отклонить" />
-          </camunda:formField>
-        </camunda:formData>
         <camunda:taskListener expression="${execution.setVariable(&#39;reviewerCamundaUserId&#39;, task.assignee)}" event="complete" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1msrtbb</bpmn:incoming>
@@ -477,6 +469,44 @@
     <bpmn:sequenceFlow id="Flow_CourierRegistrationSuccess" name="да" sourceRef="Gateway_CourierRegistrationResult" targetRef="Event_0w17ja8">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${registrationSuccessful == true}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:process id="admin_account_state_process" name="Включение и выключение администратора" isExecutable="true" camunda:candidateStarterGroups="camunda-admin" camunda:historyTimeToLive="180">
+    <bpmn:laneSet id="LaneSet_AdminState">
+      <bpmn:lane id="Lane_AdminStateSuperUser" name="Суперпользователь">
+        <bpmn:flowNodeRef>Start_AdminState</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SelectAdminState</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AdminStateSystem" name="Система">
+        <bpmn:flowNodeRef>Task_LoadAdminOptions</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ChangeAdminState</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_AdminState</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_AdminState" name="Изменить состояние админа" camunda:initiator="changedByCamundaUserId">
+      <bpmn:outgoing>Flow_AdminStateStartLoad</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_LoadAdminOptions" name="Загрузить список администраторов" camunda:type="external" camunda:topic="load-admin-options">
+      <bpmn:incoming>Flow_AdminStateStartLoad</bpmn:incoming>
+      <bpmn:outgoing>Flow_AdminStateLoadSelect</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_SelectAdminState" name="Выбрать админа и состояние" camunda:formKey="embedded:deployment:/admin-state.html" camunda:assignee="${changedByCamundaUserId}" camunda:candidateGroups="camunda-admin">
+      <bpmn:extensionElements>
+        <camunda:taskListener expression="${execution.setVariable(&#39;changedByCamundaUserId&#39;, task.assignee)}" event="complete" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AdminStateLoadSelect</bpmn:incoming>
+      <bpmn:outgoing>Flow_AdminStateSelectChange</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_ChangeAdminState" name="Изменить состояние администратора" camunda:type="external" camunda:topic="change-admin-state">
+      <bpmn:incoming>Flow_AdminStateSelectChange</bpmn:incoming>
+      <bpmn:outgoing>Flow_AdminStateChangeEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_AdminState" name="Состояние изменено">
+      <bpmn:incoming>Flow_AdminStateChangeEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_AdminStateStartLoad" sourceRef="Start_AdminState" targetRef="Task_LoadAdminOptions" />
+    <bpmn:sequenceFlow id="Flow_AdminStateLoadSelect" sourceRef="Task_LoadAdminOptions" targetRef="Task_SelectAdminState" />
+    <bpmn:sequenceFlow id="Flow_AdminStateSelectChange" sourceRef="Task_SelectAdminState" targetRef="Task_ChangeAdminState" />
+    <bpmn:sequenceFlow id="Flow_AdminStateChangeEnd" sourceRef="Task_ChangeAdminState" targetRef="End_AdminState" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="Diagram_OrderLifecycle">
     <bpmndi:BPMNPlane id="Plane_OrderLifecycle" bpmnElement="Collaboration_OrderLifecycle">
@@ -1160,6 +1190,58 @@
         <bpmndi:BPMNLabel>
           <dc:Bounds x="492" y="606" width="67" height="14" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Shape_AdminStateParticipant" bpmnElement="Participant_AdminState" isHorizontal="true">
+        <dc:Bounds x="160" y="2250" width="900" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateSuperUserLane" bpmnElement="Lane_AdminStateSuperUser" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="190" y="2250" width="870" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateSystemLane" bpmnElement="Lane_AdminStateSystem" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="190" y="2400" width="870" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateStart" bpmnElement="Start_AdminState">
+        <dc:Bounds x="250" y="2307" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="224" y="2348" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateLoad" bpmnElement="Task_LoadAdminOptions">
+        <dc:Bounds x="380" y="2435" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateSelect" bpmnElement="Task_SelectAdminState">
+        <dc:Bounds x="600" y="2285" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateChange" bpmnElement="Task_ChangeAdminState">
+        <dc:Bounds x="800" y="2435" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateEnd" bpmnElement="End_AdminState">
+        <dc:Bounds x="990" y="2457" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="906" y="2498" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_AdminStateStartLoad" bpmnElement="Flow_AdminStateStartLoad">
+        <di:waypoint x="286" y="2325" />
+        <di:waypoint x="330" y="2325" />
+        <di:waypoint x="330" y="2475" />
+        <di:waypoint x="380" y="2475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AdminStateLoadSelect" bpmnElement="Flow_AdminStateLoadSelect">
+        <di:waypoint x="530" y="2475" />
+        <di:waypoint x="565" y="2475" />
+        <di:waypoint x="565" y="2325" />
+        <di:waypoint x="600" y="2325" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AdminStateSelectChange" bpmnElement="Flow_AdminStateSelectChange">
+        <di:waypoint x="750" y="2325" />
+        <di:waypoint x="775" y="2325" />
+        <di:waypoint x="775" y="2475" />
+        <di:waypoint x="800" y="2475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AdminStateChangeEnd" bpmnElement="Flow_AdminStateChangeEnd">
+        <di:waypoint x="950" y="2475" />
+        <di:waypoint x="990" y="2475" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

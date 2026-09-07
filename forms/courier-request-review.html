@@ -1,0 +1,33 @@
+<form role="form" name="form" novalidate>
+  <div class="form-group">
+    <label>Имя курьера</label>
+    <p class="form-control-static">{{ courierName }}</p>
+  </div>
+
+  <div class="form-group">
+    <label>Фамилия курьера</label>
+    <p class="form-control-static">{{ courierSurname }}</p>
+  </div>
+
+  <div class="form-group">
+    <label for="decision">Решение</label>
+    <select id="decision" name="decision" class="form-control"
+            cam-variable-name="decision" cam-variable-type="String" required>
+      <option value="">Выберите решение</option>
+      <option value="APPROVED">Одобрить</option>
+      <option value="DECLINED">Отклонить</option>
+    </select>
+  </div>
+
+  <script cam-script type="text/form-script">
+    camForm.on('form-loaded', function() {
+      camForm.variableManager.fetchVariable('courierName');
+      camForm.variableManager.fetchVariable('courierSurname');
+    });
+
+    camForm.on('variables-fetched', function() {
+      $scope.courierName = camForm.variableManager.variableValue('courierName');
+      $scope.courierSurname = camForm.variableManager.variableValue('courierSurname');
+    });
+  </script>
+</form>
