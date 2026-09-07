@@ -28,7 +28,6 @@ public class CreateAssignmentAttemptTask implements ExternalTaskHandler {
             Long orderId = task.getVariable("orderId");
             Long courierId = task.getVariable("courierId");
             Long attemptId = orderService.createAssignmentAttempt(orderId, courierId);
-
             Map<String, Object> variables = new HashMap<>();
             variables.put("attemptId", attemptId);
             service.complete(task, variables);

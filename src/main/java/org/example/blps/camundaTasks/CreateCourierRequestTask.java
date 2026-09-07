@@ -39,8 +39,7 @@ public class CreateCourierRequestTask implements ExternalTaskHandler {
             variables.put("courierSurname", courierUser.getSurname());
             service.complete(task, variables);
         } catch (RuntimeException exception) {
-            service.handleFailure(task, exception.getMessage(), exception.toString(),
-                    3, 5000L);
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 3, 5000L);
         }
     }
 

@@ -1,7 +1,6 @@
 package org.example.blps.service;
 
 import org.example.blps.annotations.isApprovedAdmin;
-import org.example.blps.annotations.isApprovedAdminProcess;
 import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
 import org.example.blps.entity.Admin;
@@ -61,22 +60,23 @@ public class CourierRequestService {
     @Transactional
     @isApprovedAdmin
     public void approveRequest(String email, Long id){
-        approveRequestInternal(email, id, false);
+        approveCourierRequest(email, id, false);
     }
 
     @Transactional
-    public void approveRequestFromProcess(String email, Long id) {
-        approveRequestInternal(email, id, true);
+    public void approveRequestFromCamundaProcess(String email, Long id) {
+        approveCourierRequest(email, id, true);
     }
 
-    private void approveRequestInternal(String email, Long id, boolean verifyAdminState) {
+    private void approveCourierRequest(String email, Long id, boolean verifyAdminFlag) {
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
-        if (verifyAdminState && !admin.isAccountState()) {
+        if (verifyAdminFlag && !admin.isAccountState()) {
             throw new AccessDeniedException("Аккаунт администратора не одобрен");
         }
         CourierRequest courierRequest = courierRequestRepository.findCourierRequestById(id)
                 .orElseThrow(()->new IllegalStateException("заявки с данным id не существует"));
-        if (courierRequest.getStatus()!=CourierRequestStatus.PENDING) throw new IllegalStateException("Заявку можно одобрить только из состояния ожидания!");
+        if (courierRequest.getStatus()!=CourierRequestStatus.PENDING)
+            throw new IllegalStateException("Заявку можно одобрить только из состояния ожидания!");
         courierRequest.setStatus(CourierRequestStatus.APPROVED);
         courierRequest.setReviewedBy(admin);
         Courier courier = courierRequest.getCourier();
@@ -87,17 +87,17 @@ public class CourierRequestService {
     @Transactional
     @isApprovedAdmin
     public void declineRequest(String email, Long id){
-        declineRequestInternal(email, id, false);
+        declineCourierRequest(email, id, false);
     }
 
     @Transactional
-    public void declineRequestFromProcess(String email, Long id) {
-        declineRequestInternal(email, id, true);
+    public void declineRequestFromCamundaProcess(String email, Long id) {
+        declineCourierRequest(email, id, true);
     }
 
-    private void declineRequestInternal(String email, Long id, boolean verifyAdminState) {
+    private void declineCourierRequest(String email, Long id, boolean verifyAdminFlag) {
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
-        if (verifyAdminState && !admin.isAccountState()) {
+        if (verifyAdminFlag && !admin.isAccountState()) {
             throw new AccessDeniedException("Аккаунт администратора не одобрен");
         }
         CourierRequest courierRequest = courierRequestRepository.findCourierRequestById(id)

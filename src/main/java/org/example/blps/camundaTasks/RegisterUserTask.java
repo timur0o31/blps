@@ -37,9 +37,7 @@ public class RegisterUserTask implements ExternalTaskHandler {
             user.setEmail(task.getVariable("email"));
             user.setPassword(task.getVariable("password"));
             user.setPhoneNumber(task.getVariable("phoneNumber"));
-
             validate(user);
-
             String registrationRole = task.getVariable("registrationRole");
             if ("CLIENT".equals(registrationRole)) {
                 userService.createClient(user);
@@ -50,7 +48,6 @@ public class RegisterUserTask implements ExternalTaskHandler {
             } else {
                 throw new IllegalStateException("Неизвестный тип регистрируемого пользователя");
             }
-
             service.complete(task, registrationResult(true, ""));
         } catch (DataIntegrityViolationException | IllegalArgumentException exception) {
             service.complete(task, registrationResult(false, exception.getMessage()));

@@ -93,8 +93,7 @@ public class CourierService {
         if (courier.getAccountState()==CourierAccountState.BLOCKED){
             throw new IllegalStateException("Курьер уже был заблокирован");
         }
-        if (courier.getStatus() == CourierStatus.BUSY
-                || courier.getStatus() == CourierStatus.ACCEPTING_ORDER
+        if (courier.getStatus() == CourierStatus.BUSY || courier.getStatus() == CourierStatus.ACCEPTING_ORDER
                 || courier.getStatus() == CourierStatus.END_SHIFT) {
             throw new IllegalStateException("Нельзя заблокировать курьера во время выполнения заказа");
         }
@@ -116,7 +115,6 @@ public class CourierService {
             result.add(mapper.fromEntityToDto(cr));
         return PaginationUtil.responsePaginationDto(result, params, totalElements);
     }
-
 
     public Courier findCourierById(Long id){
         return courierRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Курьер не найден"));

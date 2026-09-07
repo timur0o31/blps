@@ -38,7 +38,6 @@ public class LoadAdminOptionsTask implements ExternalTaskHandler {
             if (changedBy.getRole() != Role.ADMIN || !changedBy.isSuperUser()) {
                 throw new AccessDeniedException("Управлять администраторами может только суперпользователь");
             }
-
             List<AdminOption> options = new ArrayList<>();
             for (Admin admin : adminRepository.findAll()) {
                 User user = userService.findById(admin.getUserId());
@@ -47,7 +46,6 @@ public class LoadAdminOptionsTask implements ExternalTaskHandler {
                             user.getEmail(), admin.isAccountState()));
                 }
             }
-
             service.complete(task, Map.of("adminOptionsJson", objectMapper.writeValueAsString(options)));
         } catch (Exception exception) {
             service.handleFailure(task, exception.getMessage(), exception.toString(), 3, 5000L);

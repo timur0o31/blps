@@ -38,16 +38,12 @@ public class AdminService {
         if (changedBy.getRole() != Role.ADMIN || !changedBy.isSuperUser()) {
             throw new AccessDeniedException("Включать и выключать администраторов может только суперпользователь");
         }
-
-        Admin admin = adminRepository.findById(id).orElseThrow(
-                ()->new IllegalStateException("Админа с таким id не существует")
-        );
-
+        Admin admin = adminRepository.findById(id)
+                .orElseThrow(()->new IllegalStateException("Админа с таким id не существует"));
         User targetUser = userService.findById(admin.getUserId());
         if (targetUser.isSuperUser()) {
             throw new IllegalStateException("Нельзя изменить состояние аккаунта суперпользователя");
         }
-
         admin.setAccountState(state);
         adminRepository.save(admin);
     }

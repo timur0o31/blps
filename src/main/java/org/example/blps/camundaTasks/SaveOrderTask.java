@@ -34,7 +34,6 @@ public class SaveOrderTask implements ExternalTaskHandler {
             String email = resolveClientEmail(task);
             String content = task.getVariable("content");
             String address = task.getVariable("address");
-
             OrderResponseDto order = orderService.addOrder(email, new OrderRequestDto(content, address));
             Map<String, Object> variables = new HashMap<>();
             variables.put("orderId", order.id());

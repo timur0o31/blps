@@ -212,12 +212,10 @@ public class OrderService {
         if (order.getStatus() != OrderStatus.PENDING) {
             return;
         }
-
         Courier courier = attempt.getCourier();
         attempt.setStatus(OrderAttemptStatus.EXPIRED);
         order.setCourier(null);
         order.setStatus(OrderStatus.WAITING);
-
         if (courier != null) {
             if (courier.getStatus() == CourierStatus.END_SHIFT) {
                 courier.setStatus(CourierStatus.OFF_SHIFT);

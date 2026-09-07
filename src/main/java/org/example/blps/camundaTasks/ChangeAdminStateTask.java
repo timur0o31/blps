@@ -28,7 +28,6 @@ public class ChangeAdminStateTask implements ExternalTaskHandler {
             boolean state = readState(task.getVariable("state"));
             String changedByCamundaUserId = task.getVariable("changedByCamundaUserId");
             String changedByEmail = resolveEmailByCamundaUserId(changedByCamundaUserId);
-
             adminService.changeState(changedByEmail, adminId, state);
             service.complete(task);
         } catch (RuntimeException exception) {
