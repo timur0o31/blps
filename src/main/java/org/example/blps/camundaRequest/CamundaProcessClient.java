@@ -97,4 +97,45 @@ public class CamundaProcessClient {
                 .retrieve()
                 .toBodilessEntity();
     }
+    public void reviewCourierRequest(Long requestId, String adminId, String dec) {
+        if (!dec.equals("APPROVED") && !dec.equals("DECLINED")) throw new IllegalStateException("неизвестное решение");
+        String taskId = findCourierReviewTask(requestId);
+        claimTask(taskId, adminId);
+        completeTask(taskId, Map.of("decision", new CamundaVariable(dec, "String")));
+    }
+    private String findCourierReviewTask(Long requestId) {
+        Map<String, Object> query = new HashMap<>();
+        query.put("processDefinitionKey", "courier_account_submit");
+        query.put("taskDefinitionKey", "Activity_1psr4vn");
+        query.put("active", true);
+        query.put("processVariables", new VariableQueryDto[] {
+                new VariableQueryDto("courierRequestId", "eq", requestId)});
+        TaskResponseDto[] tasks = camundaRestClient.post()
+                .uri("/task")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(query)
+                .retrieve()
+                .body(TaskResponseDto[].class);
+        if (tasks == null || tasks.length == 0)
+            throw new IllegalStateException("Активная задача рассмотрения заявки не найдена");
+        if (tasks.length != 1 || tasks[0] == null || tasks[0].id() == null)
+            throw new IllegalStateException("Не удалось однозначно определить задачу заявки");
+        return tasks[0].id();
+    }
+    private void claimTask(String taskId, String userId) {
+        camundaRestClient.post()
+                .uri("/task/{id}/claim", taskId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("userId", userId))
+                .retrieve()
+                .toBodilessEntity();
+    }
+    private void completeTask(String taskId, Map<String, CamundaVariable> variables) {
+        camundaRestClient.post()
+                .uri("/task/{id}/complete", taskId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("variables", variables))
+                .retrieve()
+                .toBodilessEntity();
+    }
 }

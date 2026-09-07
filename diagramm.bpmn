@@ -267,7 +267,7 @@
     <bpmn:sequenceFlow id="F_CourierShift_Start_Decision" sourceRef="Start_CourierShift" targetRef="Task_CourierShiftDecision" />
     <bpmn:sequenceFlow id="F_CourierShift_Decision_Change" sourceRef="Task_CourierShiftDecision" targetRef="Task_ChangeCourierShift" />
     <bpmn:sequenceFlow id="F_CourierShift_Change_End" sourceRef="Task_ChangeCourierShift" targetRef="Gateway_CourierShiftResult" />
-    <bpmn:sequenceFlow id="F_CourierShift_Retry" name="повторить" sourceRef="Gateway_CourierShiftResult" targetRef="Task_CourierShiftDecision" />
+    <bpmn:sequenceFlow id="F_CourierShift_Retry" name="нет" sourceRef="Gateway_CourierShiftResult" targetRef="Task_CourierShiftDecision" />
     <bpmn:sequenceFlow id="F_CourierShift_Success" name="да" sourceRef="Gateway_CourierShiftResult" targetRef="End_CourierShift">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable('shiftChangeSuccessful') == true}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
@@ -373,7 +373,7 @@
       <bpmn:incoming>Flow_ClientRegistrationSuccess</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_1cxkz1y" sourceRef="Event_04zijsk" targetRef="Activity_0yc84sa" />
-    <bpmn:sequenceFlow id="Flow_ClientRegistrationRetry" name="исправить данные" sourceRef="Gateway_ClientRegistrationResult" targetRef="Activity_0yc84sa" />
+    <bpmn:sequenceFlow id="Flow_ClientRegistrationRetry" name="нет" sourceRef="Gateway_ClientRegistrationResult" targetRef="Activity_0yc84sa" />
     <bpmn:sequenceFlow id="Flow_0wecqxi" sourceRef="Activity_0yc84sa" targetRef="Activity_15pylf7" />
     <bpmn:sequenceFlow id="Flow_16hnmxm" sourceRef="Activity_15pylf7" targetRef="Gateway_ClientRegistrationResult" />
     <bpmn:sequenceFlow id="Flow_ClientRegistrationSuccess" name="да" sourceRef="Gateway_ClientRegistrationResult" targetRef="Event_0dttix4">
@@ -418,7 +418,7 @@
       <bpmn:incoming>Flow_AdminRegistrationSuccess</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_AdminRegistrationStartFill" sourceRef="Start_AdminRegistration" targetRef="Task_FillAdminRegistration" />
-    <bpmn:sequenceFlow id="Flow_AdminRegistrationRetry" name="исправить данные" sourceRef="Gateway_AdminRegistrationResult" targetRef="Task_FillAdminRegistration" />
+    <bpmn:sequenceFlow id="Flow_AdminRegistrationRetry" name="нет" sourceRef="Gateway_AdminRegistrationResult" targetRef="Task_FillAdminRegistration" />
     <bpmn:sequenceFlow id="Flow_AdminRegistrationFillRegister" sourceRef="Task_FillAdminRegistration" targetRef="Task_RegisterAdmin" />
     <bpmn:sequenceFlow id="Flow_AdminRegistrationRegisterResult" sourceRef="Task_RegisterAdmin" targetRef="Gateway_AdminRegistrationResult" />
     <bpmn:sequenceFlow id="Flow_AdminRegistrationSuccess" name="да" sourceRef="Gateway_AdminRegistrationResult" targetRef="End_AdminRegistration">
@@ -463,7 +463,7 @@
       <bpmn:incoming>Flow_CourierRegistrationSuccess</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_1un5juj" sourceRef="Event_1wliw0t" targetRef="Activity_1w1d3vd" />
-    <bpmn:sequenceFlow id="Flow_CourierRegistrationRetry" name="исправить данные" sourceRef="Gateway_CourierRegistrationResult" targetRef="Activity_1w1d3vd" />
+    <bpmn:sequenceFlow id="Flow_CourierRegistrationRetry" name="нет" sourceRef="Gateway_CourierRegistrationResult" targetRef="Activity_1w1d3vd" />
     <bpmn:sequenceFlow id="Flow_0oz4giz" sourceRef="Activity_1w1d3vd" targetRef="Activity_01inu2e" />
     <bpmn:sequenceFlow id="Flow_01zq7f0" sourceRef="Activity_01inu2e" targetRef="Gateway_CourierRegistrationResult" />
     <bpmn:sequenceFlow id="Flow_CourierRegistrationSuccess" name="да" sourceRef="Gateway_CourierRegistrationResult" targetRef="Event_0w17ja8">
@@ -472,14 +472,14 @@
   </bpmn:process>
   <bpmn:process id="admin_account_state_process" name="Включение и выключение администратора" isExecutable="true" camunda:candidateStarterGroups="camunda-admin" camunda:historyTimeToLive="180">
     <bpmn:laneSet id="LaneSet_AdminState">
-      <bpmn:lane id="Lane_AdminStateSuperUser" name="Суперпользователь">
-        <bpmn:flowNodeRef>Start_AdminState</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Task_SelectAdminState</bpmn:flowNodeRef>
-      </bpmn:lane>
       <bpmn:lane id="Lane_AdminStateSystem" name="Система">
         <bpmn:flowNodeRef>Task_LoadAdminOptions</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_ChangeAdminState</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>End_AdminState</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AdminStateSuperUser" name="Суперпользователь">
+        <bpmn:flowNodeRef>Start_AdminState</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SelectAdminState</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:startEvent id="Start_AdminState" name="Изменить состояние админа" camunda:initiator="changedByCamundaUserId">
@@ -849,6 +849,12 @@
       <bpmndi:BPMNShape id="S_Task_ChangeCourierShift" bpmnElement="Task_ChangeCourierShift">
         <dc:Bounds x="650" y="1640" width="140" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Gateway_CourierShiftResult" bpmnElement="Gateway_CourierShiftResult" isMarkerVisible="true">
+        <dc:Bounds x="825" y="1655" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="810" y="1710" width="80" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_End_CourierShift" bpmnElement="End_CourierShift">
         <dc:Bounds x="960" y="1662" width="36" height="36" />
         <bpmndi:BPMNLabel>
@@ -870,21 +876,21 @@
         <di:waypoint x="790" y="1680" />
         <di:waypoint x="825" y="1680" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="S_Gateway_CourierShiftResult" bpmnElement="Gateway_CourierShiftResult" isMarkerVisible="true">
-        <dc:Bounds x="825" y="1655" width="50" height="50" />
-        <bpmndi:BPMNLabel><dc:Bounds x="810" y="1710" width="80" height="28" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="E_CourierShift_Success" bpmnElement="F_CourierShift_Success">
-        <di:waypoint x="875" y="1680" />
-        <di:waypoint x="960" y="1680" />
-        <bpmndi:BPMNLabel><dc:Bounds x="905" y="1658" width="20" height="14" /></bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_CourierShift_Retry" bpmnElement="F_CourierShift_Retry">
         <di:waypoint x="850" y="1655" />
         <di:waypoint x="850" y="1570" />
-        <di:waypoint x="475" y="1570" />
-        <di:waypoint x="475" y="1550" />
-        <bpmndi:BPMNLabel><dc:Bounds x="585" y="1552" width="75" height="14" /></bpmndi:BPMNLabel>
+        <di:waypoint x="500" y="1570" />
+        <di:waypoint x="500" y="1550" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="630" y="1552" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_CourierShift_Success" bpmnElement="F_CourierShift_Success">
+        <di:waypoint x="875" y="1680" />
+        <di:waypoint x="960" y="1680" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="905" y="1658" width="20" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="BPMNShape_0kzviyx" bpmnElement="Participant_submit" isHorizontal="true">
         <dc:Bounds x="1130" y="40" width="980" height="570" />
@@ -1028,7 +1034,7 @@
         <di:waypoint x="2285" y="1570" />
         <di:waypoint x="2285" y="1550" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2445" y="1552" width="95" height="14" />
+          <dc:Bounds x="2484" y="1552" width="17" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_1y9cdun" bpmnElement="Flow_0wecqxi">
@@ -1095,7 +1101,7 @@
         <di:waypoint x="2245" y="1970" />
         <di:waypoint x="2245" y="1950" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2405" y="1952" width="95" height="14" />
+          <dc:Bounds x="2444" y="1952" width="17" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_AdminRegistrationFillRegister" bpmnElement="Flow_AdminRegistrationFillRegister">
@@ -1163,7 +1169,7 @@
         <di:waypoint x="1410" y="1570" />
         <di:waypoint x="1410" y="1550" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1562" y="1552" width="95" height="14" />
+          <dc:Bounds x="1601" y="1552" width="17" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_0cr3hta" bpmnElement="Flow_0oz4giz">
@@ -1182,6 +1188,58 @@
           <dc:Bounds x="1830" y="1658" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Shape_AdminStateParticipant" bpmnElement="Participant_AdminState" isHorizontal="true">
+        <dc:Bounds x="160" y="1840" width="1100" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateSystemLane" bpmnElement="Lane_AdminStateSystem" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="190" y="1990" width="1070" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateSuperUserLane" bpmnElement="Lane_AdminStateSuperUser" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="190" y="1840" width="1070" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateStart" bpmnElement="Start_AdminState">
+        <dc:Bounds x="250" y="1897" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="242" y="1938" width="53" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateLoad" bpmnElement="Task_LoadAdminOptions">
+        <dc:Bounds x="380" y="2025" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateSelect" bpmnElement="Task_SelectAdminState">
+        <dc:Bounds x="600" y="1875" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateChange" bpmnElement="Task_ChangeAdminState">
+        <dc:Bounds x="800" y="2025" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminStateEnd" bpmnElement="End_AdminState">
+        <dc:Bounds x="1000" y="2047" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="921" y="2088" width="55" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_AdminStateStartLoad" bpmnElement="Flow_AdminStateStartLoad">
+        <di:waypoint x="286" y="1915" />
+        <di:waypoint x="330" y="1915" />
+        <di:waypoint x="330" y="2065" />
+        <di:waypoint x="380" y="2065" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AdminStateLoadSelect" bpmnElement="Flow_AdminStateLoadSelect">
+        <di:waypoint x="530" y="2065" />
+        <di:waypoint x="565" y="2065" />
+        <di:waypoint x="565" y="1915" />
+        <di:waypoint x="600" y="1915" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AdminStateSelectChange" bpmnElement="Flow_AdminStateSelectChange">
+        <di:waypoint x="750" y="1915" />
+        <di:waypoint x="775" y="1915" />
+        <di:waypoint x="775" y="2065" />
+        <di:waypoint x="800" y="2065" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AdminStateChangeEnd" bpmnElement="Flow_AdminStateChangeEnd">
+        <di:waypoint x="950" y="2065" />
+        <di:waypoint x="1000" y="2065" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_MSG" bpmnElement="MessageFlow_OrderCreated">
         <di:waypoint x="795" y="550" />
         <di:waypoint x="795" y="630" />
@@ -1190,58 +1248,6 @@
         <bpmndi:BPMNLabel>
           <dc:Bounds x="492" y="606" width="67" height="14" />
         </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="Shape_AdminStateParticipant" bpmnElement="Participant_AdminState" isHorizontal="true">
-        <dc:Bounds x="160" y="2250" width="900" height="300" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_AdminStateSuperUserLane" bpmnElement="Lane_AdminStateSuperUser" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
-        <dc:Bounds x="190" y="2250" width="870" height="150" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_AdminStateSystemLane" bpmnElement="Lane_AdminStateSystem" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
-        <dc:Bounds x="190" y="2400" width="870" height="150" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_AdminStateStart" bpmnElement="Start_AdminState">
-        <dc:Bounds x="250" y="2307" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="224" y="2348" width="88" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_AdminStateLoad" bpmnElement="Task_LoadAdminOptions">
-        <dc:Bounds x="380" y="2435" width="150" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_AdminStateSelect" bpmnElement="Task_SelectAdminState">
-        <dc:Bounds x="600" y="2285" width="150" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_AdminStateChange" bpmnElement="Task_ChangeAdminState">
-        <dc:Bounds x="800" y="2435" width="150" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_AdminStateEnd" bpmnElement="End_AdminState">
-        <dc:Bounds x="990" y="2457" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="906" y="2498" width="84" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Edge_AdminStateStartLoad" bpmnElement="Flow_AdminStateStartLoad">
-        <di:waypoint x="286" y="2325" />
-        <di:waypoint x="330" y="2325" />
-        <di:waypoint x="330" y="2475" />
-        <di:waypoint x="380" y="2475" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_AdminStateLoadSelect" bpmnElement="Flow_AdminStateLoadSelect">
-        <di:waypoint x="530" y="2475" />
-        <di:waypoint x="565" y="2475" />
-        <di:waypoint x="565" y="2325" />
-        <di:waypoint x="600" y="2325" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_AdminStateSelectChange" bpmnElement="Flow_AdminStateSelectChange">
-        <di:waypoint x="750" y="2325" />
-        <di:waypoint x="775" y="2325" />
-        <di:waypoint x="775" y="2475" />
-        <di:waypoint x="800" y="2475" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_AdminStateChangeEnd" bpmnElement="Flow_AdminStateChangeEnd">
-        <di:waypoint x="950" y="2475" />
-        <di:waypoint x="990" y="2475" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

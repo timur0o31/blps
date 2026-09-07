@@ -3,6 +3,7 @@ package org.example.blps.controller;
 
 import jakarta.validation.constraints.Positive;
 import org.example.blps.CamundaRequestProperties.CamundaVariable;
+import org.example.blps.annotations.isApprovedAdmin;
 import org.example.blps.camundaRequest.CamundaProcessClient;
 import org.example.blps.dto.responseDto.CourierApplicationsResponseDto;
 import org.example.blps.dto.responseDto.ResponsePaginationDto;
@@ -52,17 +53,19 @@ public class CourierRequestController {
     }
 
     @PreAuthorize("hasAuthority('APPROVE_REQUEST')")
+    @isApprovedAdmin
     @PatchMapping("/{id}/approve")
     public ResponseEntity<?> approveRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable @Positive Long id){
-        String email = userDetails.getUsername();
-        courierRequestService.approveRequest(email, id);
-        return ResponseEntity.ok().build();
+        String adminCamundaId = "user"+userDetails.user().getId();
+        camundaProcessClient.reviewCourierRequest(id, adminCamundaId, "APPROVED");
+        return ResponseEntity.accepted().build();
     }
     @PreAuthorize("hasAuthority('DECLINE_REQUEST')")
+    @isApprovedAdmin
     @PatchMapping("/{id}/decline")
     public ResponseEntity<?> declineRequest(@AuthenticationPrincipal CustomUserDetails userDetails,@PathVariable @Positive Long id){
-        String email = userDetails.getUsername();
-        courierRequestService.declineRequest(email,id);
-        return ResponseEntity.ok().build();
+        String adminCamundaId = "user" + userDetails.user().getId();
+        camundaProcessClient.reviewCourierRequest(id, adminCamundaId, "DECLINED");
+        return ResponseEntity.accepted().build();
     }
 }

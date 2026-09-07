@@ -57,20 +57,11 @@ public class CourierRequestService {
         return savedRequest.getId();
     }
 
-    @Transactional
-    @isApprovedAdmin
-    public void approveRequest(String email, Long id){
-        approveCourierRequest(email, id, false);
-    }
 
     @Transactional
-    public void approveRequestFromCamundaProcess(String email, Long id) {
-        approveCourierRequest(email, id, true);
-    }
-
-    private void approveCourierRequest(String email, Long id, boolean verifyAdminFlag) {
+    public void approveRequest(String email, Long id) {
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
-        if (verifyAdminFlag && !admin.isAccountState()) {
+        if (!admin.isAccountState()) {
             throw new AccessDeniedException("Аккаунт администратора не одобрен");
         }
         CourierRequest courierRequest = courierRequestRepository.findCourierRequestById(id)
@@ -85,19 +76,9 @@ public class CourierRequestService {
         courierService.saveCourier(courier);
     }
     @Transactional
-    @isApprovedAdmin
     public void declineRequest(String email, Long id){
-        declineCourierRequest(email, id, false);
-    }
-
-    @Transactional
-    public void declineRequestFromCamundaProcess(String email, Long id) {
-        declineCourierRequest(email, id, true);
-    }
-
-    private void declineCourierRequest(String email, Long id, boolean verifyAdminFlag) {
         Admin admin = adminService.findByUserId(userService.findByEmail(email).getId());
-        if (verifyAdminFlag && !admin.isAccountState()) {
+        if (!admin.isAccountState()) {
             throw new AccessDeniedException("Аккаунт администратора не одобрен");
         }
         CourierRequest courierRequest = courierRequestRepository.findCourierRequestById(id)

@@ -27,7 +27,7 @@ public class CourierDeclineRequestTask implements ExternalTaskHandler {
             Long requestId = task.getVariable("courierRequestId");
             String reviewerCamundaUserId = task.getVariable("reviewerCamundaUserId");
             String reviewerEmail = resolveEmailByCamundaUserId(reviewerCamundaUserId);
-            courierRequestService.declineRequestFromCamundaProcess(reviewerEmail, requestId);
+            courierRequestService.declineRequest(reviewerEmail, requestId);
             service.complete(task);
         } catch (RuntimeException exception) {
             service.handleFailure(
