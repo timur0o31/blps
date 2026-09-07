@@ -45,6 +45,8 @@ public class RegisterUserTask implements ExternalTaskHandler {
                 userService.createClient(user);
             } else if ("COURIER".equals(registrationRole)) {
                 userService.createCourier(user);
+            } else if ("ADMIN".equals(registrationRole)) {
+                userService.createAdmin(user);
             } else {
                 throw new IllegalStateException("Неизвестный тип регистрируемого пользователя");
             }

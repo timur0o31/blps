@@ -42,8 +42,13 @@ public class CourierService {
     }
 
     public CourierStatus toggleCourierShiftStatus(String email) {
-        User user = userService.findByEmail(email);
-        Courier courier = courierRepository.findByUserId(user.getId()).orElseThrow(() -> new EntityNotFoundException("Курьер не найден"));
+        Courier courier = findCourierByEmail(email);
+        if (courier.getAccountState() == CourierAccountState.BLOCKED) {
+            throw new AccessDeniedException("Аккаунт курьера заблокирован");
+        }
+        if (courier.getAccountState() != CourierAccountState.ACTIVE) {
+            throw new AccessDeniedException("Аккаунт курьера ещё не одобрен");
+        }
         if (courier.getStatus()==CourierStatus.END_SHIFT){
             throw new IllegalStateException("Разберитесь с назначенным заказом!");
         }

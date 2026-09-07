@@ -1,0 +1,11 @@
+<form role="form" name="form" novalidate>
+  <div class="alert alert-danger" role="alert" ng-if="shiftError">{{ shiftError }}</div>
+  <script cam-script type="text/form-script">
+    camForm.on('form-loaded', function() {
+      camForm.variableManager.fetchVariable('shiftError');
+    });
+    camForm.on('variables-fetched', function() {
+      $scope.shiftError = camForm.variableManager.variableValue('shiftError');
+    });
+  </script>
+</form>

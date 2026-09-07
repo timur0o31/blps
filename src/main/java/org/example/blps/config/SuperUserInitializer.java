@@ -51,7 +51,6 @@ public class SuperUserInitializer implements CommandLineRunner {
             user = userRepository.findByEmail(user.getEmail())
                     .orElseThrow(() -> new IllegalStateException("Не удалось загрузить суперпользователя"));
         }
-        camundaIdentityService.createUser(user, rawPassword, "ADMIN");
         camundaIdentityService.createUser(user, rawPassword, "camunda-admin");
     }
 }

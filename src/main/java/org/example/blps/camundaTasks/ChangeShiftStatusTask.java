@@ -7,7 +7,10 @@ import org.example.blps.entity.User;
 import org.example.blps.service.CourierService;
 import org.example.blps.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 @Component
 @ExternalTaskSubscription("courier-status-toggle")
@@ -25,14 +28,18 @@ public class ChangeShiftStatusTask implements ExternalTaskHandler {
     @Override
     public void execute(ExternalTask externalTask, ExternalTaskService externalTaskService) {
         try {
-            String email = externalTask.getVariable("email");
-            if (email == null || email.trim().isEmpty()) {
-                String camundaUserId = externalTask.getVariable("courierCamundaUserId");
-                email = resolveEmailByCamundaUserId(camundaUserId);
-            }
-            courierService.findActiveCourierByEmail(email);
+            String camundaUserId = externalTask.getVariable("courierCamundaUserId");
+            String email = resolveEmailByCamundaUserId(camundaUserId);
             courierService.toggleCourierShiftStatus(email);
-            externalTaskService.complete(externalTask);
+            externalTaskService.complete(externalTask, Map.of(
+                    "shiftChangeSuccessful", true,
+                    "shiftError", ""
+            ));
+        } catch (AccessDeniedException | IllegalStateException exception) {
+            externalTaskService.complete(externalTask, Map.of(
+                    "shiftChangeSuccessful", false,
+                    "shiftError", exception.getMessage() == null ? "Не удалось изменить статус смены" : exception.getMessage()
+            ));
         } catch (RuntimeException exception) {
             externalTaskService.handleFailure(
                     externalTask, exception.getMessage(), exception.toString(), 0, 0L

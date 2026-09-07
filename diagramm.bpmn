@@ -1,29 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_OrderLifecycle" targetNamespace="http://example.org/blps" exporter="Camunda Modeler" exporterVersion="5.50.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_OrderLifecycle" targetNamespace="http://example.org/blps" exporter="Camunda Modeler" exporterVersion="5.48.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
   <bpmn:message id="Message_OrderCreated" name="order-created" />
   <bpmn:collaboration id="Collaboration_OrderLifecycle">
     <bpmn:participant id="Participant_Create" name="Создание заказа" processRef="create_order_process" />
     <bpmn:participant id="Participant_Lifecycle" name="Обработка заказа курьером" processRef="process_order_assignment" />
     <bpmn:participant id="Participant_CourierShift" name="Изменение статуса смены курьера" processRef="courier_shift_status_process" />
     <bpmn:participant id="Participant_submit" name="Запрос на одобрение аккаунта курьера" processRef="courier_account_submit" />
+    <bpmn:participant id="Participant_0z77n3a" name="Регистрация клиента" processRef="client_registration_process" />
+    <bpmn:participant id="Participant_AdminRegistration" name="Регистрация админа" processRef="admin_registration_process" />
+    <bpmn:participant id="Participant_1snnznm" name="Регистрация курьера" processRef="courier_registration_process" />
     <bpmn:messageFlow id="MessageFlow_OrderCreated" name="order-created" sourceRef="Task_Publish" targetRef="Start_Assignment" />
   </bpmn:collaboration>
   <bpmn:process id="create_order_process" name="Создание заказа" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:laneSet id="LaneSet_CreateOrder">
-      <bpmn:lane id="Lane_Client" name="Клиент">
-        <bpmn:flowNodeRef>Start_Create</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Task_FillOrder</bpmn:flowNodeRef>
-      </bpmn:lane>
       <bpmn:lane id="Lane_CreateSystem" name="Система">
         <bpmn:flowNodeRef>Task_Save</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_Publish</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>End_Create</bpmn:flowNodeRef>
       </bpmn:lane>
+      <bpmn:lane id="Lane_Client" name="Клиент">
+        <bpmn:flowNodeRef>Start_Create</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FillOrder</bpmn:flowNodeRef>
+      </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:startEvent id="Start_Create" name="Запрос на создание заказа" camunda:initiator="clientCamundaUserId">
       <bpmn:outgoing>F_Create_Fill</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Task_FillOrder" name="Оформить заказ" camunda:assignee="${clientCamundaUserId}" camunda:formKey="embedded:deployment:/forms/create-order.html">
+    <bpmn:userTask id="Task_FillOrder" name="Оформить заказ" camunda:formKey="embedded:deployment:/create-order.html" camunda:assignee="${clientCamundaUserId}">
       <bpmn:incoming>F_Create_Fill</bpmn:incoming>
       <bpmn:outgoing>F_Create_Save</bpmn:outgoing>
     </bpmn:userTask>
@@ -45,11 +48,6 @@
   </bpmn:process>
   <bpmn:process id="process_order_assignment" name="Обработка заказа" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:laneSet id="LaneSet_OrderLifecycle">
-      <bpmn:lane id="Lane_Courier" name="Курьер">
-        <bpmn:flowNodeRef>Task_UpdateOrderStatus</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Task_CourierDecision</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Boundary_AssignmentTimeout</bpmn:flowNodeRef>
-      </bpmn:lane>
       <bpmn:lane id="Lane_System" name="Система">
         <bpmn:flowNodeRef>Task_Failed</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>End_Failed</bpmn:flowNodeRef>
@@ -74,6 +72,11 @@
         <bpmn:flowNodeRef>Task_ApplyOrderStatus</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Event_RetryRejectThrow</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Event_RetryTimerThrow</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Courier" name="Курьер">
+        <bpmn:flowNodeRef>Task_UpdateOrderStatus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CourierDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Boundary_AssignmentTimeout</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:serviceTask id="Task_Failed" name="Перевести заказ в статус FAILED" camunda:type="external" camunda:topic="mark-order-failed">
@@ -141,25 +144,6 @@
       <bpmn:outgoing>F_LimitYes</bpmn:outgoing>
       <bpmn:outgoing>F_LimitNo</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="F_LimitYes" name="да" sourceRef="Gateway_Limit" targetRef="Task_Failed">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${limitReached == true}</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="F_Failed_End" sourceRef="Task_Failed" targetRef="End_Failed" />
-    <bpmn:sequenceFlow id="F_LimitNo" name="нет" sourceRef="Gateway_Limit" targetRef="Task_Find" />
-    <bpmn:sequenceFlow id="F_Find_Gateway" sourceRef="Task_Find" targetRef="Gateway_Found" />
-    <bpmn:sequenceFlow id="F_Found" name="да" sourceRef="Gateway_Found" targetRef="Task_Attempt">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${courierFound == true}</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="F_NotFound" name="нет" sourceRef="Gateway_Found" targetRef="Task_Waiting" />
-    <bpmn:sequenceFlow id="F_Decision_Gateway" sourceRef="Task_CourierDecision" targetRef="Gateway_Accepted" />
-    <bpmn:sequenceFlow id="F_Expire_Link" sourceRef="Task_Expire" targetRef="Event_RetryTimeoutThrow" />
-    <bpmn:sequenceFlow id="F_Start_Check" sourceRef="Start_Assignment" targetRef="Task_CheckLimit" />
-    <bpmn:sequenceFlow id="F_Retry_Check" sourceRef="Event_RetryCatch" targetRef="Task_CheckLimit" />
-    <bpmn:sequenceFlow id="F_Check_Limit" sourceRef="Task_CheckLimit" targetRef="Gateway_Limit" />
-    <bpmn:sequenceFlow id="F_Assign_Mark" sourceRef="Task_Assign" targetRef="Task_MarkCourier" />
-    <bpmn:sequenceFlow id="F_Attempt_Assign" sourceRef="Task_Attempt" targetRef="Task_Assign" />
-    <bpmn:sequenceFlow id="F_Waiting_Timer" sourceRef="Task_Waiting" targetRef="Event_WaitingTimer" />
-    <bpmn:sequenceFlow id="F_Timer_Link" sourceRef="Event_WaitingTimer" targetRef="Event_RetryTimerThrow" />
     <bpmn:exclusiveGateway id="Gateway_Accepted" name="Заказ принят?" default="F_Rejected">
       <bpmn:incoming>F_Decision_Gateway</bpmn:incoming>
       <bpmn:outgoing>F_Rejected</bpmn:outgoing>
@@ -189,12 +173,51 @@
       <bpmn:incoming>F_Reject_Link</bpmn:incoming>
       <bpmn:linkEventDefinition id="Link_RetryReject" name="Повторить назначение" />
     </bpmn:intermediateThrowEvent>
-    <bpmn:userTask id="Task_UpdateOrderStatus" name="Изменить статус доставки" camunda:assignee="${courierCamundaUserId}" camunda:formKey="embedded:deployment:/forms/update-order-status.html">
+    <bpmn:userTask id="Task_UpdateOrderStatus" name="Изменить статус доставки" camunda:formKey="embedded:deployment:/update-order-status.html" camunda:assignee="${courierCamundaUserId}">
       <bpmn:incoming>F_Accept_Update</bpmn:incoming>
       <bpmn:incoming>F_NotDelivered</bpmn:incoming>
       <bpmn:outgoing>F_Update_Service</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:sequenceFlow id="F_Update_Service" sourceRef="Task_UpdateOrderStatus" targetRef="Task_ApplyOrderStatus" />
+    <bpmn:userTask id="Task_CourierDecision" name="Принять или отклонить заказ" camunda:assignee="${courierCamundaUserId}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="accepted" label="Принять заказ" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1nwii46</bpmn:incoming>
+      <bpmn:outgoing>F_Decision_Gateway</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="Event_RetryTimerThrow" name="Повторить назначение">
+      <bpmn:incoming>F_Timer_Link</bpmn:incoming>
+      <bpmn:linkEventDefinition id="Link_RetryTimer" name="Повторить назначение" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="Boundary_AssignmentTimeout" name="Ответ не получен за 2 минуты" attachedToRef="Task_CourierDecision">
+      <bpmn:outgoing>F_AssignmentTimeout_Expire</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_0xkk2gs">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="F_LimitYes" name="да" sourceRef="Gateway_Limit" targetRef="Task_Failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${limitReached == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_Failed_End" sourceRef="Task_Failed" targetRef="End_Failed" />
+    <bpmn:sequenceFlow id="F_LimitNo" name="нет" sourceRef="Gateway_Limit" targetRef="Task_Find" />
+    <bpmn:sequenceFlow id="F_Find_Gateway" sourceRef="Task_Find" targetRef="Gateway_Found" />
+    <bpmn:sequenceFlow id="F_Found" name="да" sourceRef="Gateway_Found" targetRef="Task_Attempt">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${courierFound == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_NotFound" name="нет" sourceRef="Gateway_Found" targetRef="Task_Waiting" />
+    <bpmn:sequenceFlow id="F_AssignmentTimeout_Expire" sourceRef="Boundary_AssignmentTimeout" targetRef="Task_Expire" />
+    <bpmn:sequenceFlow id="F_Expire_Link" sourceRef="Task_Expire" targetRef="Event_RetryTimeoutThrow" />
+    <bpmn:sequenceFlow id="F_Start_Check" sourceRef="Start_Assignment" targetRef="Task_CheckLimit" />
+    <bpmn:sequenceFlow id="F_Retry_Check" sourceRef="Event_RetryCatch" targetRef="Task_CheckLimit" />
+    <bpmn:sequenceFlow id="F_Check_Limit" sourceRef="Task_CheckLimit" targetRef="Gateway_Limit" />
+    <bpmn:sequenceFlow id="F_Assign_Mark" sourceRef="Task_Assign" targetRef="Task_MarkCourier" />
+    <bpmn:sequenceFlow id="Flow_1nwii46" sourceRef="Task_MarkCourier" targetRef="Task_CourierDecision" />
+    <bpmn:sequenceFlow id="F_Attempt_Assign" sourceRef="Task_Attempt" targetRef="Task_Assign" />
+    <bpmn:sequenceFlow id="F_Waiting_Timer" sourceRef="Task_Waiting" targetRef="Event_WaitingTimer" />
+    <bpmn:sequenceFlow id="F_Timer_Link" sourceRef="Event_WaitingTimer" targetRef="Event_RetryTimerThrow" />
+    <bpmn:sequenceFlow id="F_Decision_Gateway" sourceRef="Task_CourierDecision" targetRef="Gateway_Accepted" />
     <bpmn:sequenceFlow id="F_Accepted" name="да" sourceRef="Gateway_Accepted" targetRef="Task_Accept">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${accepted == true}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
@@ -206,79 +229,86 @@
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="F_Service_Delivered" sourceRef="Task_ApplyOrderStatus" targetRef="Gateway_Delivered" />
     <bpmn:sequenceFlow id="F_NotDelivered" name="нет" sourceRef="Gateway_Delivered" targetRef="Task_UpdateOrderStatus" />
-    <bpmn:sequenceFlow id="Flow_1nwii46" sourceRef="Task_MarkCourier" targetRef="Task_CourierDecision" />
-    <bpmn:sequenceFlow id="F_AssignmentTimeout_Expire" sourceRef="Boundary_AssignmentTimeout" targetRef="Task_Expire" />
-    <bpmn:userTask id="Task_CourierDecision" name="Принять или отклонить заказ" camunda:assignee="${courierCamundaUserId}">
-      <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="accepted" label="Принять заказ" type="boolean" />
-        </camunda:formData>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1nwii46</bpmn:incoming>
-      <bpmn:outgoing>F_Decision_Gateway</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:boundaryEvent id="Boundary_AssignmentTimeout" name="Ответ не получен за 2 минуты" attachedToRef="Task_CourierDecision">
-      <bpmn:outgoing>F_AssignmentTimeout_Expire</bpmn:outgoing>
-      <bpmn:timerEventDefinition id="TimerEventDefinition_0xkk2gs">
-        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
-      </bpmn:timerEventDefinition>
-    </bpmn:boundaryEvent>
-    <bpmn:intermediateThrowEvent id="Event_RetryTimerThrow" name="Повторить назначение">
-      <bpmn:incoming>F_Timer_Link</bpmn:incoming>
-      <bpmn:linkEventDefinition id="Link_RetryTimer" name="Повторить назначение" />
-    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="F_Update_Service" sourceRef="Task_UpdateOrderStatus" targetRef="Task_ApplyOrderStatus" />
   </bpmn:process>
   <bpmn:process id="courier_shift_status_process" name="Изменение статуса смены курьера" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:laneSet id="LaneSet_CourierShift">
+      <bpmn:lane id="Lane_CourierShiftSystem" name="Система">
+        <bpmn:flowNodeRef>Task_ChangeCourierShift</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CourierShiftResult</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_CourierShift</bpmn:flowNodeRef>
+      </bpmn:lane>
       <bpmn:lane id="Lane_CourierShiftCourier" name="Курьер">
         <bpmn:flowNodeRef>Start_CourierShift</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_CourierShiftDecision</bpmn:flowNodeRef>
-      </bpmn:lane>
-      <bpmn:lane id="Lane_CourierShiftSystem" name="Система">
-        <bpmn:flowNodeRef>Task_ChangeCourierShift</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>End_CourierShift</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:startEvent id="Start_CourierShift" name="Запрос изменения смены" camunda:initiator="courierCamundaUserId">
       <bpmn:outgoing>F_CourierShift_Start_Decision</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Task_CourierShiftDecision" name="Подтвердить изменение смены" camunda:assignee="${courierCamundaUserId}">
+    <bpmn:userTask id="Task_CourierShiftDecision" name="Подтвердить изменение смены" camunda:formKey="embedded:deployment:/courier-shift.html" camunda:assignee="${courierCamundaUserId}">
       <bpmn:incoming>F_CourierShift_Start_Decision</bpmn:incoming>
+      <bpmn:incoming>F_CourierShift_Retry</bpmn:incoming>
       <bpmn:outgoing>F_CourierShift_Decision_Change</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:serviceTask id="Task_ChangeCourierShift" name="Переключить статус смены курьера" camunda:type="external" camunda:topic="courier-status-toggle">
       <bpmn:incoming>F_CourierShift_Decision_Change</bpmn:incoming>
       <bpmn:outgoing>F_CourierShift_Change_End</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:endEvent id="End_CourierShift" name="Статус смены изменён">
+    <bpmn:exclusiveGateway id="Gateway_CourierShiftResult" name="Статус изменён?" default="F_CourierShift_Retry">
       <bpmn:incoming>F_CourierShift_Change_End</bpmn:incoming>
+      <bpmn:outgoing>F_CourierShift_Success</bpmn:outgoing>
+      <bpmn:outgoing>F_CourierShift_Retry</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_CourierShift" name="Статус смены изменён">
+      <bpmn:incoming>F_CourierShift_Success</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="F_CourierShift_Start_Decision" sourceRef="Start_CourierShift" targetRef="Task_CourierShiftDecision" />
     <bpmn:sequenceFlow id="F_CourierShift_Decision_Change" sourceRef="Task_CourierShiftDecision" targetRef="Task_ChangeCourierShift" />
-    <bpmn:sequenceFlow id="F_CourierShift_Change_End" sourceRef="Task_ChangeCourierShift" targetRef="End_CourierShift" />
+    <bpmn:sequenceFlow id="F_CourierShift_Change_End" sourceRef="Task_ChangeCourierShift" targetRef="Gateway_CourierShiftResult" />
+    <bpmn:sequenceFlow id="F_CourierShift_Retry" name="повторить" sourceRef="Gateway_CourierShiftResult" targetRef="Task_CourierShiftDecision" />
+    <bpmn:sequenceFlow id="F_CourierShift_Success" name="да" sourceRef="Gateway_CourierShiftResult" targetRef="End_CourierShift">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${execution.getVariable('shiftChangeSuccessful') == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
   </bpmn:process>
   <bpmn:process id="courier_account_submit" name="Запрос на одобрение аккаунта курьера" isExecutable="true" camunda:candidateStarterGroups="COURIER" camunda:historyTimeToLive="180">
     <bpmn:laneSet id="LaneSet_1bbi064">
-      <bpmn:lane id="Lane_12o0v6q" name="Система">
-        <bpmn:flowNodeRef>Activity_01h7bz2</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Activity_18705ks</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Event_0k4pod6</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Event_0ljddn1</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Activity_0dgjb9j</bpmn:flowNodeRef>
+      <bpmn:lane id="Lane_19gsr32" name="Админ">
+        <bpmn:flowNodeRef>Gateway_068ozs8</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_1psr4vn</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_1xk2101" name="Курьер">
         <bpmn:flowNodeRef>Event_1u7afq9</bpmn:flowNodeRef>
       </bpmn:lane>
-      <bpmn:lane id="Lane_19gsr32" name="Админ">
-        <bpmn:flowNodeRef>Activity_1psr4vn</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Gateway_068ozs8</bpmn:flowNodeRef>
+      <bpmn:lane id="Lane_12o0v6q" name="Система">
+        <bpmn:flowNodeRef>Activity_0dgjb9j</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_01h7bz2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_0k4pod6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_0ljddn1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_18705ks</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
-    <bpmn:startEvent id="Event_1u7afq9" name="Запрос на одобрение аккаунта" camunda:initiator="initiatorCamundaUserId">
-      <bpmn:outgoing>Flow_1np5t1f</bpmn:outgoing>
-    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Gateway_068ozs8" name="Заявка одобрена?">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_0lakaf0</bpmn:incoming>
+      <bpmn:outgoing>Flow_1362di1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_15ck3iv</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_1np5t1f" sourceRef="Event_1u7afq9" targetRef="Activity_0dgjb9j" />
+    <bpmn:sequenceFlow id="Flow_1msrtbb" sourceRef="Activity_0dgjb9j" targetRef="Activity_1psr4vn" />
+    <bpmn:sequenceFlow id="Flow_0lakaf0" sourceRef="Activity_1psr4vn" targetRef="Gateway_068ozs8" />
+    <bpmn:sequenceFlow id="Flow_1362di1" name="да" sourceRef="Gateway_068ozs8" targetRef="Activity_01h7bz2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision == 'APPROVED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_15ck3iv" name="нет" sourceRef="Gateway_068ozs8" targetRef="Activity_18705ks">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision == 'DECLINED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_0id0o26" sourceRef="Activity_01h7bz2" targetRef="Event_0k4pod6" />
+    <bpmn:sequenceFlow id="Flow_080qy31" sourceRef="Activity_18705ks" targetRef="Event_0ljddn1" />
+    <bpmn:serviceTask id="Activity_0dgjb9j" name="Создать заявку со статусом PENDING" camunda:type="external" camunda:topic="create-courier-request">
+      <bpmn:incoming>Flow_1np5t1f</bpmn:incoming>
+      <bpmn:outgoing>Flow_1msrtbb</bpmn:outgoing>
+    </bpmn:serviceTask>
     <bpmn:userTask id="Activity_1psr4vn" name="Рассмотреть заявку курьера" camunda:candidateGroups="ADMIN">
       <bpmn:extensionElements>
         <camunda:formData>
@@ -290,501 +320,845 @@
             <camunda:value id="DECLINED" name="Отклонить" />
           </camunda:formField>
         </camunda:formData>
-        <camunda:taskListener event="complete" expression="${execution.setVariable('reviewerCamundaUserId', task.assignee)}" />
+        <camunda:taskListener expression="${execution.setVariable(&#39;reviewerCamundaUserId&#39;, task.assignee)}" event="complete" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1msrtbb</bpmn:incoming>
       <bpmn:outgoing>Flow_0lakaf0</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:sequenceFlow id="Flow_0lakaf0" sourceRef="Activity_1psr4vn" targetRef="Gateway_068ozs8" />
-    <bpmn:exclusiveGateway id="Gateway_068ozs8" name="Заявка одобрена?">
-      <bpmn:extensionElements />
-      <bpmn:incoming>Flow_0lakaf0</bpmn:incoming>
-      <bpmn:outgoing>Flow_1362di1</bpmn:outgoing>
-      <bpmn:outgoing>Flow_15ck3iv</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
+    <bpmn:startEvent id="Event_1u7afq9" name="Запрос на одобрение аккаунта" camunda:initiator="initiatorCamundaUserId">
+      <bpmn:outgoing>Flow_1np5t1f</bpmn:outgoing>
+    </bpmn:startEvent>
     <bpmn:serviceTask id="Activity_01h7bz2" name="Одобрить" camunda:type="external" camunda:topic="approve-courier-request">
       <bpmn:incoming>Flow_1362di1</bpmn:incoming>
       <bpmn:outgoing>Flow_0id0o26</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:sequenceFlow id="Flow_1362di1" name="Одобрить" sourceRef="Gateway_068ozs8" targetRef="Activity_01h7bz2">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision == 'APPROVED'}</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_15ck3iv" name="Отклонить" sourceRef="Gateway_068ozs8" targetRef="Activity_18705ks">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision == 'DECLINED'}</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="Event_0k4pod6" name="Аккаунт верифицирован">
+      <bpmn:incoming>Flow_0id0o26</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Event_0ljddn1" name="Аккаунт не верифицирован">
+      <bpmn:incoming>Flow_080qy31</bpmn:incoming>
+    </bpmn:endEvent>
     <bpmn:serviceTask id="Activity_18705ks" name="Отклонить" camunda:type="external" camunda:topic="decline-courier-request">
       <bpmn:incoming>Flow_15ck3iv</bpmn:incoming>
       <bpmn:outgoing>Flow_080qy31</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:endEvent id="Event_0k4pod6" name="Аккаунт верифицирован">
-      <bpmn:incoming>Flow_0id0o26</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_080qy31" sourceRef="Activity_18705ks" targetRef="Event_0ljddn1" />
-    <bpmn:endEvent id="Event_0ljddn1" name="Аккаунт не верифицирован">
-      <bpmn:incoming>Flow_080qy31</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:serviceTask id="Activity_0dgjb9j" name="Создать заявку со статусом PENDING" camunda:type="external" camunda:topic="create-courier-request">
-      <bpmn:incoming>Flow_1np5t1f</bpmn:incoming>
-      <bpmn:outgoing>Flow_1msrtbb</bpmn:outgoing>
+  </bpmn:process>
+  <bpmn:process id="client_registration_process" name="Регистрация клиента" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:laneSet id="LaneSet_0vcrtwg">
+      <bpmn:lane id="Lane_1uoxr5l" name="Система">
+        <bpmn:flowNodeRef>Activity_15pylf7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ClientRegistrationResult</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_0dttix4</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_010czr0" name="Администратор">
+        <bpmn:flowNodeRef>Event_04zijsk</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_0yc84sa</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Event_04zijsk" name="Запрос регистрации клиента" camunda:initiator="registrationInitiator">
+      <bpmn:outgoing>Flow_1cxkz1y</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_0yc84sa" name="Ввести данные клиента" camunda:formKey="embedded:deployment:/register-user.html" camunda:assignee="${registrationInitiator}">
+      <bpmn:incoming>Flow_1cxkz1y</bpmn:incoming>
+      <bpmn:incoming>Flow_ClientRegistrationRetry</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wecqxi</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Activity_15pylf7" name="Создать клиента" camunda:type="external" camunda:topic="register-user">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="registrationRole">CLIENT</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0wecqxi</bpmn:incoming>
+      <bpmn:outgoing>Flow_16hnmxm</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:sequenceFlow id="Flow_1msrtbb" sourceRef="Activity_0dgjb9j" targetRef="Activity_1psr4vn" />
+    <bpmn:exclusiveGateway id="Gateway_ClientRegistrationResult" name="Клиент создан?" default="Flow_ClientRegistrationRetry">
+      <bpmn:incoming>Flow_16hnmxm</bpmn:incoming>
+      <bpmn:outgoing>Flow_ClientRegistrationRetry</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ClientRegistrationSuccess</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_0dttix4" name="Регистрация произошла успешно">
+      <bpmn:incoming>Flow_ClientRegistrationSuccess</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1cxkz1y" sourceRef="Event_04zijsk" targetRef="Activity_0yc84sa" />
+    <bpmn:sequenceFlow id="Flow_ClientRegistrationRetry" name="исправить данные" sourceRef="Gateway_ClientRegistrationResult" targetRef="Activity_0yc84sa" />
+    <bpmn:sequenceFlow id="Flow_0wecqxi" sourceRef="Activity_0yc84sa" targetRef="Activity_15pylf7" />
+    <bpmn:sequenceFlow id="Flow_16hnmxm" sourceRef="Activity_15pylf7" targetRef="Gateway_ClientRegistrationResult" />
+    <bpmn:sequenceFlow id="Flow_ClientRegistrationSuccess" name="да" sourceRef="Gateway_ClientRegistrationResult" targetRef="Event_0dttix4">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${registrationSuccessful == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:process id="admin_registration_process" name="Регистрация админа" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:laneSet id="LaneSet_AdminRegistration">
+      <bpmn:lane id="Lane_AdminRegistrationAdmin" name="Администратор">
+        <bpmn:flowNodeRef>Start_AdminRegistration</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FillAdminRegistration</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AdminRegistrationSystem" name="Система">
+        <bpmn:flowNodeRef>Task_RegisterAdmin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AdminRegistrationResult</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_AdminRegistration</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_AdminRegistration" name="Запрос регистрации админа" camunda:initiator="adminCreatorCamundaUserId">
+      <bpmn:outgoing>Flow_AdminRegistrationStartFill</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_FillAdminRegistration" name="Ввести данные админа" camunda:formKey="embedded:deployment:/register-user.html" camunda:assignee="${adminCreatorCamundaUserId}">
+      <bpmn:incoming>Flow_AdminRegistrationStartFill</bpmn:incoming>
+      <bpmn:incoming>Flow_AdminRegistrationRetry</bpmn:incoming>
+      <bpmn:outgoing>Flow_AdminRegistrationFillRegister</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_RegisterAdmin" name="Создать админа" camunda:type="external" camunda:topic="register-user">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="registrationRole">ADMIN</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AdminRegistrationFillRegister</bpmn:incoming>
+      <bpmn:outgoing>Flow_AdminRegistrationRegisterResult</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_AdminRegistrationResult" name="Админ создан?" default="Flow_AdminRegistrationRetry">
+      <bpmn:incoming>Flow_AdminRegistrationRegisterResult</bpmn:incoming>
+      <bpmn:outgoing>Flow_AdminRegistrationRetry</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AdminRegistrationSuccess</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_AdminRegistration" name="Админ создан">
+      <bpmn:incoming>Flow_AdminRegistrationSuccess</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_AdminRegistrationStartFill" sourceRef="Start_AdminRegistration" targetRef="Task_FillAdminRegistration" />
+    <bpmn:sequenceFlow id="Flow_AdminRegistrationRetry" name="исправить данные" sourceRef="Gateway_AdminRegistrationResult" targetRef="Task_FillAdminRegistration" />
+    <bpmn:sequenceFlow id="Flow_AdminRegistrationFillRegister" sourceRef="Task_FillAdminRegistration" targetRef="Task_RegisterAdmin" />
+    <bpmn:sequenceFlow id="Flow_AdminRegistrationRegisterResult" sourceRef="Task_RegisterAdmin" targetRef="Gateway_AdminRegistrationResult" />
+    <bpmn:sequenceFlow id="Flow_AdminRegistrationSuccess" name="да" sourceRef="Gateway_AdminRegistrationResult" targetRef="End_AdminRegistration">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${registrationSuccessful == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:process id="courier_registration_process" name="Регистрация курьера" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:laneSet id="LaneSet_13z6qmo">
+      <bpmn:lane id="Lane_1qmz392" name="Админ">
+        <bpmn:flowNodeRef>Event_1wliw0t</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_1w1d3vd</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_0e6oe7n" name="Система">
+        <bpmn:flowNodeRef>Activity_01inu2e</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CourierRegistrationResult</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_0w17ja8</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Event_1wliw0t" name="Запрос регистрации курьера" camunda:initiator="registrationInitiator">
+      <bpmn:outgoing>Flow_1un5juj</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_1w1d3vd" name="Ввести данные курьера" camunda:formKey="embedded:deployment:/register-user.html" camunda:assignee="${registrationInitiator}">
+      <bpmn:incoming>Flow_1un5juj</bpmn:incoming>
+      <bpmn:incoming>Flow_CourierRegistrationRetry</bpmn:incoming>
+      <bpmn:outgoing>Flow_0oz4giz</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Activity_01inu2e" name="Создать курьера" camunda:type="external" camunda:topic="register-user">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="registrationRole">COURIER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0oz4giz</bpmn:incoming>
+      <bpmn:outgoing>Flow_01zq7f0</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_CourierRegistrationResult" name="Курьер создан?" default="Flow_CourierRegistrationRetry">
+      <bpmn:incoming>Flow_01zq7f0</bpmn:incoming>
+      <bpmn:outgoing>Flow_CourierRegistrationRetry</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CourierRegistrationSuccess</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_0w17ja8" name="Регистрация произошла успешно">
+      <bpmn:incoming>Flow_CourierRegistrationSuccess</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1un5juj" sourceRef="Event_1wliw0t" targetRef="Activity_1w1d3vd" />
+    <bpmn:sequenceFlow id="Flow_CourierRegistrationRetry" name="исправить данные" sourceRef="Gateway_CourierRegistrationResult" targetRef="Activity_1w1d3vd" />
+    <bpmn:sequenceFlow id="Flow_0oz4giz" sourceRef="Activity_1w1d3vd" targetRef="Activity_01inu2e" />
+    <bpmn:sequenceFlow id="Flow_01zq7f0" sourceRef="Activity_01inu2e" targetRef="Gateway_CourierRegistrationResult" />
+    <bpmn:sequenceFlow id="Flow_CourierRegistrationSuccess" name="да" sourceRef="Gateway_CourierRegistrationResult" targetRef="Event_0w17ja8">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${registrationSuccessful == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="Diagram_OrderLifecycle">
     <bpmndi:BPMNPlane id="Plane_OrderLifecycle" bpmnElement="Collaboration_OrderLifecycle">
       <bpmndi:BPMNShape id="S_P_Create" bpmnElement="Participant_Create" isHorizontal="true">
-        <dc:Bounds x="160" y="80" width="900" height="280" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_Lane_CreateSystem" bpmnElement="Lane_CreateSystem" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
-        <dc:Bounds x="190" y="220" width="870" height="140" />
+        <dc:Bounds x="160" y="300" width="900" height="280" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Lane_Client" bpmnElement="Lane_Client" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
-        <dc:Bounds x="190" y="80" width="870" height="140" />
+        <dc:Bounds x="190" y="300" width="870" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Lane_CreateSystem" bpmnElement="Lane_CreateSystem" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="190" y="440" width="870" height="140" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_StartCreate" bpmnElement="Start_Create">
-        <dc:Bounds x="240" y="132" width="36" height="36" />
+        <dc:Bounds x="240" y="352" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="216" y="168" width="84" height="27" />
+          <dc:Bounds x="216" y="388" width="84" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_FillOrder" bpmnElement="Task_FillOrder">
-        <dc:Bounds x="340" y="110" width="130" height="80" />
+        <dc:Bounds x="340" y="330" width="130" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Save" bpmnElement="Task_Save">
-        <dc:Bounds x="550" y="250" width="130" height="80" />
+        <dc:Bounds x="550" y="470" width="130" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Publish" bpmnElement="Task_Publish">
-        <dc:Bounds x="730" y="250" width="130" height="80" />
+        <dc:Bounds x="730" y="470" width="130" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_EndCreate" bpmnElement="End_Create">
-        <dc:Bounds x="930" y="272" width="36" height="36" />
+        <dc:Bounds x="930" y="492" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="906" y="308" width="84" height="27" />
+          <dc:Bounds x="906" y="528" width="84" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="E_CF" bpmnElement="F_Create_Fill">
-        <di:waypoint x="276" y="150" />
-        <di:waypoint x="340" y="150" />
+        <di:waypoint x="276" y="370" />
+        <di:waypoint x="340" y="370" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_CreateSave" bpmnElement="F_Create_Save">
-        <di:waypoint x="470" y="150" />
-        <di:waypoint x="510" y="150" />
-        <di:waypoint x="510" y="290" />
-        <di:waypoint x="550" y="290" />
+        <di:waypoint x="470" y="370" />
+        <di:waypoint x="510" y="370" />
+        <di:waypoint x="510" y="510" />
+        <di:waypoint x="550" y="510" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_SP" bpmnElement="F_Save_Publish">
-        <di:waypoint x="680" y="290" />
-        <di:waypoint x="730" y="290" />
+        <di:waypoint x="680" y="510" />
+        <di:waypoint x="730" y="510" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_PE" bpmnElement="F_Publish_End">
-        <di:waypoint x="860" y="290" />
-        <di:waypoint x="930" y="290" />
+        <di:waypoint x="860" y="510" />
+        <di:waypoint x="930" y="510" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="S_P_Life" bpmnElement="Participant_Lifecycle" isHorizontal="true">
-        <dc:Bounds x="160" y="440" width="2600" height="720" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_Lane_System" bpmnElement="Lane_System" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
-        <dc:Bounds x="190" y="440" width="2570" height="420" />
+        <dc:Bounds x="160" y="660" width="2600" height="720" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Lane_Courier" bpmnElement="Lane_Courier" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
-        <dc:Bounds x="190" y="860" width="2570" height="300" />
+        <dc:Bounds x="190" y="1080" width="2570" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Lane_System" bpmnElement="Lane_System" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="190" y="660" width="2570" height="420" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Failed" bpmnElement="Task_Failed">
-        <dc:Bounds x="640" y="560" width="110" height="80" />
+        <dc:Bounds x="640" y="780" width="110" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_EndFailed" bpmnElement="End_Failed">
-        <dc:Bounds x="790" y="582" width="36" height="36" />
+        <dc:Bounds x="790" y="802" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="777" y="618" width="63" height="27" />
+          <dc:Bounds x="777" y="838" width="63" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Find" bpmnElement="Task_Find">
-        <dc:Bounds x="670" y="748" width="110" height="80" />
+        <dc:Bounds x="670" y="968" width="110" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_FoundG" bpmnElement="Gateway_Found" isMarkerVisible="true">
-        <dc:Bounds x="820" y="763" width="50" height="50" />
+        <dc:Bounds x="820" y="983" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="804" y="813" width="82" height="14" />
+          <dc:Bounds x="804" y="1033" width="82" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Expire" bpmnElement="Task_Expire">
-        <dc:Bounds x="1320" y="560" width="130" height="80" />
+        <dc:Bounds x="1320" y="780" width="130" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Start" bpmnElement="Start_Assignment">
-        <dc:Bounds x="222" y="770" width="36" height="36" />
+        <dc:Bounds x="222" y="990" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="203" y="806" width="74" height="14" />
+          <dc:Bounds x="203" y="1026" width="74" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_RetryTimeoutThrow" bpmnElement="Event_RetryTimeoutThrow">
-        <dc:Bounds x="1367" y="492" width="36" height="36" />
+        <dc:Bounds x="1367" y="712" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1318" y="454" width="134" height="27" />
+          <dc:Bounds x="1327" y="674" width="116" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Check" bpmnElement="Task_CheckLimit">
-        <dc:Bounds x="435" y="680" width="110" height="80" />
+        <dc:Bounds x="435" y="900" width="110" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_RetryCatch" bpmnElement="Event_RetryCatch">
-        <dc:Bounds x="472" y="792" width="36" height="36" />
+        <dc:Bounds x="472" y="1012" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="460" y="828" width="60" height="27" />
+          <dc:Bounds x="460" y="1048" width="60" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Mark" bpmnElement="Task_MarkCourier">
-        <dc:Bounds x="1290" y="748" width="120" height="80" />
+        <dc:Bounds x="1290" y="968" width="120" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Assign" bpmnElement="Task_Assign">
-        <dc:Bounds x="1135" y="748" width="110" height="80" />
+        <dc:Bounds x="1135" y="968" width="110" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Attempt" bpmnElement="Task_Attempt">
-        <dc:Bounds x="1010" y="748" width="110" height="80" />
+        <dc:Bounds x="1010" y="968" width="110" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Wait" bpmnElement="Task_Waiting">
-        <dc:Bounds x="925" y="560" width="110" height="80" />
+        <dc:Bounds x="925" y="780" width="110" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_WaitTimer" bpmnElement="Event_WaitingTimer">
-        <dc:Bounds x="1075" y="582" width="36" height="36" />
+        <dc:Bounds x="1075" y="802" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1058" y="627.5" width="69" height="27" />
+          <dc:Bounds x="1058" y="848" width="69" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_LimitG" bpmnElement="Gateway_Limit" isMarkerVisible="true">
-        <dc:Bounds x="570" y="695" width="50" height="50" />
+        <dc:Bounds x="570" y="915" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="629.5" y="713" width="89" height="14" />
+          <dc:Bounds x="630" y="933" width="89" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_AcceptG" bpmnElement="Gateway_Accepted" isMarkerVisible="true">
-        <dc:Bounds x="1860" y="773" width="50" height="50" />
+        <dc:Bounds x="1860" y="993" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1783" y="723" width="74" height="14" />
+          <dc:Bounds x="1783" y="943" width="74" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Reject" bpmnElement="Task_Reject">
-        <dc:Bounds x="1840" y="570" width="120" height="80" />
+        <dc:Bounds x="1840" y="790" width="120" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Accept" bpmnElement="Task_Accept">
-        <dc:Bounds x="1950" y="758" width="120" height="80" />
+        <dc:Bounds x="1950" y="978" width="120" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_EndDelivered" bpmnElement="End_Delivered">
-        <dc:Bounds x="2612" y="780" width="36" height="36" />
+        <dc:Bounds x="2612" y="1000" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2587" y="816" width="86" height="14" />
+          <dc:Bounds x="2587" y="1036" width="86" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_DeliveredG" bpmnElement="Gateway_Delivered" isMarkerVisible="true">
-        <dc:Bounds x="2492" y="773" width="50" height="50" />
+        <dc:Bounds x="2492" y="993" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2487" y="736" width="60" height="27" />
+          <dc:Bounds x="2487" y="956" width="60" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Update" bpmnElement="Task_ApplyOrderStatus">
-        <dc:Bounds x="2335" y="758" width="130" height="80" />
+        <dc:Bounds x="2335" y="978" width="130" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_RetryRejectThrow" bpmnElement="Event_RetryRejectThrow">
-        <dc:Bounds x="1882" y="502" width="36" height="36" />
+        <dc:Bounds x="1882" y="722" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1870" y="465" width="60" height="27" />
+          <dc:Bounds x="1870" y="685" width="60" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_UpdateUser" bpmnElement="Task_UpdateOrderStatus">
-        <dc:Bounds x="2085" y="970" width="130" height="80" />
+        <dc:Bounds x="2085" y="1190" width="130" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Decision" bpmnElement="Task_CourierDecision">
-        <dc:Bounds x="1660" y="1040" width="130" height="80" />
+        <dc:Bounds x="1660" y="1260" width="130" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_RetryTimerThrow" bpmnElement="Event_RetryTimerThrow">
-        <dc:Bounds x="1075" y="522" width="36" height="36" />
+        <dc:Bounds x="1075" y="742" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1063" y="484.5" width="60" height="27" />
+          <dc:Bounds x="1063" y="705" width="60" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0gfdwtq_di" bpmnElement="Boundary_AssignmentTimeout">
-        <dc:Bounds x="1707" y="1102" width="36" height="36" />
+        <dc:Bounds x="1707" y="1322" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1787" y="1100" width="66" height="40" />
+          <dc:Bounds x="1787" y="1320" width="66" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="E7" bpmnElement="F_LimitYes">
-        <di:waypoint x="595" y="695" />
-        <di:waypoint x="595" y="600" />
-        <di:waypoint x="640" y="600" />
+        <di:waypoint x="595" y="915" />
+        <di:waypoint x="595" y="820" />
+        <di:waypoint x="640" y="820" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="604" y="639" width="13" height="14" />
+          <dc:Bounds x="604" y="859" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E8" bpmnElement="F_Failed_End">
-        <di:waypoint x="750" y="600" />
-        <di:waypoint x="790" y="600" />
+        <di:waypoint x="750" y="820" />
+        <di:waypoint x="790" y="820" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E6" bpmnElement="F_LimitNo">
-        <di:waypoint x="595" y="745" />
-        <di:waypoint x="595" y="788" />
-        <di:waypoint x="670" y="788" />
+        <di:waypoint x="595" y="965" />
+        <di:waypoint x="595" y="1008" />
+        <di:waypoint x="670" y="1008" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="604" y="761" width="17" height="14" />
+          <dc:Bounds x="604" y="981" width="17" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E9" bpmnElement="F_Find_Gateway">
-        <di:waypoint x="780" y="788" />
-        <di:waypoint x="820" y="788" />
+        <di:waypoint x="780" y="1008" />
+        <di:waypoint x="820" y="1008" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E10" bpmnElement="F_Found">
-        <di:waypoint x="870" y="788" />
-        <di:waypoint x="1010" y="788" />
+        <di:waypoint x="870" y="1008" />
+        <di:waypoint x="1010" y="1008" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="936" y="763" width="13" height="14" />
+          <dc:Bounds x="936" y="983" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E11" bpmnElement="F_NotFound">
-        <di:waypoint x="845" y="763" />
-        <di:waypoint x="845" y="600" />
-        <di:waypoint x="925" y="600" />
+        <di:waypoint x="845" y="983" />
+        <di:waypoint x="845" y="820" />
+        <di:waypoint x="925" y="820" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="852" y="672" width="17" height="14" />
+          <dc:Bounds x="852" y="892" width="17" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="E16" bpmnElement="F_Decision_Gateway">
-        <di:waypoint x="1790" y="1080" />
-        <di:waypoint x="1885" y="1080" />
-        <di:waypoint x="1885" y="823" />
+      <bpmndi:BPMNEdge id="E_AssignmentTimeoutExpire" bpmnElement="F_AssignmentTimeout_Expire">
+        <di:waypoint x="1725" y="1358" />
+        <di:waypoint x="1725" y="1365" />
+        <di:waypoint x="880" y="1365" />
+        <di:waypoint x="880" y="910" />
+        <di:waypoint x="1385" y="910" />
+        <di:waypoint x="1385" y="860" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_ExpireLink" bpmnElement="F_Expire_Link">
-        <di:waypoint x="1385" y="560" />
-        <di:waypoint x="1385" y="528" />
+        <di:waypoint x="1385" y="780" />
+        <di:waypoint x="1385" y="748" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_StartCheck" bpmnElement="F_Start_Check">
-        <di:waypoint x="258" y="788" />
-        <di:waypoint x="385" y="788" />
-        <di:waypoint x="385" y="720" />
-        <di:waypoint x="435" y="720" />
+        <di:waypoint x="258" y="1008" />
+        <di:waypoint x="385" y="1008" />
+        <di:waypoint x="385" y="940" />
+        <di:waypoint x="435" y="940" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E12C" bpmnElement="F_Retry_Check">
-        <di:waypoint x="490" y="792" />
-        <di:waypoint x="490" y="760" />
+        <di:waypoint x="490" y="1012" />
+        <di:waypoint x="490" y="980" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E5" bpmnElement="F_Check_Limit">
-        <di:waypoint x="545" y="720" />
-        <di:waypoint x="570" y="720" />
+        <di:waypoint x="545" y="940" />
+        <di:waypoint x="570" y="940" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E14" bpmnElement="F_Assign_Mark">
-        <di:waypoint x="1245" y="788" />
-        <di:waypoint x="1290" y="788" />
+        <di:waypoint x="1245" y="1008" />
+        <di:waypoint x="1290" y="1008" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1nwii46_di" bpmnElement="Flow_1nwii46">
+        <di:waypoint x="1350" y="1048" />
+        <di:waypoint x="1350" y="1300" />
+        <di:waypoint x="1660" y="1300" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E13" bpmnElement="F_Attempt_Assign">
-        <di:waypoint x="1065" y="748" />
-        <di:waypoint x="1065" y="728" />
-        <di:waypoint x="1190" y="728" />
-        <di:waypoint x="1190" y="748" />
+        <di:waypoint x="1065" y="968" />
+        <di:waypoint x="1065" y="948" />
+        <di:waypoint x="1190" y="948" />
+        <di:waypoint x="1190" y="968" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E12" bpmnElement="F_Waiting_Timer">
-        <di:waypoint x="1035" y="600" />
-        <di:waypoint x="1075" y="600" />
+        <di:waypoint x="1035" y="820" />
+        <di:waypoint x="1075" y="820" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E12B" bpmnElement="F_Timer_Link">
-        <di:waypoint x="1093" y="582" />
-        <di:waypoint x="1093" y="558" />
+        <di:waypoint x="1093" y="802" />
+        <di:waypoint x="1093" y="778" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="E21" bpmnElement="F_Update_Service">
-        <di:waypoint x="2215" y="1010" />
-        <di:waypoint x="2280" y="1010" />
-        <di:waypoint x="2280" y="798" />
-        <di:waypoint x="2335" y="798" />
+      <bpmndi:BPMNEdge id="E16" bpmnElement="F_Decision_Gateway">
+        <di:waypoint x="1790" y="1300" />
+        <di:waypoint x="1885" y="1300" />
+        <di:waypoint x="1885" y="1043" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E17" bpmnElement="F_Accepted">
-        <di:waypoint x="1910" y="798" />
-        <di:waypoint x="1930" y="798" />
-        <di:waypoint x="1930" y="738" />
-        <di:waypoint x="2010" y="738" />
-        <di:waypoint x="2010" y="758" />
+        <di:waypoint x="1910" y="1018" />
+        <di:waypoint x="1930" y="1018" />
+        <di:waypoint x="1930" y="958" />
+        <di:waypoint x="2010" y="958" />
+        <di:waypoint x="2010" y="978" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1953" y="723" width="13" height="14" />
+          <dc:Bounds x="1953" y="943" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E18" bpmnElement="F_Rejected">
-        <di:waypoint x="1885" y="773" />
-        <di:waypoint x="1885" y="647" />
+        <di:waypoint x="1885" y="993" />
+        <di:waypoint x="1885" y="867" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1892" y="702" width="17" height="14" />
+          <dc:Bounds x="1892" y="922" width="17" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E19" bpmnElement="F_Reject_Link">
-        <di:waypoint x="1900" y="570" />
-        <di:waypoint x="1900" y="538" />
+        <di:waypoint x="1900" y="790" />
+        <di:waypoint x="1900" y="758" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E20" bpmnElement="F_Accept_Update">
-        <di:waypoint x="2010" y="838" />
-        <di:waypoint x="2010" y="1010" />
-        <di:waypoint x="2085" y="1010" />
+        <di:waypoint x="2010" y="1058" />
+        <di:waypoint x="2010" y="1230" />
+        <di:waypoint x="2085" y="1230" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E23" bpmnElement="F_Delivered">
-        <di:waypoint x="2542" y="798" />
-        <di:waypoint x="2612" y="798" />
+        <di:waypoint x="2542" y="1018" />
+        <di:waypoint x="2612" y="1018" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2571" y="773" width="13" height="14" />
+          <dc:Bounds x="2571" y="993" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E22" bpmnElement="F_Service_Delivered">
-        <di:waypoint x="2465" y="798" />
-        <di:waypoint x="2492" y="798" />
+        <di:waypoint x="2465" y="1018" />
+        <di:waypoint x="2492" y="1018" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E24" bpmnElement="F_NotDelivered">
-        <di:waypoint x="2517" y="823" />
-        <di:waypoint x="2517" y="1030" />
-        <di:waypoint x="2215" y="1030" />
+        <di:waypoint x="2517" y="1043" />
+        <di:waypoint x="2517" y="1250" />
+        <di:waypoint x="2215" y="1250" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2466" y="919" width="17" height="14" />
+          <dc:Bounds x="2466" y="1139" width="17" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1nwii46_di" bpmnElement="Flow_1nwii46">
-        <di:waypoint x="1350" y="828" />
-        <di:waypoint x="1350" y="1080" />
-        <di:waypoint x="1660" y="1080" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="E_AssignmentTimeoutExpire" bpmnElement="F_AssignmentTimeout_Expire">
-        <di:waypoint x="1725" y="1138" />
-        <di:waypoint x="1725" y="1145" />
-        <di:waypoint x="880" y="1145" />
-        <di:waypoint x="880" y="690" />
-        <di:waypoint x="1385" y="690" />
-        <di:waypoint x="1385" y="640" />
+      <bpmndi:BPMNEdge id="E21" bpmnElement="F_Update_Service">
+        <di:waypoint x="2215" y="1230" />
+        <di:waypoint x="2280" y="1230" />
+        <di:waypoint x="2280" y="1018" />
+        <di:waypoint x="2335" y="1018" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="S_P_CourierShift" bpmnElement="Participant_CourierShift" isHorizontal="true">
-        <dc:Bounds x="160" y="1190" width="900" height="360" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_Lane_CourierShiftSystem" bpmnElement="Lane_CourierShiftSystem" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
-        <dc:Bounds x="190" y="1370" width="870" height="180" />
+        <dc:Bounds x="160" y="1410" width="900" height="360" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Lane_CourierShiftCourier" bpmnElement="Lane_CourierShiftCourier" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
-        <dc:Bounds x="190" y="1190" width="870" height="180" />
+        <dc:Bounds x="190" y="1410" width="870" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Lane_CourierShiftSystem" bpmnElement="Lane_CourierShiftSystem" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="190" y="1590" width="870" height="180" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Start_CourierShift" bpmnElement="Start_CourierShift">
-        <dc:Bounds x="230" y="1272" width="36" height="36" />
+        <dc:Bounds x="230" y="1492" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="205" y="1308" width="86" height="27" />
+          <dc:Bounds x="220" y="1528" width="56" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Task_CourierShiftDecision" bpmnElement="Task_CourierShiftDecision">
-        <dc:Bounds x="405" y="1250" width="140" height="80" />
+        <dc:Bounds x="405" y="1470" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Task_ChangeCourierShift" bpmnElement="Task_ChangeCourierShift">
-        <dc:Bounds x="650" y="1420" width="140" height="80" />
+        <dc:Bounds x="650" y="1640" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_End_CourierShift" bpmnElement="End_CourierShift">
-        <dc:Bounds x="860" y="1442" width="36" height="36" />
+        <dc:Bounds x="960" y="1662" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="835" y="1478" width="86" height="27" />
+          <dc:Bounds x="943" y="1698" width="71" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="E_CourierShift_Start_Decision" bpmnElement="F_CourierShift_Start_Decision">
-        <di:waypoint x="266" y="1289" />
-        <di:waypoint x="336" y="1289" />
-        <di:waypoint x="336" y="1290" />
-        <di:waypoint x="405" y="1290" />
+        <di:waypoint x="266" y="1509" />
+        <di:waypoint x="336" y="1509" />
+        <di:waypoint x="336" y="1510" />
+        <di:waypoint x="405" y="1510" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_CourierShift_Decision_Change" bpmnElement="F_CourierShift_Decision_Change">
-        <di:waypoint x="475" y="1330" />
-        <di:waypoint x="475" y="1460" />
-        <di:waypoint x="650" y="1460" />
+        <di:waypoint x="475" y="1550" />
+        <di:waypoint x="475" y="1680" />
+        <di:waypoint x="650" y="1680" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_CourierShift_Change_End" bpmnElement="F_CourierShift_Change_End">
-        <di:waypoint x="790" y="1460" />
-        <di:waypoint x="860" y="1460" />
+        <di:waypoint x="790" y="1680" />
+        <di:waypoint x="825" y="1680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="S_Gateway_CourierShiftResult" bpmnElement="Gateway_CourierShiftResult" isMarkerVisible="true">
+        <dc:Bounds x="825" y="1655" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="810" y="1710" width="80" height="28" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_CourierShift_Success" bpmnElement="F_CourierShift_Success">
+        <di:waypoint x="875" y="1680" />
+        <di:waypoint x="960" y="1680" />
+        <bpmndi:BPMNLabel><dc:Bounds x="905" y="1658" width="20" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_CourierShift_Retry" bpmnElement="F_CourierShift_Retry">
+        <di:waypoint x="850" y="1655" />
+        <di:waypoint x="850" y="1570" />
+        <di:waypoint x="475" y="1570" />
+        <di:waypoint x="475" y="1550" />
+        <bpmndi:BPMNLabel><dc:Bounds x="585" y="1552" width="75" height="14" /></bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="BPMNShape_0kzviyx" bpmnElement="Participant_submit" isHorizontal="true">
-        <dc:Bounds x="160" y="1630" width="900" height="530" />
+        <dc:Bounds x="1130" y="40" width="980" height="570" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_1g5exec" bpmnElement="Lane_12o0v6q" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
-        <dc:Bounds x="190" y="1800" width="870" height="190" />
+        <dc:Bounds x="1160" y="188" width="950" height="252" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_1fl43nx" bpmnElement="Lane_1xk2101" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
-        <dc:Bounds x="190" y="1630" width="870" height="170" />
+        <dc:Bounds x="1160" y="40" width="950" height="148" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_19gsr32_di" bpmnElement="Lane_19gsr32" isHorizontal="true">
-        <dc:Bounds x="190" y="1990" width="870" height="170" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1lqhhx9" bpmnElement="Event_1u7afq9">
-        <dc:Bounds x="230" y="1712" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="220" y="1662" width="56" height="40" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1n20w22" bpmnElement="Activity_1psr4vn">
-        <dc:Bounds x="330" y="2010" width="140" height="80" />
+      <bpmndi:BPMNShape id="Lane_19gsr32_di" bpmnElement="Lane_19gsr32" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="1160" y="440" width="950" height="170" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_068ozs8_di" bpmnElement="Gateway_068ozs8" isMarkerVisible="true">
-        <dc:Bounds x="525" y="2025" width="50" height="50" />
+        <dc:Bounds x="1495" y="475" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="523" y="2082" width="56" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0v6v40d" bpmnElement="Activity_01h7bz2">
-        <dc:Bounds x="630" y="1810" width="140" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_05ilxrx" bpmnElement="Activity_18705ks">
-        <dc:Bounds x="630" y="1910" width="140" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1dcgijt" bpmnElement="Event_0k4pod6">
-        <dc:Bounds x="892" y="1832" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="870" y="1875" width="82" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1wvdrvh" bpmnElement="Event_0ljddn1">
-        <dc:Bounds x="892" y="1932" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="870" y="1975" width="82" height="27" />
+          <dc:Bounds x="1493" y="532" width="56" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_03lm293" bpmnElement="Activity_0dgjb9j">
-        <dc:Bounds x="220" y="1870" width="140" height="80" />
+        <dc:Bounds x="1210" y="310" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1n20w22" bpmnElement="Activity_1psr4vn">
+        <dc:Bounds x="1330" y="460" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1lqhhx9" bpmnElement="Event_1u7afq9">
+        <dc:Bounds x="1212" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1202" y="62" width="56" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0v6v40d" bpmnElement="Activity_01h7bz2">
+        <dc:Bounds x="1660" y="220" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1dcgijt" bpmnElement="Event_0k4pod6">
+        <dc:Bounds x="2012" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1990" y="285" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1wvdrvh" bpmnElement="Event_0ljddn1">
+        <dc:Bounds x="2012" y="352" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1990" y="395" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_05ilxrx" bpmnElement="Activity_18705ks">
+        <dc:Bounds x="1660" y="330" width="140" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="BPMNEdge_1xaco6f" bpmnElement="Flow_1np5t1f">
-        <di:waypoint x="248" y="1748" />
-        <di:waypoint x="248" y="1820" />
-        <di:waypoint x="290" y="1820" />
-        <di:waypoint x="290" y="1860" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="BPMNEdge_06p1ars" bpmnElement="Flow_0id0o26">
-        <di:waypoint x="770" y="1850" />
-        <di:waypoint x="892" y="1850" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0lakaf0_di" bpmnElement="Flow_0lakaf0">
-        <di:waypoint x="470" y="2050" />
-        <di:waypoint x="525" y="2050" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1362di1_di" bpmnElement="Flow_1362di1">
-        <di:waypoint x="550" y="2025" />
-        <di:waypoint x="550" y="1850" />
-        <di:waypoint x="630" y="1850" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_15ck3iv_di" bpmnElement="Flow_15ck3iv">
-        <di:waypoint x="550" y="2025" />
-        <di:waypoint x="550" y="1950" />
-        <di:waypoint x="630" y="1950" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_080qy31_di" bpmnElement="Flow_080qy31">
-        <di:waypoint x="770" y="1950" />
-        <di:waypoint x="892" y="1950" />
+        <di:waypoint x="1230" y="148" />
+        <di:waypoint x="1230" y="270" />
+        <di:waypoint x="1290" y="270" />
+        <di:waypoint x="1290" y="310" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1msrtbb_di" bpmnElement="Flow_1msrtbb">
-        <di:waypoint x="290" y="1950" />
-        <di:waypoint x="290" y="2050" />
-        <di:waypoint x="330" y="2050" />
+        <di:waypoint x="1280" y="390" />
+        <di:waypoint x="1280" y="500" />
+        <di:waypoint x="1330" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lakaf0_di" bpmnElement="Flow_0lakaf0">
+        <di:waypoint x="1470" y="500" />
+        <di:waypoint x="1495" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1362di1_di" bpmnElement="Flow_1362di1">
+        <di:waypoint x="1520" y="475" />
+        <di:waypoint x="1520" y="260" />
+        <di:waypoint x="1660" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1533" y="318" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15ck3iv_di" bpmnElement="Flow_15ck3iv">
+        <di:waypoint x="1545" y="500" />
+        <di:waypoint x="1580" y="500" />
+        <di:waypoint x="1580" y="370" />
+        <di:waypoint x="1660" y="370" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1591" y="393" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_06p1ars" bpmnElement="Flow_0id0o26">
+        <di:waypoint x="1800" y="260" />
+        <di:waypoint x="2012" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_080qy31_di" bpmnElement="Flow_080qy31">
+        <di:waypoint x="1800" y="370" />
+        <di:waypoint x="2012" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="BPMNShape_0yagds2" bpmnElement="Participant_0z77n3a" isHorizontal="true">
+        <dc:Bounds x="1970" y="1410" width="860" height="360" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_105gr6h" bpmnElement="Lane_010czr0" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="2000" y="1410" width="830" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1yo7xq7" bpmnElement="Lane_1uoxr5l" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="2000" y="1590" width="830" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_15banxy" bpmnElement="Event_04zijsk">
+        <dc:Bounds x="2040" y="1492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2026" y="1528" width="64" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0fc1mls" bpmnElement="Activity_0yc84sa">
+        <dc:Bounds x="2215" y="1470" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_00zt1dl" bpmnElement="Activity_15pylf7">
+        <dc:Bounds x="2460" y="1640" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_ClientRegistrationResult" bpmnElement="Gateway_ClientRegistrationResult" isMarkerVisible="true">
+        <dc:Bounds x="2645" y="1655" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2630" y="1708" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1q7tj8g" bpmnElement="Event_0dttix4">
+        <dc:Bounds x="2770" y="1662" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2756" y="1710" width="65" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_1f6zw7n" bpmnElement="Flow_1cxkz1y">
+        <di:waypoint x="2076" y="1509" />
+        <di:waypoint x="2146" y="1509" />
+        <di:waypoint x="2146" y="1510" />
+        <di:waypoint x="2215" y="1510" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_ClientRegistrationRetry" bpmnElement="Flow_ClientRegistrationRetry">
+        <di:waypoint x="2670" y="1655" />
+        <di:waypoint x="2670" y="1570" />
+        <di:waypoint x="2285" y="1570" />
+        <di:waypoint x="2285" y="1550" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2445" y="1552" width="95" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_1y9cdun" bpmnElement="Flow_0wecqxi">
+        <di:waypoint x="2270" y="1550" />
+        <di:waypoint x="2270" y="1680" />
+        <di:waypoint x="2460" y="1680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0u8yvsq" bpmnElement="Flow_16hnmxm">
+        <di:waypoint x="2600" y="1680" />
+        <di:waypoint x="2645" y="1680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_ClientRegistrationSuccess" bpmnElement="Flow_ClientRegistrationSuccess">
+        <di:waypoint x="2695" y="1680" />
+        <di:waypoint x="2770" y="1680" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2720" y="1658" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Shape_AdminRegistrationParticipant" bpmnElement="Participant_AdminRegistration" isHorizontal="true">
+        <dc:Bounds x="1930" y="1810" width="860" height="360" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminRegistrationSystemLane" bpmnElement="Lane_AdminRegistrationSystem" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="1960" y="1990" width="830" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminRegistrationAdminLane" bpmnElement="Lane_AdminRegistrationAdmin" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="1960" y="1810" width="830" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminRegistrationStart" bpmnElement="Start_AdminRegistration">
+        <dc:Bounds x="2000" y="1892" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1986" y="1928" width="64" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminRegistrationFillTask" bpmnElement="Task_FillAdminRegistration">
+        <dc:Bounds x="2175" y="1870" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminRegistrationRegisterTask" bpmnElement="Task_RegisterAdmin">
+        <dc:Bounds x="2420" y="2040" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminRegistrationResult" bpmnElement="Gateway_AdminRegistrationResult" isMarkerVisible="true">
+        <dc:Bounds x="2605" y="2055" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2590" y="2108" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_AdminRegistrationEnd" bpmnElement="End_AdminRegistration">
+        <dc:Bounds x="2730" y="2062" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2716" y="2110" width="65" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_AdminRegistrationStartFill" bpmnElement="Flow_AdminRegistrationStartFill">
+        <di:waypoint x="2036" y="1909" />
+        <di:waypoint x="2106" y="1909" />
+        <di:waypoint x="2106" y="1910" />
+        <di:waypoint x="2175" y="1910" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AdminRegistrationRetry" bpmnElement="Flow_AdminRegistrationRetry">
+        <di:waypoint x="2630" y="2055" />
+        <di:waypoint x="2630" y="1970" />
+        <di:waypoint x="2245" y="1970" />
+        <di:waypoint x="2245" y="1950" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2405" y="1952" width="95" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AdminRegistrationFillRegister" bpmnElement="Flow_AdminRegistrationFillRegister">
+        <di:waypoint x="2210" y="1950" />
+        <di:waypoint x="2210" y="2080" />
+        <di:waypoint x="2420" y="2080" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AdminRegistrationRegisterResult" bpmnElement="Flow_AdminRegistrationRegisterResult">
+        <di:waypoint x="2560" y="2080" />
+        <di:waypoint x="2605" y="2080" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_AdminRegistrationSuccess" bpmnElement="Flow_AdminRegistrationSuccess">
+        <di:waypoint x="2655" y="2080" />
+        <di:waypoint x="2730" y="2080" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2680" y="2058" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="BPMNShape_10j5730" bpmnElement="Participant_1snnznm" isHorizontal="true">
+        <dc:Bounds x="1080" y="1410" width="860" height="360" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0es9jvq" bpmnElement="Lane_0e6oe7n" isHorizontal="true" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="1110" y="1590" width="830" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1utbc6p" bpmnElement="Lane_1qmz392" isHorizontal="true" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="1110" y="1410" width="830" height="180" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1jyxznd" bpmnElement="Event_1wliw0t">
+        <dc:Bounds x="1150" y="1492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1136" y="1528" width="64" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0mfus12" bpmnElement="Activity_1w1d3vd">
+        <dc:Bounds x="1325" y="1470" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_127p8zk" bpmnElement="Activity_01inu2e">
+        <dc:Bounds x="1570" y="1640" width="140" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_CourierRegistrationResult" bpmnElement="Gateway_CourierRegistrationResult" isMarkerVisible="true">
+        <dc:Bounds x="1755" y="1655" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1740" y="1708" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1cj4xtv" bpmnElement="Event_0w17ja8">
+        <dc:Bounds x="1880" y="1662" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1866" y="1706" width="65" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_0ldjskb" bpmnElement="Flow_1un5juj">
+        <di:waypoint x="1186" y="1509" />
+        <di:waypoint x="1256" y="1509" />
+        <di:waypoint x="1256" y="1510" />
+        <di:waypoint x="1325" y="1510" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CourierRegistrationRetry" bpmnElement="Flow_CourierRegistrationRetry">
+        <di:waypoint x="1780" y="1655" />
+        <di:waypoint x="1780" y="1570" />
+        <di:waypoint x="1410" y="1570" />
+        <di:waypoint x="1410" y="1550" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1562" y="1552" width="95" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0cr3hta" bpmnElement="Flow_0oz4giz">
+        <di:waypoint x="1395" y="1550" />
+        <di:waypoint x="1395" y="1680" />
+        <di:waypoint x="1570" y="1680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_1pz4q0m" bpmnElement="Flow_01zq7f0">
+        <di:waypoint x="1710" y="1680" />
+        <di:waypoint x="1755" y="1680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CourierRegistrationSuccess" bpmnElement="Flow_CourierRegistrationSuccess">
+        <di:waypoint x="1805" y="1680" />
+        <di:waypoint x="1880" y="1680" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1830" y="1658" width="13" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E_MSG" bpmnElement="MessageFlow_OrderCreated">
-        <di:waypoint x="795" y="330" />
-        <di:waypoint x="795" y="410" />
-        <di:waypoint x="240" y="420" />
-        <di:waypoint x="241" y="770" />
+        <di:waypoint x="795" y="550" />
+        <di:waypoint x="795" y="630" />
+        <di:waypoint x="240" y="640" />
+        <di:waypoint x="241" y="990" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="492" y="386" width="67" height="14" />
+          <dc:Bounds x="492" y="606" width="67" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
