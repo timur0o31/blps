@@ -44,14 +44,7 @@ public class CreateCourierRequestTask implements ExternalTaskHandler {
     }
 
     private User resolveUser(String camundaUserId) {
-        if (camundaUserId == null || !camundaUserId.startsWith("user")) {
-            throw new IllegalStateException("Не удалось определить курьера, запустившего процесс");
-        }
-        try {
-            Long userId = Long.parseLong(camundaUserId.substring("user".length()));
-            return userService.findById(userId);
-        } catch (NumberFormatException exception) {
-            throw new IllegalStateException("Некорректный Camunda user id: " + camundaUserId, exception);
-        }
+        Long userId = Long.parseLong(camundaUserId.substring("user".length()));
+        return userService.findById(userId);
     }
 }

@@ -41,16 +41,11 @@ public class ChangeShiftStatusTask implements ExternalTaskHandler {
                     "shiftError", exception.getMessage() == null ? "Не удалось изменить статус смены" : exception.getMessage()
             ));
         } catch (RuntimeException exception) {
-            externalTaskService.handleFailure(
-                    externalTask, exception.getMessage(), exception.toString(), 0, 0L
-            );
+            externalTaskService.handleFailure(externalTask, exception.getMessage(), exception.toString(), 0, 0L);
         }
     }
 
     private String resolveEmailByCamundaUserId(String camundaUserId) {
-        if (camundaUserId == null || !camundaUserId.startsWith("user")) {
-            throw new IllegalStateException("Не удалось определить пользователя Camunda");
-        }
         Long userId = Long.parseLong(camundaUserId.substring("user".length()));
         User user = userService.findById(userId);
         return user.getEmail();

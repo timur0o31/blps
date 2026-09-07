@@ -25,7 +25,6 @@ public class PublishOrderCreatedTask implements ExternalTaskHandler {
     public void execute(ExternalTask task, ExternalTaskService service) {
         try {
             Long orderId = task.getVariable("orderId");
-
             Map<String, CamundaVariable> variables = new HashMap<>();
             variables.put("orderId", new CamundaVariable(orderId, "Long"));
             camundaProcessClient.correlateMessage("order-created", variables);

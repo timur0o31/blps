@@ -1,5 +1,6 @@
 package org.example.blps.service;
 
+import org.example.blps.CamundaResponceProperties.CamundaAdminResponce;
 import org.example.blps.annotations.isApprovedAdmin;
 import org.example.blps.annotations.isSuperUser;
 import org.example.blps.dto.requestDto.UserRequestDto;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class AdminService {
@@ -61,4 +64,15 @@ public class AdminService {
         return PaginationUtil.responsePaginationDto(admins.getContent(), params, admins.getTotalElements());
     }
 
+
+    public List<CamundaAdminResponce> getAdminChoise() {
+        List<CamundaAdminResponce> options = new ArrayList<>();
+        for (Admin admin : adminRepository.findAll()) {
+            User user = userService.findById(admin.getUserId());
+            if (!user.isSuperUser()) {
+                options.add(new CamundaAdminResponce(admin.getId(), user.getName(), user.getSurname(), user.getEmail(), admin.isAccountState()));
+            }
+        }
+        return options;
+    }
 }

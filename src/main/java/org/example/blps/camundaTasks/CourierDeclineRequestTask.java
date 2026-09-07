@@ -30,27 +30,13 @@ public class CourierDeclineRequestTask implements ExternalTaskHandler {
             courierRequestService.declineRequest(reviewerEmail, requestId);
             service.complete(task);
         } catch (RuntimeException exception) {
-            service.handleFailure(
-                    task,
-                    exception.getMessage(),
-                    exception.toString(),
-                    3,
-                    5000L
-            );
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 3, 5000L);
         }
     }
 
     private String resolveEmailByCamundaUserId(String camundaUserId) {
-        if (camundaUserId == null || !camundaUserId.startsWith("user")) {
-            throw new IllegalStateException("Не удалось определить администратора, рассмотревшего заявку");
-        }
-
-        try {
-            Long userId = Long.parseLong(camundaUserId.substring("user".length()));
-            User user = userService.findById(userId);
-            return user.getEmail();
-        } catch (NumberFormatException exception) {
-            throw new IllegalStateException("Некорректный Camunda user id: " + camundaUserId, exception);
-        }
+        Long userId = Long.parseLong(camundaUserId.substring("user".length()));
+        User user = userService.findById(userId);
+        return user.getEmail();
     }
 }

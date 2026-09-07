@@ -27,7 +27,6 @@ public class FindAvailableCourierTask implements ExternalTaskHandler {
         try {
             Long orderId = task.getVariable("orderId");
             Long courierId = orderService.findAvailableCourier(orderId);
-
             Map<String, Object> variables = new HashMap<>();
             variables.put("courierFound", courierId != null);
             if (courierId != null) {

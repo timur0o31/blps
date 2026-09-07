@@ -1,5 +1,4 @@
 package org.example.blps.camundaTasks;
-
 import org.camunda.bpm.client.spring.annotation.ExternalTaskSubscription;
 import org.camunda.bpm.client.task.ExternalTask;
 import org.camunda.bpm.client.task.ExternalTaskHandler;
@@ -35,5 +34,4 @@ public class AcceptOrderAssignmentTask implements ExternalTaskHandler {
             service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
         }
     }
-
 }

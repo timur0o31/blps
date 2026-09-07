@@ -51,7 +51,6 @@ public class SaveOrderTask implements ExternalTaskHandler {
             User user = userService.findById(userId);
             return user.getEmail();
         }
-
         String email = task.getVariable("email");
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalStateException("Не удалось определить клиента для заказа");

@@ -19,6 +19,7 @@ public class CamundaProcessClient {
         this.camundaRestClient = camundaRestClient;
     }
 
+    // метод, чтобы после обычного запроса Spring - контроллер мог передать управление бизнес-процессом в Camunda.
     public String startProcess(String processKey, Map<String, CamundaVariable> variables) {
         ProcessStartRequest request = new ProcessStartRequest(variables, false);
         ProcessResponseDto response = camundaRestClient.post()
@@ -33,9 +34,9 @@ public class CamundaProcessClient {
         return response.id();
     }
 
+    // завершение задачи в Camunda, после чего процесс может перейти дальше
     public void completeTask(String processInstanceId, String taskDefinitionKey,
-            Map<String, CamundaVariable> variables
-    ) {
+                             Map<String, CamundaVariable> variables) {
         Map<String, Object> query = new HashMap<>();
         query.put("processInstanceId", processInstanceId);
         query.put("taskDefinitionKey", taskDefinitionKey);
@@ -49,13 +50,12 @@ public class CamundaProcessClient {
         completeFirstTask(tasks, taskDefinitionKey, variables);
     }
 
-
+    // Произошло внешнее событие, которого процесс ждал.
     public void correlateMessage(String messageName, Map<String, CamundaVariable> variables) {
         Map<String, Object> request = new HashMap<>();
         request.put("messageName", messageName);
         request.put("processVariables", variables);
         request.put("resultEnabled", false);
-
         camundaRestClient.post()
                 .uri("/message")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -64,6 +64,7 @@ public class CamundaProcessClient {
                 .toBodilessEntity();
     }
 
+    // находит активную задачу по процессу и orderId и завершает её
     public void completeTask(String processDefinitionKey, String taskDefinitionKey, Long orderId, Map<String, CamundaVariable> variables) {
         VariableQueryDto[] variableQueries = {new VariableQueryDto("orderId", "eq", orderId)};
         Map<String, Object> query = new HashMap<>();
@@ -80,6 +81,8 @@ public class CamundaProcessClient {
         completeFirstTask(tasks, taskDefinitionKey, variables);
     }
 
+
+    // берет первую найденную задачу и завершает её в Camunda
     private void completeFirstTask(TaskResponseDto[] tasks, String taskDefinitionKey, Map<String, CamundaVariable> variables) {
         if (tasks == null || tasks.length == 0) {
             throw new IllegalStateException("Активная задача Camunda не найдена: " + taskDefinitionKey);
