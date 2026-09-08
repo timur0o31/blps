@@ -276,7 +276,7 @@
     <bpmn:laneSet id="LaneSet_1bbi064">
       <bpmn:lane id="Lane_19gsr32" name="Админ">
         <bpmn:flowNodeRef>Gateway_068ozs8</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Activity_1psr4vn</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReviewCourierRequest</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_1xk2101" name="Курьер">
         <bpmn:flowNodeRef>Event_1u7afq9</bpmn:flowNodeRef>
@@ -301,11 +301,11 @@
     <bpmn:sequenceFlow id="Flow_1np5t1f" sourceRef="Event_1u7afq9" targetRef="Task_SubmitCourierRequest" />
     <bpmn:sequenceFlow id="Flow_CourierRequestFormCreate" sourceRef="Task_SubmitCourierRequest" targetRef="Activity_0dgjb9j" />
     <bpmn:sequenceFlow id="Flow_1msrtbb" sourceRef="Activity_0dgjb9j" targetRef="Gateway_CourierRequestCreationResult" />
-    <bpmn:sequenceFlow id="Flow_CourierRequestCreationSuccess" sourceRef="Gateway_CourierRequestCreationResult" targetRef="Activity_1psr4vn">
+    <bpmn:sequenceFlow id="Flow_CourierRequestCreationSuccess" sourceRef="Gateway_CourierRequestCreationResult" targetRef="Task_ReviewCourierRequest">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requestCreationSuccessful == true}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_CourierRequestCreationRetry" name="заявка уже существует" sourceRef="Gateway_CourierRequestCreationResult" targetRef="Task_SubmitCourierRequest" />
-    <bpmn:sequenceFlow id="Flow_0lakaf0" sourceRef="Activity_1psr4vn" targetRef="Gateway_068ozs8" />
+    <bpmn:sequenceFlow id="Flow_0lakaf0" sourceRef="Task_ReviewCourierRequest" targetRef="Gateway_068ozs8" />
     <bpmn:sequenceFlow id="Flow_1362di1" name="да" sourceRef="Gateway_068ozs8" targetRef="Activity_01h7bz2">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision == 'APPROVED'}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
@@ -320,7 +320,7 @@
     <bpmn:sequenceFlow id="Flow_080qy31" sourceRef="Gateway_CourierRequestActionResult" targetRef="Event_0ljddn1">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requestActionSuccessful == true and decision == 'DECLINED'}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_CourierRequestActionRetry" name="исправить" sourceRef="Gateway_CourierRequestActionResult" targetRef="Activity_1psr4vn" />
+    <bpmn:sequenceFlow id="Flow_CourierRequestActionRetry" name="исправить" sourceRef="Gateway_CourierRequestActionResult" targetRef="Task_ReviewCourierRequest" />
     <bpmn:serviceTask id="Activity_0dgjb9j" name="Создать заявку со статусом PENDING" camunda:type="external" camunda:topic="create-courier-request">
       <bpmn:incoming>Flow_CourierRequestFormCreate</bpmn:incoming>
       <bpmn:outgoing>Flow_1msrtbb</bpmn:outgoing>
@@ -335,7 +335,7 @@
       <bpmn:outgoing>Flow_CourierRequestCreationSuccess</bpmn:outgoing>
       <bpmn:outgoing>Flow_CourierRequestCreationRetry</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:userTask id="Activity_1psr4vn" name="Рассмотреть заявку: ${courierName} ${courierSurname}" camunda:formKey="embedded:deployment:/courier-request-review.html" camunda:candidateGroups="ADMIN">
+    <bpmn:userTask id="Task_ReviewCourierRequest" name="Рассмотреть заявку: ${courierName} ${courierSurname}" camunda:formKey="embedded:deployment:/courier-request-review.html" camunda:candidateGroups="ADMIN">
       <bpmn:extensionElements>
         <camunda:taskListener expression="${execution.setVariable(&#39;reviewerCamundaUserId&#39;, task.assignee)}" event="complete" />
       </bpmn:extensionElements>
@@ -949,7 +949,7 @@
         <dc:Bounds x="1210" y="310" width="140" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1n20w22" bpmnElement="Activity_1psr4vn">
+      <bpmndi:BPMNShape id="BPMNShape_1n20w22" bpmnElement="Task_ReviewCourierRequest">
         <dc:Bounds x="1330" y="460" width="140" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>

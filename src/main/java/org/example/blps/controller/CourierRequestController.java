@@ -58,7 +58,7 @@ public class CourierRequestController {
     @PatchMapping("/{id}/approve")
     public ResponseEntity<?> approveRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable @Positive Long id){
         String adminCamundaId = "user"+userDetails.user().getId();
-        camundaProcessClient.reviewCourierRequest(id, adminCamundaId, "APPROVED");
+        camundaProcessClient.completeTaskCourierRequest(id, adminCamundaId, "APPROVED");
         return ResponseEntity.accepted().build();
     }
     @PreAuthorize("hasAuthority('DECLINE_REQUEST')")
@@ -66,7 +66,7 @@ public class CourierRequestController {
     @PatchMapping("/{id}/decline")
     public ResponseEntity<?> declineRequest(@AuthenticationPrincipal CustomUserDetails userDetails,@PathVariable @Positive Long id){
         String adminCamundaId = "user" + userDetails.user().getId();
-        camundaProcessClient.reviewCourierRequest(id, adminCamundaId, "DECLINED");
+        camundaProcessClient.completeTaskCourierRequest(id, adminCamundaId, "DECLINED");
         return ResponseEntity.accepted().build();
     }
 }
