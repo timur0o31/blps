@@ -31,7 +31,7 @@ public class ChangeAdminStateTask implements ExternalTaskHandler {
             adminService.changeState(changedByEmail, adminId, state);
             service.complete(task);
         } catch (RuntimeException exception) {
-            service.handleFailure(task, exception.getMessage(), exception.toString(), 3, 5000L);
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
         }
     }
 

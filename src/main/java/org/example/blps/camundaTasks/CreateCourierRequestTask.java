@@ -7,6 +7,7 @@ import org.camunda.bpm.client.task.ExternalTaskService;
 import org.example.blps.entity.User;
 import org.example.blps.service.CourierRequestService;
 import org.example.blps.service.UserService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -37,13 +38,25 @@ public class CreateCourierRequestTask implements ExternalTaskHandler {
             variables.put("courierRequestId", requestId);
             variables.put("courierName", courierUser.getName());
             variables.put("courierSurname", courierUser.getSurname());
+            variables.put("requestCreationSuccessful", true);
+            variables.put("requestCreationError", "");
             service.complete(task, variables);
+        } catch (AccessDeniedException | IllegalStateException exception) {
+            service.complete(task, Map.of(
+                    "requestCreationSuccessful", false,
+                    "requestCreationError", exception.getMessage() == null
+                            ? "Не удалось отправить заявку"
+                            : exception.getMessage()
+            ));
         } catch (RuntimeException exception) {
-            service.handleFailure(task, exception.getMessage(), exception.toString(), 3, 5000L);
+            service.handleFailure(task, exception.getMessage(), exception.toString(), 0, 0L);
         }
     }
 
     private User resolveUser(String camundaUserId) {
+        if (camundaUserId == null || !camundaUserId.startsWith("user")) {
+            throw new IllegalStateException("Не удалось определить курьера, отправившего заявку");
+        }
         Long userId = Long.parseLong(camundaUserId.substring("user".length()));
         return userService.findById(userId);
     }

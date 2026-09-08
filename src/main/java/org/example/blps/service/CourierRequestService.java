@@ -47,9 +47,11 @@ public class CourierRequestService {
         if (courier.getAccountState()==CourierAccountState.BLOCKED)
             throw new AccessDeniedException("Заблокированным сотрудникам нельзя трудоустроиться");
         if (!courierRequestRepository.findCourierRequestByCourierAndStatus(courier, CourierRequestStatus.APPROVED).isEmpty())
-            throw new IllegalStateException("Заявка уже одобрена");
+            throw new IllegalStateException("Ваша заявка уже была принята");
         if (!courierRequestRepository.findCourierRequestByCourierAndStatus(courier, CourierRequestStatus.PENDING).isEmpty())
-            throw new IllegalStateException("Заявка на трудоустройство уже подана");
+            throw new IllegalStateException("Ваша заявка уже ожидает рассмотрения");
+        if (!courierRequestRepository.findCourierRequestByCourierAndStatus(courier, CourierRequestStatus.DECLINED).isEmpty())
+            throw new IllegalStateException("Ваша заявка уже была отклонена");
         CourierRequest courierRequest = new CourierRequest();
         courierRequest.setCourier(courier);
         courierRequest.setStatus(CourierRequestStatus.PENDING);

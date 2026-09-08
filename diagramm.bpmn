@@ -280,9 +280,11 @@
       </bpmn:lane>
       <bpmn:lane id="Lane_1xk2101" name="Курьер">
         <bpmn:flowNodeRef>Event_1u7afq9</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SubmitCourierRequest</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_12o0v6q" name="Система">
         <bpmn:flowNodeRef>Activity_0dgjb9j</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CourierRequestCreationResult</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Activity_01h7bz2</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Gateway_CourierRequestActionResult</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Event_0k4pod6</bpmn:flowNodeRef>
@@ -296,8 +298,13 @@
       <bpmn:outgoing>Flow_1362di1</bpmn:outgoing>
       <bpmn:outgoing>Flow_15ck3iv</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_1np5t1f" sourceRef="Event_1u7afq9" targetRef="Activity_0dgjb9j" />
-    <bpmn:sequenceFlow id="Flow_1msrtbb" sourceRef="Activity_0dgjb9j" targetRef="Activity_1psr4vn" />
+    <bpmn:sequenceFlow id="Flow_1np5t1f" sourceRef="Event_1u7afq9" targetRef="Task_SubmitCourierRequest" />
+    <bpmn:sequenceFlow id="Flow_CourierRequestFormCreate" sourceRef="Task_SubmitCourierRequest" targetRef="Activity_0dgjb9j" />
+    <bpmn:sequenceFlow id="Flow_1msrtbb" sourceRef="Activity_0dgjb9j" targetRef="Gateway_CourierRequestCreationResult" />
+    <bpmn:sequenceFlow id="Flow_CourierRequestCreationSuccess" sourceRef="Gateway_CourierRequestCreationResult" targetRef="Activity_1psr4vn">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requestCreationSuccessful == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_CourierRequestCreationRetry" name="заявка уже существует" sourceRef="Gateway_CourierRequestCreationResult" targetRef="Task_SubmitCourierRequest" />
     <bpmn:sequenceFlow id="Flow_0lakaf0" sourceRef="Activity_1psr4vn" targetRef="Gateway_068ozs8" />
     <bpmn:sequenceFlow id="Flow_1362di1" name="да" sourceRef="Gateway_068ozs8" targetRef="Activity_01h7bz2">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision == 'APPROVED'}</bpmn:conditionExpression>
@@ -315,18 +322,28 @@
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_CourierRequestActionRetry" name="исправить" sourceRef="Gateway_CourierRequestActionResult" targetRef="Activity_1psr4vn" />
     <bpmn:serviceTask id="Activity_0dgjb9j" name="Создать заявку со статусом PENDING" camunda:type="external" camunda:topic="create-courier-request">
-      <bpmn:incoming>Flow_1np5t1f</bpmn:incoming>
+      <bpmn:incoming>Flow_CourierRequestFormCreate</bpmn:incoming>
       <bpmn:outgoing>Flow_1msrtbb</bpmn:outgoing>
     </bpmn:serviceTask>
+    <bpmn:userTask id="Task_SubmitCourierRequest" name="Отправить заявку на одобрение" camunda:formKey="embedded:deployment:/courier-request-submit.html" camunda:assignee="${courierCamundaUserId}">
+      <bpmn:incoming>Flow_1np5t1f</bpmn:incoming>
+      <bpmn:incoming>Flow_CourierRequestCreationRetry</bpmn:incoming>
+      <bpmn:outgoing>Flow_CourierRequestFormCreate</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_CourierRequestCreationResult" name="Заявка создана?" default="Flow_CourierRequestCreationRetry">
+      <bpmn:incoming>Flow_1msrtbb</bpmn:incoming>
+      <bpmn:outgoing>Flow_CourierRequestCreationSuccess</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CourierRequestCreationRetry</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
     <bpmn:userTask id="Activity_1psr4vn" name="Рассмотреть заявку: ${courierName} ${courierSurname}" camunda:formKey="embedded:deployment:/courier-request-review.html" camunda:candidateGroups="ADMIN">
       <bpmn:extensionElements>
         <camunda:taskListener expression="${execution.setVariable(&#39;reviewerCamundaUserId&#39;, task.assignee)}" event="complete" />
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1msrtbb</bpmn:incoming>
+      <bpmn:incoming>Flow_CourierRequestCreationSuccess</bpmn:incoming>
       <bpmn:incoming>Flow_CourierRequestActionRetry</bpmn:incoming>
       <bpmn:outgoing>Flow_0lakaf0</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:startEvent id="Event_1u7afq9" name="Запрос на одобрение аккаунта" camunda:initiator="initiatorCamundaUserId">
+    <bpmn:startEvent id="Event_1u7afq9" name="Запрос на одобрение аккаунта" camunda:initiator="courierCamundaUserId">
       <bpmn:outgoing>Flow_1np5t1f</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:serviceTask id="Activity_01h7bz2" name="Одобрить" camunda:type="external" camunda:topic="approve-courier-request">
@@ -942,6 +959,16 @@
           <dc:Bounds x="1202" y="62" width="56" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_SubmitCourierRequest" bpmnElement="Task_SubmitCourierRequest">
+        <dc:Bounds x="1400" y="80" width="150" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_CourierRequestCreationResult" bpmnElement="Gateway_CourierRequestCreationResult" isMarkerVisible="true">
+        <dc:Bounds x="1435" y="325" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1492" y="337" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_0v6v40d" bpmnElement="Activity_01h7bz2">
         <dc:Bounds x="1660" y="220" width="140" height="80" />
         <bpmndi:BPMNLabel />
@@ -969,15 +996,28 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="BPMNEdge_1xaco6f" bpmnElement="Flow_1np5t1f">
-        <di:waypoint x="1230" y="148" />
-        <di:waypoint x="1230" y="270" />
-        <di:waypoint x="1290" y="270" />
-        <di:waypoint x="1290" y="310" />
+        <di:waypoint x="1248" y="130" />
+        <di:waypoint x="1400" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CourierRequestFormCreate" bpmnElement="Flow_CourierRequestFormCreate">
+        <di:waypoint x="1475" y="160" />
+        <di:waypoint x="1475" y="250" />
+        <di:waypoint x="1280" y="250" />
+        <di:waypoint x="1280" y="310" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1msrtbb_di" bpmnElement="Flow_1msrtbb">
-        <di:waypoint x="1280" y="390" />
-        <di:waypoint x="1280" y="500" />
-        <di:waypoint x="1330" y="500" />
+        <di:waypoint x="1350" y="350" />
+        <di:waypoint x="1435" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CourierRequestCreationSuccess" bpmnElement="Flow_CourierRequestCreationSuccess">
+        <di:waypoint x="1460" y="375" />
+        <di:waypoint x="1460" y="420" />
+        <di:waypoint x="1400" y="420" />
+        <di:waypoint x="1400" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CourierRequestCreationRetry" bpmnElement="Flow_CourierRequestCreationRetry">
+        <di:waypoint x="1460" y="325" />
+        <di:waypoint x="1460" y="160" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0lakaf0_di" bpmnElement="Flow_0lakaf0">
         <di:waypoint x="1470" y="500" />

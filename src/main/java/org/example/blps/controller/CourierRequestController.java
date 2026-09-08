@@ -49,6 +49,7 @@ public class CourierRequestController {
         Map<String, CamundaVariable> variables = new HashMap<>();
         variables.put("courierCamundaUserId", new CamundaVariable("user" + userDetails.user().getId(), "String"));
         String processInstanceId = camundaProcessClient.startProcess("courier_account_submit", variables);
+        camundaProcessClient.completeTask(processInstanceId, "Task_SubmitCourierRequest", variables);
         return ResponseEntity.accepted().body(Map.of("processInstanceId", processInstanceId));
     }
 

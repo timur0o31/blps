@@ -3,7 +3,7 @@
     <name>Admin</name>
     <surname>Admin</surname>
     <email>admin@gmail.com</email>
-    <password>$2a$04$xFztN7/yQid0Q3w9j7H5g.263pS1IWEmsUwkRFGlN756SoBhPDLpW</password>
+    <password>$2a$04$i9BEaq4CQZzm3W6cnI8X9eSWTvPXRqttDLe6yjYJ3Hmp4LVyUpAxy</password>
     <phone_number>+70000000000</phone_number>
     <role>ADMIN</role>
     <superUser>true</superUser>
@@ -12,63 +12,45 @@
     <name>Robert</name>
     <surname>Tykaev</surname>
     <email>robert@gmail.com</email>
-    <password>$2a$04$7b3js1BhR9Yy5.MmUsRK9u6XJ7ZFopiqPENL4m0iQ4ZPKmDwV.r92</password>
+    <password>$2a$04$o/bKCMiORD4C/i9/gJ8rderSJu.NHSBd8Bgg30kYE4mCHASBVJ/dC</password>
     <phone_number>89211238462</phone_number>
     <role>ADMIN</role>
     <superUser>false</superUser>
   </user>
   <user id="3">
-    <name>Ivans</name>
+    <name>test</name>
     <surname>Ivanov</surname>
-    <email>timur2005@yandex.ru</email>
-    <password>$2a$04$EjWG2LVvV.8zqtK1bjXIquKHDZh9wN8b/GwMBP4i1p2rMWrxIc.xm</password>
-    <phone_number>+79931632745</phone_number>
-    <role>COURIER</role>
+    <email>dans2005@yandex.ru</email>
+    <password>$2a$04$NmJk4skVT8o0zqcGXbyn/eOgmPF98Fs9XDKGvKRUk0zZhE.2oB7wy</password>
+    <phone_number>89112444822</phone_number>
+    <role>CLIENT</role>
     <superUser>false</superUser>
   </user>
   <user id="4">
-    <name>Ivans</name>
-    <surname>Ivanov</surname>
-    <email>timusr2005@yandex.ru</email>
-    <password>$2a$04$6K4/5thm907LZvw3ZIS2JOIOHxr.9wqChV8sZitUMFX9GUg46oC.i</password>
-    <phone_number>+79932632745</phone_number>
+    <name>Timur</name>
+    <surname>Almetov</surname>
+    <email>timur2005@yandex.ru</email>
+    <password>$2a$04$croJXdolx/S0/6k1ZnDDJeo6G3ihDPfpY5xzLgmekHI8ySPyM9VMC</password>
+    <phone_number>89112555822</phone_number>
     <role>COURIER</role>
     <superUser>false</superUser>
   </user>
   <user id="5">
-    <name>Ivans</name>
-    <surname>Ivanov</surname>
-    <email>timus2r2005@yandex.ru</email>
-    <password>$2a$04$kPhbZ8bfRu8i56w.a8vpcun1uGRow1wLGftoXzFX70ly/J0OFBNVq</password>
-    <phone_number>+79932632795</phone_number>
-    <role>COURIER</role>
-    <superUser>false</superUser>
-  </user>
-  <user id="6">
-    <name>fdasfsf</name>
-    <surname>dsfdsfsd</surname>
-    <email>sitik1623@gmail.com</email>
-    <password>$2a$04$uu/osYVNpFM4No8ScGXb4.Cl8O3vt9QLIOIFc9p97UTIGHxpjEUvG</password>
-    <phone_number>89211999462</phone_number>
+    <name>Semen</name>
+    <surname>Pojar</surname>
+    <email>pojar2005@email.ru</email>
+    <password>$2a$04$W9EDXFSbhQg.kCH4OLQDoOFa6Rh1tluiw19GU.m3eRAp09LV67kmq</password>
+    <phone_number>89113444822</phone_number>
     <role>ADMIN</role>
     <superUser>false</superUser>
   </user>
-  <user id="7">
-    <name>Ivans</name>
-    <surname>Ivanov</surname>
-    <email>tim2us2r2005@yandex.ru</email>
-    <password>$2a$04$AAq6CAQ.7fz0fpIictU/3OHQmwi0dkR/9ozrGObX1JaqJPxTfCIKS</password>
-    <phone_number>+79932932795</phone_number>
+  <user id="6">
+    <name>Kirill</name>
+    <surname>Fish</surname>
+    <email>fish2005@mail.ru</email>
+    <password>$2a$04$.xNFRGeEKqJQiiWy7tdXXeGUrOCpDqS0GlpECzmozxwQH6QPXCxz2</password>
+    <phone_number>89119444822</phone_number>
     <role>COURIER</role>
-    <superUser>false</superUser>
-  </user>
-  <user id="8">
-    <name>Danc</name>
-    <surname>Solod</surname>
-    <email>dans2005@yandex.ru</email>
-    <password>$2a$04$CyNjAu/5l3ze/nMQ8nbKtullOfIgryRp1BkeEPcAi1ICYAbu1/d8q</password>
-    <phone_number>+79112444822</phone_number>
-    <role>CLIENT</role>
     <superUser>false</superUser>
   </user>
 </users>

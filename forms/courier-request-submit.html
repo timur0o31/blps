@@ -1,0 +1,20 @@
+<form role="form" name="form">
+  <div class="alert alert-danger" role="alert" ng-if="requestCreationError">
+    {{ requestCreationError }}
+  </div>
+
+  <p ng-if="!requestCreationError">
+    Подтвердите отправку заявки на одобрение аккаунта курьера.
+  </p>
+
+  <script cam-script type="text/form-script">
+    camForm.on('form-loaded', function() {
+      camForm.variableManager.fetchVariable('requestCreationError');
+    });
+
+    camForm.on('variables-fetched', function() {
+      $scope.requestCreationError =
+        camForm.variableManager.variableValue('requestCreationError');
+    });
+  </script>
+</form>
